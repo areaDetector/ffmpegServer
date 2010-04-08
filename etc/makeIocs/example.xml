@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <components arch="linux-x86">
 	<areaDetector.simDetector ADDR="0" HEIGHT="768" MEMORY="-1" P="TEST:" PORT="cam" R="CAM:" TIMEOUT="1" WIDTH="1024"/>
-	<ffmpeg.ffmpegServer ADDR="0" MEMORY="-1" NDARRAY_ADDR="0" NDARRAY_PORT="cam" P="TEST:" PORT="camMJPG" R="MJPG:" TIMEOUT="1"/>
-	<ffmpeg.ffmpegFile ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="cam" P="TEST:" PORT="camFFMPEG" R="FFMPEG:" TIMEOUT="1"/>
+	<ffmpegServer.ffmpegServer ADDR="0" MEMORY="-1" NDARRAY_ADDR="0" NDARRAY_PORT="cam" P="TEST:" PORT="camMJPG" R="MJPG:" TIMEOUT="1"/>
+	<ffmpegServer.ffmpegFile ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="cam" P="TEST:" PORT="camFFMPEG" R="FFMPEG:" TIMEOUT="1"/>
 </components>

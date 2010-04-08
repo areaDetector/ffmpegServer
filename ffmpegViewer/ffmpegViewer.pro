@@ -1,20 +1,14 @@
 TEMPLATE = app
-TARGET =
-DEPENDPATH += .
-INCLUDEPATH += .
-
-# Input
-SOURCES += main.cpp videoWidget.cpp
-HEADERS += videoWidget.h
-
-# ffmpeg libs for ffmpegViewer widget
-INCLUDEPATH += ../../include
-LIBPATH += ../../lib/linux-x86
+TARGET = ffmpegViewer
+DESTDIR = .
 LIBS += -lavdevice -lavformat -lavcodec -lavutil -lbz2 -lswscale
 QT += opengl
 CONFIG += thread release
+SOURCES += main.cpp videoWidget.cpp
+HEADERS += videoWidget.h
 
-# install
-ffmpegViewer.path = ../data
-ffmpegViewer.files = ffmpegViewer
-INSTALLS += ffmpegViewer
+things.path = ../data
+things.files = ffmpegViewer
+things.depends = ffmpegViewer
+
+INSTALLS += things
