@@ -1,0 +1,105 @@
+Automated FFmpeg Win32 builds made by Ramiro Polla.
+
+FFmpeg revision: 22127
+SwScale revision: 30787
+
+FFmpeg configuration:
+    --enable-shared --disable-static
+    --enable-memalign-hack
+    --cross-prefix=i686-mingw32-
+    --cc=ccache-i686-mingw32-gcc
+    --arch=i686
+    --target-os=mingw32
+    --enable-runtime-cpudetect
+    --enable-avisynth
+    --enable-gpl
+    --enable-version3
+    --enable-bzlib
+    --enable-libgsm
+    --enable-libfaad
+    --enable-pthreads
+    --enable-libvorbis
+    --enable-libtheora
+    --enable-libspeex
+    --enable-libmp3lame
+    --enable-libopenjpeg
+    --enable-libxvid
+    --enable-libschroedinger
+    --enable-libx264
+    --enable-libopencore_amrwb
+    --enable-libopencore_amrnb
+
+All source code used can be found at:
+    http://ffmpeg.arrozcru.org/autobuilds
+
+Comments, suggestions, bug reports, compliments, donations, etc:
+    http://ffmpeg.arrozcru.org/forum
+
+These builds are cross-compiled from an amd64 Ubuntu Jaunty system.
+The relevant development package versions from the main repository are:
+nasm                                      2.05.01-1
+yasm                                      0.7.1-0ubuntu2
+
+The cross-compilation packages are available from:
+    http://apt.arrozcru.org
+
+The cross-development package versions from that repository are:
+mingw32-gcc-4.4                           4.4.2-1
+mingw32-binutils                          2.20-1
+mingw32-runtime                           3.17-1
+mingw32-w32api                            3.14-1
+
+The external libraries compiled into FFmpeg are:
+
+http://www.bzip.org
+mingw32-bzip2                             1.0.5-1
+
+http://www.audiocoding.com
+mingw32-libfaad2                          2.7-1
+
+http://kbs.cs.tu-berlin.de/~jutta/toast.html
+mingw32-libgsm                            1.0-pl13-2
+
+http://lame.sourceforge.net
+mingw32-libmp3lame                        20091220-1
+
+http://www.xiph.org
+mingw32-libogg                            1.1.4-1
+
+http://liboil.freedesktop.org
+mingw32-liboil                            0.3.16-1
+
+http://sourceforge.net/projects/opencore-amr
+mingw32-libopencore-amr                   0.1.2-1
+
+http://www.openjpeg.org
+mingw32-libopenjpeg                       1.3-1
+
+http://diracvideo.org
+mingw32-libschroedinger                   1.0.7-1
+
+http://www.libsdl.org
+mingw32-libsdl                            1.2.14-2
+
+http://www.xiph.org
+mingw32-libspeex                          1.2rc1-1
+
+http://www.xiph.org
+mingw32-libtheora                         1.1.1-1
+
+http://www.xiph.org
+mingw32-libvorbis                         1.2.3-1
+
+http://www.videolan.org/developers/x264.html
+mingw32-libx264                           1442-1
+
+http://www.xvid.org
+mingw32-libxvid                           1.2.2-1
+
+http://sourceware.org/pthreads-win32
+mingw32-pthreads                          20091019-1
+
+http://www.zlib.net
+mingw32-zlib                              1.2.3-1
+
+The license for each library can be found in the licenses directory.

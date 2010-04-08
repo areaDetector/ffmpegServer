@@ -1,0 +1,5 @@
+SUPPORT=/dls_sw/prod/R3.14.8.2/support
+WORK=/dls_sw/work/R3.14.8.2/support
+
+# Place any example specific dependencies here
+

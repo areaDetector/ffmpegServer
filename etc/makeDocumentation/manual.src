@@ -1,0 +1,18 @@
+/**
+\mainpage ffmpeg EPICS Support Module
+\section intro_sec Introduction 
+I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \endlink \n
+You can also link to internally generated documentation like this: \ref ffmpegServerApp/Db/ffmpegServer.db "Database Documentation" \n
+This documentation is split into 2 sections:
+\section user_sec User Manual 
+This contains instructions for the end user: \ref user_manual 
+\section build_sec Build Instructions 
+This contains instructions for the programmer using this module: \ref build_instructions
+**/
+
+/* Build instructions page will be generated from the xml file given to dls-make-doxygen-documentation.py */
+
+/** 
+\page user_manual User Manual
+This needs to be hand generated. You can link directly to this page from the edm screen if you want
+**/

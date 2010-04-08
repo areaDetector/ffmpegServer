@@ -1,0 +1,13 @@
+Vendor imports
+==============
+
+ffmpeg
+------
+
+From http://ffmpeg.arrozcru.org/autobuilds/
+
+* Download and untar the latest source tarball
+* Download and unzip the latest shared 32bit devel 7z file (you need http://sourceforge.net/projects/p7zip/files/p7zip/9.04/p7zip_9.04_x86_linux_bin.tar.bz2/download to extract it)
+* Download and unzip the latest shared 32bit 7z file
+* Move the both mingw32 builds into a dir called mingw32 in the source tree
+* Do a dls-vendor-update on this

@@ -1,0 +1,52 @@
+# Macros:
+#% macro, P, Device Prefix
+#% macro, R, Device Suffix
+#% macro, PORT, Asyn Port name
+
+# We replace some fields in records defined in NDFile.template
+# File data format 
+record(mbbo, "$(P)$(R)FileFormat")
+{
+    field(ZRST, "msmpegv2")
+    field(ZRVL, "0")
+    field(ONST, "Invalid")
+    field(ONVL, "1")
+}
+
+record(mbbi, "$(P)$(R)FileFormat_RBV")
+{
+    field(ZRST, "msmpegv2")
+    field(ZRVL, "0")
+    field(ONST, "Undefined")
+    field(ONVL, "1")
+}
+
+## FFMPEG Bitrate
+record(ao, "$(P)$(R)BITRATE") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_BITRATE")
+  field(VAL, "200000")
+  field(PINI, "YES")  
+}
+
+## FFMPEG Bitrate from driver
+record(ai, "$(P)$(R)BITRATE_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_BITRATE")
+}
+
+## FFMPEG Frames Per Second
+record(ao, "$(P)$(R)FPS") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_FPS")
+  field(VAL, "25")
+  field(PINI, "YES")  
+}
+
+## FFMPEG Frames Per Second from driver
+record(ai, "$(P)$(R)FPS_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_FPS")
+}

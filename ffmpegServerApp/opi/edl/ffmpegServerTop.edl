@@ -1,0 +1,219 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 1343
+y 216
+w 400
+h 865
+font "arial-bold-r-12.0"
+ctlFont "arial-bold-r-12.0"
+btnFont "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 25
+ctlFgColor2 index 25
+ctlBgColor1 index 3
+ctlBgColor2 index 3
+topShadowColor index 1
+botShadowColor index 11
+showGrid
+gridSize 5
+endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 5
+y 500
+w 389
+h 10
+lineColor index 5
+fill
+fillColor index 5
+endObjectProperties
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 4
+y 3
+w 391
+h 25
+fgColor index 14
+bgColor index 3
+selectColor index 4
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "LOC\\$(!W)menu=e:0,Camera,FFMPEG,MJPG Server"
+font "arial-bold-r-12.0"
+orientation "horizontal"
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 4
+y 29
+w 392
+h 832
+lineColor index 1
+fillColor index 3
+numPoints 3
+xPoints {
+  0 4
+  1 396
+  2 396
+}
+yPoints {
+  0 861
+  1 861
+  2 29
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 4
+y 29
+w 392
+h 832
+lineColor index 11
+fillColor index 3
+numPoints 3
+xPoints {
+  0 4
+  1 4
+  2 396
+}
+yPoints {
+  0 861
+  1 29
+  2 29
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 10
+y 505
+w 380
+h 0
+lineColor index 1
+fillColor index 3
+numPoints 2
+xPoints {
+  0 10
+  1 390
+}
+yPoints {
+  0 505
+  1 505
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 10
+y 506
+w 380
+h 0
+lineColor index 11
+fillColor index 11
+numPoints 2
+xPoints {
+  0 10
+  1 390
+}
+yPoints {
+  0 506
+  1 506
+}
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 30
+w 390
+h 470
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "menu"
+filePv "LOC\\$(!W)menu"
+sizeOfs 5
+numDsps 3
+displayFileName {
+  0 "ADBase"
+  1 "NDPluginBase"
+  2 "NDPluginBase"
+}
+symbols {
+  0 "P=$(P),R=CAM:"
+  1 "P=$(P),R=FFMPEG:"
+  2 "P=$(P),R=MJPG:"
+}
+noScroll
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 510
+w 390
+h 350
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "menu"
+filePv "LOC\\$(!W)menu"
+sizeOfs 5
+numDsps 3
+displayFileName {
+  0 "simDetector"
+  1 "ffmpegFile"
+  2 "ffmpegServer"
+}
+symbols {
+  0 "P=$(P),R=CAM:"
+  1 "P=$(P),R=FFMPEG:"
+  2 "P=$(P),R=MJPG:"
+}
+noScroll
+endObjectProperties
+
