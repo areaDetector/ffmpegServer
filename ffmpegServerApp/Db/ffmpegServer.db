@@ -2,11 +2,14 @@
 #% macro, P, Device Prefix
 #% macro, R, Device Suffix
 #% macro, PORT, Asyn Port name
+#% macro, QULAITY, Jpeg Quality in percent
 
 ## JPEG Quality
 record(ao, "$(P)$(R)QUALITY") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_QUALITY")
+  field(VAL, "$(QUALITY=100)")
+  field(PINI, "1")  
 }
 
 ## JPEG Quality Readback from driver

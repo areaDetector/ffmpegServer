@@ -9,6 +9,7 @@ VideoWidget::VideoWidget(const char *url) {
 
 	/* Create a graphics scene */
 	QGraphicsScene *scene = new QGraphicsScene(this);
+
 	item = new VideoItem();
 	scene->addItem(item);
     this->setScene(scene);
@@ -48,7 +49,10 @@ VideoWidget::VideoWidget(const char *url) {
     this->setDragMode(QGraphicsView::ScrollHandDrag);
 
     /* OpenGL */
-    this->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+    if (QGLFormat::hasOpenGL()) {
+        printf("OpenGL enabled\n");
+        this->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+    }
 
  	/* Launch ffmpeg on the url */
     /* create the ffmpeg thread */
@@ -253,7 +257,7 @@ void FFThread::run()
                           this->pictures[index]->data, this->pictures[index]->linesize);
                 // Parcel it up as a QImage
                 imgs[this->index] = new QImage(this->frames[this->index], width, height, QImage::Format_RGB888);
-                printf("Produce: %p %p\n", imgs[this->index], this->frames[this->index]);
+//                printf("Produce: %p %p\n", imgs[this->index], this->frames[this->index]);
                 // Tell the widget that the picture is ready
                 emit updateSignal(imgs[this->index], firstImage);
                 if (firstImage) firstImage = false;
@@ -302,7 +306,7 @@ void VideoItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 /*        printf("x: %f, y: %f, w: %f, h: %f\n",this->boundingRect().x(), this->boundingRect().y(), this->boundingRect().width(), this->boundingRect().height());               */
         painter->setClipRect( option->exposedRect );
     	painter->drawImage(0,0,*this->image);
-        printf("Paint: %p\n", this->image);
+//        printf("Paint: %p\n", this->image);
     }
 	this->imgmutex->unlock();		                
 }

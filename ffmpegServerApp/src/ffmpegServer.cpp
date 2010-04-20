@@ -669,7 +669,6 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     status = connectToArrayPort();
 
     /* Set the initial values of some parameters */
-    setIntegerParam(0, ffmpeg_quality, 10);
     setIntegerParam(0, ffmpeg_http_port, config.server_port);
     setIntegerParam(0, ffmpeg_clients, 0);    
     
