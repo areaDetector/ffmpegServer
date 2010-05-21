@@ -16,7 +16,7 @@ WORK=/dls_sw/work/R3.14.11/support
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-ASYN=$(WORK)/asyn
+ASYN=$(SUPPORT)/asyn/4-12dls1
 AREA_DETECTOR=$(WORK)/areaDetector
 NULLHTTPD=$(WORK)/nullhttpd
 FFMPEG=$(WORK)/ffmpeg

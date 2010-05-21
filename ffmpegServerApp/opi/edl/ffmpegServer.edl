@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 814
-y 714
+x 809
+y 104
 w 390
-h 350
+h 820
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
 btnFont "arial-bold-r-12.0"
@@ -31,9 +31,9 @@ major 4
 minor 0
 release 0
 x 0
-y 0
+y 385
 w 390
-h 350
+h 435
 lineColor index 5
 fill
 fillColor index 5
@@ -46,7 +46,7 @@ major 4
 minor 0
 release 0
 x 5
-y 145
+y 530
 w 380
 h 190
 lineColor index 14
@@ -61,7 +61,7 @@ major 4
 minor 0
 release 0
 x 5
-y 15
+y 400
 w 380
 h 110
 lineColor index 14
@@ -76,7 +76,7 @@ major 4
 minor 1
 release 0
 x 5
-y 5
+y 390
 w 45
 h 14
 font "arial-medium-r-12.0"
@@ -96,7 +96,7 @@ major 4
 minor 1
 release 0
 x 5
-y 135
+y 520
 w 79
 h 14
 font "arial-medium-r-12.0"
@@ -116,7 +116,7 @@ major 4
 minor 0
 release 0
 x 95
-y 70
+y 455
 w 90
 h 20
 fgColor index 25
@@ -136,7 +136,7 @@ major 10
 minor 0
 release 0
 x 290
-y 95
+y 480
 w 90
 h 20
 controlPv "$(P)$(R)QUALITY_RBV"
@@ -155,9 +155,9 @@ major 10
 minor 0
 release 0
 x 200
-y 90
-w 89
-h 30
+y 480
+w 85
+h 20
 controlPv "$(P)$(R)QUALITY"
 fgColor index 25
 fgAlarm
@@ -173,7 +173,7 @@ major 4
 minor 1
 release 0
 x 10
-y 45
+y 430
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -192,7 +192,7 @@ major 10
 minor 0
 release 0
 x 95
-y 45
+y 430
 w 90
 h 20
 controlPv "$(P)$(R)HTTP_PORT_RBV"
@@ -211,7 +211,7 @@ major 4
 minor 1
 release 0
 x 205
-y 45
+y 430
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -230,7 +230,7 @@ major 10
 minor 0
 release 0
 x 290
-y 45
+y 430
 w 90
 h 20
 controlPv "$(P)$(R)CLIENTS_RBV"
@@ -249,7 +249,7 @@ major 4
 minor 1
 release 0
 x 10
-y 70
+y 455
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -268,7 +268,7 @@ major 4
 minor 0
 release 0
 x 290
-y 70
+y 455
 w 90
 h 20
 fgColor index 25
@@ -288,7 +288,7 @@ major 4
 minor 1
 release 0
 x 205
-y 70
+y 455
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -307,7 +307,7 @@ major 4
 minor 1
 release 0
 x 110
-y 95
+y 480
 w 85
 h 25
 font "arial-bold-r-12.0"
@@ -326,7 +326,7 @@ major 4
 minor 2
 release 0
 x 15
-y 155
+y 540
 w 360
 h 40
 fgColor index 43
@@ -348,7 +348,7 @@ major 4
 minor 1
 release 0
 x 10
-y 20
+y 405
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -367,7 +367,7 @@ major 10
 minor 0
 release 0
 x 55
-y 20
+y 405
 w 325
 h 20
 controlPv "$(P)$(R)HOST_RBV"
@@ -386,7 +386,7 @@ major 4
 minor 1
 release 0
 x 15
-y 200
+y 585
 w 213
 h 14
 font "arial-bold-r-12.0"
@@ -406,7 +406,7 @@ major 4
 minor 1
 release 0
 x 15
-y 315
+y 700
 w 225
 h 14
 font "arial-bold-r-12.0"
@@ -426,7 +426,7 @@ major 4
 minor 2
 release 0
 x 15
-y 220
+y 605
 w 360
 h 40
 fgColor index 43
@@ -448,7 +448,7 @@ major 4
 minor 2
 release 0
 x 15
-y 265
+y 650
 w 360
 h 40
 fgColor index 43
@@ -461,5 +461,30 @@ numCmds 1
 command {
   0 "ffmpegViewer `caget -t $(P)$(R)HOST_RBV $(P)$(R)HTTP_PORT_RBV $(P)$(R)PortName_RBV | sed 'N;N;s| *\\n|\\n|g;s|\\n|:|;s|\\n|/|;s/ *$/.mjpg/;s|^|http://|'`"
 }
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 0
+w 390
+h 385
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "file"
+file "NDPluginBase"
+sizeOfs 5
+numDsps 2
+displayFileName {
+  0 "NDPluginBase"
+  1 "NDPluginBase"
+}
+noScroll
 endObjectProperties
 

@@ -6,7 +6,7 @@ release 1
 x 178
 y 204
 w 390
-h 350
+h 820
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
 btnFont "arial-bold-r-12.0"
@@ -31,9 +31,9 @@ major 4
 minor 0
 release 0
 x 0
-y 0
+y 665
 w 390
-h 350
+h 155
 lineColor index 5
 fill
 fillColor index 5
@@ -46,7 +46,7 @@ major 4
 minor 0
 release 0
 x 5
-y 305
+y 680
 w 380
 h 40
 lineColor index 14
@@ -61,7 +61,7 @@ major 4
 minor 1
 release 0
 x 5
-y 295
+y 670
 w 51
 h 14
 font "arial-medium-r-12.0"
@@ -81,7 +81,7 @@ major 10
 minor 0
 release 0
 x 150
-y 315
+y 690
 w 90
 h 20
 controlPv "$(P)$(R)BITRATE_RBV"
@@ -100,7 +100,7 @@ major 10
 minor 0
 release 0
 x 55
-y 310
+y 685
 w 89
 h 30
 controlPv "$(P)$(R)BITRATE"
@@ -118,7 +118,7 @@ major 4
 minor 1
 release 0
 x 10
-y 315
+y 690
 w 45
 h 20
 font "arial-bold-r-12.0"
@@ -130,27 +130,6 @@ value {
 }
 endObjectProperties
 
-# (Embedded Window)
-object activePipClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 0
-y 0
-w 390
-h 290
-fgColor index 14
-bgColor index 3
-topShadowColor index 1
-botShadowColor index 11
-displaySource "file"
-file "NDFile"
-sizeOfs 5
-numDsps 0
-noScroll
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -158,7 +137,7 @@ major 4
 minor 1
 release 0
 x 255
-y 315
+y 690
 w 35
 h 20
 font "arial-bold-r-12.0"
@@ -177,7 +156,7 @@ major 10
 minor 0
 release 0
 x 340
-y 315
+y 690
 w 40
 h 20
 controlPv "$(P)$(R)FPS_RBV"
@@ -196,7 +175,7 @@ major 10
 minor 0
 release 0
 x 295
-y 310
+y 685
 w 40
 h 30
 controlPv "$(P)$(R)FPS"
@@ -205,5 +184,55 @@ fgAlarm
 bgColor index 3
 fill
 font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 0
+w 390
+h 385
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "file"
+file "NDPluginBase"
+sizeOfs 5
+numDsps 2
+displayFileName {
+  0 "NDPluginBase"
+  1 "NDPluginBase"
+}
+noScroll
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 385
+w 390
+h 280
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "file"
+file "NDFile"
+sizeOfs 5
+numDsps 2
+displayFileName {
+  0 "NDPluginBase"
+  1 "NDPluginBase"
+}
+noScroll
 endObjectProperties
 

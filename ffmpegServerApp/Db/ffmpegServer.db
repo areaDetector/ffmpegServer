@@ -2,7 +2,10 @@
 #% macro, P, Device Prefix
 #% macro, R, Device Suffix
 #% macro, PORT, Asyn Port name
-#% macro, QULAITY, Jpeg Quality in percent
+#% macro, QUALITY, Jpeg Quality in percent
+
+# This associates the template with an edm screen
+# % gui, $(PORT), edmtab, ffmpegServer.edl, P=$(P),R=$(R)
 
 ## JPEG Quality
 record(ao, "$(P)$(R)QUALITY") {

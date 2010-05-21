@@ -150,7 +150,6 @@ p { \n\
 </HTML> \n\
 ");
     flushbuffer(sid);    
-    printf("Index sent\n");
 }
 
 /* this dummy function is here to satisfy nullhttpd */
@@ -192,19 +191,16 @@ void ffmpegServerConfigure(int port) {
     strncpy(config.server_hostname, "any", sizeof(config.server_hostname)-1);
     config.server_maxconn=50;
     config.server_maxidle=120;    
-    printf("starting server on port %d...\n", port);
+    printf("Starting server on port %d...\n", port);
     snprintf((char *)program_name, sizeof(program_name)-1, "ffmpegServer");
     init();
-    printf("Done init \n");
 #ifdef WIN32
     if (_beginthread(WSAReaper, 0, NULL)==-1) {
         logerror("Winsock reaper thread failed to start");
         exit(0);
     }
-    printf("Done win32 init \n");
 #endif
     /* Start up acquisition thread */
-    printf("Starting up http server...     ");
     status = (epicsThreadCreate("httpServer",
             epicsThreadPriorityMedium,
             epicsThreadGetStackSize(epicsThreadStackMedium),
@@ -252,7 +248,6 @@ void ffmpegStream::send_snapshot(int sid, int index) {
     /* Send the jpeg itself */
     send(conn[sid].socket, (const char *) pArray->pData, size, 0);
     pArray->release();
-    printf("JPEG sent\n");
     /* Clear up */
     conn[sid].dat->out_headdone=1;
     conn[sid].dat->out_bodydone=1;
@@ -269,7 +264,7 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
     int ret = 0;
     if (pArray) {
         /* Send metadata */
-        printf("Send frame %d to sid %d\n", pArray->dims[0].size, sid);                        
+//        printf("Send frame %d to sid %d\n", pArray->dims[0].size, sid);                        
         prints("Content-Type: image/jpeg\r\n");
         prints("Content-Length: %d\r\n\r\n", pArray->dims[0].size);
         flushbuffer(sid);
@@ -282,7 +277,7 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
         /* Send a boundary */
         prints("--BOUNDARY\r\n");
         flushbuffer(sid);
-        printf("Done\n");        
+//        printf("Done\n");        
         pArray->release();             
     }
     return ret;
@@ -315,7 +310,6 @@ void ffmpegStream::send_stream(int sid) {
     int always_on;
     NDArray* pArray;
     time_t now=time((time_t*)0);    
-    printf("MJPEG requested\n");
     /* Say we're listening */
     getIntegerParam(0, ffmpeg_always_on, &always_on);
     pthread_mutex_lock( &this->mutex );    
@@ -325,7 +319,6 @@ void ffmpegStream::send_stream(int sid) {
     send_fileheader(sid, 0, 200, "OK", "1", "multipart/x-mixed-replace;boundary=BOUNDARY", -1, now);
     prints("--BOUNDARY\r\n");
     flushbuffer(sid);
-    printf("New Header sent\n");
     /* if always on or clients already listening then there is already a frame */    
     if (always_on || this->nclients > 1) {
         pArray = get_jpeg();
@@ -397,7 +390,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
 
     /* if no-ones listening and we're not always on then do nothing */
     if (clients == 0 && always_on == 0) {
-        printf("No-one listening\n");
+//        printf("No-one listening\n");
         return;
     }
 
@@ -577,7 +570,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* If width and height have changed then reinitialise the codec */
     halfsize = size / 2;
     if (c == NULL || width != c->width || height != c->height) {
-        printf("Setting width %d height %d\n", width, height);
+//        printf("Setting width %d height %d\n", width, height);
         AVRational avr;
         avr.num = 1;
         avr.den = 25;
@@ -592,7 +585,6 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         c->pix_fmt = PIX_FMT_YUVJ422P;
         c->flags = CODEC_FLAG_QSCALE;
         c->time_base = avr;
-        printf("Opening codec\n");
         /* open it */
         if (avcodec_open(c, codec) < 0) {
 			c = NULL;
@@ -629,7 +621,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* Convert it to a jpeg */        
     this->jpeg = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
     this->jpeg->dims[0].size = avcodec_encode_video(c, (uint8_t*)this->jpeg->pData, c->width * c->height, picture);    
-    printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
+//    printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
     
     /* signal fresh_frame to output plugin and unlock mutex */
     for (int i=0; i<config.server_maxconn; i++) {

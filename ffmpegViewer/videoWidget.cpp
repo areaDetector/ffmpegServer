@@ -257,8 +257,8 @@ void FFThread::run()
                           this->pictures[index]->data, this->pictures[index]->linesize);
                 // Parcel it up as a QImage
                 imgs[this->index] = new QImage(this->frames[this->index], width, height, QImage::Format_RGB888);
-//                printf("Produce: %p %p\n", imgs[this->index], this->frames[this->index]);
-                // Tell the widget that the picture is ready
+//                printf("Produce: %p %p %d\n", imgs[this->index], this->frames[this->index], this->index);
+                // Tell the widget that the picture is ready                
                 emit updateSignal(imgs[this->index], firstImage);
                 if (firstImage) firstImage = false;
             } else {
