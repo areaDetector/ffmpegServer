@@ -3,7 +3,6 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QGridLayout>
-#include <QSlider>
 #include "ffmpegViewer.h"
 
 #define clickButton( layout, name, Name, text, y ) \
@@ -26,14 +25,15 @@
     QLabel (name ## Lbl)((text)); \
     (name ## Lbl).setAlignment(Qt::AlignRight | Qt::AlignVCenter); \
     (layout).addWidget(&(name ## Lbl), (y), 0);    \
-    QSlider (name ## Sld)(Qt::Horizontal); \
+    SSpinBox (name ## Sld); \
     (layout).addWidget(&(name ## Sld), (y), 1); \
     view.connect(&(name ## Sld), SIGNAL(valueChanged(int)), SLOT(set ## Name(int))); \
     (name ## Sld).connect(&view, SIGNAL(name ## Changed(int)), SLOT(setValue(int))); \
     (name ## Sld).setMaximum(max);
 #define setSliderRange( name, Name ) \
-    (name ## Sld).setMaximum(view.max ## Name());
-//    (name ## Sld).connect(&view, SIGNAL(max ## Name ## Changed(int)), "setMaximum(int)"); 
+    (name ## Sld).setMaximum(view.max ## Name()); \
+    (name ## Sld).connect(&view, SIGNAL(max ## Name ## Changed(int)), SLOT(setMaximumSlot(int))); 
+
     
 int main(int argc, char *argv[])
 {
@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
 
     /* Image controls */
     clickButton(icontrolsLayout, reset, Reset, "Reset Image", 0)
-    controlsSlider(icontrolsLayout, zoom, Zoom, "Zoom", 1, 100);
-    zoomSld.setMinimum(-100);
+    controlsSlider(icontrolsLayout, zoom, Zoom, "Zoom", 1, 50);
+    zoomSld.setMinimum(-50);
     controlsSlider(icontrolsLayout, x, X, "X Offset", 2, 100);
     setSliderRange(x, X);
     controlsSlider(icontrolsLayout, y, Y, "Y Offset", 3, 100);
@@ -84,14 +84,16 @@ int main(int argc, char *argv[])
     /* Grid controls */
     controlsButton(gcontrolsLayout, grid, Grid, "Grid", 0);
     controlsSlider(gcontrolsLayout, gx, Gx, "Grid X", 1, 100);
-    setSliderRange(gx, X);    
+    setSliderRange(gx, Gx);    
     controlsSlider(gcontrolsLayout, gy, Gy, "Grid Y", 2, 100);
-    setSliderRange(gy, Y);        
+    setSliderRange(gy, Gy);        
     controlsSlider(gcontrolsLayout, gs, Gs, "Grid Spacing", 3, 100);
+    gsSld.setMinimum(2);    
+    gsSld.setValue(20);        
     clickButton(gcontrolsLayout, gcol, Gcol, "Grid Colour", 4)    
 
     /* Run the program */
-    top.resize(840,480);
+    top.resize(1266,808);
     top.show();
     return app.exec();
 }

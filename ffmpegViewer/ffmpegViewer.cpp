@@ -15,7 +15,7 @@ static QMutex *ffmutex;
 /* thread that decodes frames from video stream and emits updateSignal when
  * each new frame is available
  */
-FFThread::FFThread (const QString &url, QWidget* parent)
+FFThread::FFThread (const QString &url, unsigned char * destFrame, QWidget* parent)
 	: QThread (parent)
 {
 	/* setup frame */
@@ -36,14 +36,13 @@ FFThread::FFThread (const QString &url, QWidget* parent)
     }
     // Allocate video frame for decoding into
     this->pFrame=avcodec_alloc_frame();
-    this->pFrameRGB=avcodec_alloc_frame();    
-	this->destFrame = (unsigned char *) malloc(MAXWIDTH*MAXHEIGHT*3*sizeof(unsigned char));    
+    this->pFrameRGB=avcodec_alloc_frame();  
+    this->destFrame = destFrame;    
 }
 
 // destroy widget
 FFThread::~FFThread() {
     // free the frames
-    free(destFrame);        
     av_free(pFrame);
     av_free(pFrameRGB);    
 }
@@ -121,7 +120,7 @@ void FFThread::run()
                 sws_scale(ctx, pFrame->data, pFrame->linesize, 0, height, 
                           pFrameRGB->data, pFrameRGB->linesize);
                 // Tell the GL widget that the picture is ready
-                emit updateSignal(width, height, firstImage, (void*) this->pFrameRGB->data[0]);             
+                emit updateSignal(width, height, firstImage);             
                 if (firstImage) firstImage = false;
             } else {
                 printf("Frame not finished. Shouldn't see this...\n");
@@ -175,6 +174,8 @@ void ffmpegViewer::init() {
     _zoom = 0;
     _gx = 100;
     _gy = 100;
+    _maxGx = 0;
+    _maxGy = 0;
     _gs = 20;    
     _gcol = Qt::black;   
     _gcol.setAlpha(50); 
@@ -185,6 +186,8 @@ void ffmpegViewer::init() {
     _grid = false;
     _url = QString("");  
     ff = NULL;
+    tex = 0;
+	this->destFrame = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));      
 }    
 
 
@@ -200,9 +203,9 @@ void ffmpegViewer::ffInit() {
     disableUpdates = true;    
     
     /* create the ffmpeg thread */
-    ff = new FFThread(_url, this);    
-	QObject::connect( ff, SIGNAL(updateSignal(int, int, bool, void*)), 
-	                  this, SLOT(updateImage(int, int, bool, void*)) );
+    ff = new FFThread(_url, this->destFrame, this);    
+	QObject::connect( ff, SIGNAL(updateSignal(int, int, bool)), 
+	                  this, SLOT(updateImage(int, int, bool)) );
 	QObject::connect( this, SIGNAL(aboutToQuit()),
                       ff, SLOT(stopGracefully()) ); 	                  
                       
@@ -230,6 +233,7 @@ void ffmpegViewer::ffQuit() {
 ffmpegViewer::~ffmpegViewer() {
 	printf("Destroying ffmpegViewer\n");
     ffQuit();
+    free(destFrame);            
 }
 
 
@@ -261,11 +265,12 @@ void ffmpegViewer::setY(int y) {
 
 // zoom frame
 void ffmpegViewer::setZoom(int zoom) { 
-    zoom = (zoom < -100) ? -100 : (zoom > 100) ? 100 : zoom;   
+    zoom = (zoom < -50) ? -50 : (zoom > 50) ? 50 : zoom;   
     if (_zoom != zoom) { 
         _zoom = zoom;
         emit zoomChanged(zoom);
-        if (!disableUpdates) {     
+        if (!disableUpdates) {   
+            initializeGL();          
             updateViewport();    
             updateGL();
         }
@@ -274,7 +279,7 @@ void ffmpegViewer::setZoom(int zoom) {
 
 // x offset of grid centre from origin of full size image
 void ffmpegViewer::setGx(int gx) {
-    gx = (gx < 0) ? 0 : (gx > _imw) ? _imw : gx;
+    gx = (gx < 1) ? 1 : (gx > _imw - 1 && _imw > 0) ? _imw - 1 : gx;
     if (_gx != gx) { 
         _gx = gx; 
         emit gxChanged(gx);
@@ -286,7 +291,7 @@ void ffmpegViewer::setGx(int gx) {
 
 // y offset of grid centre from origin of full size image
 void ffmpegViewer::setGy(int gy) {
-    gy = (gy < 0) ? 0 : (gy > _imh) ? _imh : gy;
+    gy = (gy < 1) ? 1 : (gy > _imh - 1 && _imh > 0) ? _imh - 1 : gy;
     if (_gy != gy) { 
         _gy = gy; 
         emit gyChanged(gy);
@@ -298,7 +303,7 @@ void ffmpegViewer::setGy(int gy) {
 
 // pixel width of gridlines from grid centre outwards
 void ffmpegViewer::setGs(int gs) {
-    gs = (gs < 2) ? 2 : (gs > _imw) ? _imw : gs;
+    gs = (gs < 2) ? 2 : (gs > _imw && _imw > 0) ? _imw : gs;
     if (_gs!=gs) { 
         _gs = gs;        
         emit gsChanged(gs); 
@@ -342,12 +347,16 @@ void ffmpegViewer::setUrl(const QString &url) {
 }
 
 void ffmpegViewer::initializeGL() {
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth (1.0f);
-//    glClear(); 
+    glClear (GL_COLOR_BUFFER_BIT);
 	// enable blending
     glEnable (GL_BLEND); 
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);		
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    if (tex) {
+//	    glDeleteTextures(1, &tex);		
+//	}
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     // select replace to just draw the texture
@@ -368,7 +377,7 @@ void ffmpegViewer::initializeGL() {
     glTexCoord2f(1.0, 1.0);    glVertex2f(1.0, 0.0);
     glTexCoord2f(0.0, 1.0);    glVertex2f(0.0, 0.0);
     glEnd();
-    glEndList();     
+    glEndList();    
 }
 
 void ffmpegViewer::resizeGL (int width, int height) {
@@ -380,28 +389,32 @@ void ffmpegViewer::resizeGL (int width, int height) {
 void ffmpegViewer::setReset() {
     // zoom onto the image
     makeCurrent();
-    _x = 0;
-    _y = 0;
-    _zoom = 0;
+    disableUpdates = true;
+    setX(0);
+    setY(0);
+    setZoom(0);    
+    disableUpdates = false;     
     initializeGL();
     updateViewport();
     updateGL();
-
 }
 
-void ffmpegViewer::updateImage(int imw, int imh, bool firstImage, void *data) 
+void ffmpegViewer::updateImage(int imw, int imh, bool firstImage) 
 {
-    unsigned char *destFrame = (unsigned char*) data;
     // make sure we update the current OpenGL window
     makeCurrent();
-    _imw = imw;
-    _imh = imh;
     // draw the subimage onto the texture        
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imw, imh, GL_RGB, GL_UNSIGNED_BYTE, destFrame);          
 
     // if this is the first image, then make sure we zoom onto it
-    if (firstImage) {
+    if (firstImage || _imw != imw || _imh != imh) {
+        _imw = imw;
+        _imh = imh;        
         setReset();
+        _maxGx = _imw - 1;
+        emit maxGxChanged(_maxGx);
+        _maxGy = _imh - 1;
+        emit maxGyChanged(_maxGy);                
     } else {        
         updateGL();
     }
@@ -456,6 +469,7 @@ void ffmpegViewer::paintGL() {
         }
         glEnd();
     }
+    glFlush ();	
 }
 
 // update grid centre
@@ -510,9 +524,14 @@ void ffmpegViewer::wheelEvent(QWheelEvent * event) {
 	} else {
 		this->setZoom(this->zoom() - 1);
 	}
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth (1.0f);
+    glClear (GL_COLOR_BUFFER_BIT);
+initializeGL();
     updateViewport();	
-    setX(_x + (int) (((float) (oldw - _w)*event->x()) / width()));
-    setY(_y + (int) (((float) (oldh - _h)*event->y()) / height())); 
+    setX(_x + (int) (0.5 + ((float) (oldw - _w)*event->x()) / width()));
+    setY(_y + (int) (0.5 + ((float) (oldh - _h)*event->y()) / height())); 
+    updateViewport();    
     disableUpdates = false;                   
     updateGL();
     event->accept();
@@ -523,9 +542,29 @@ void ffmpegViewer::updateViewport() {
 //    initializeGL();
 //    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-    double sf = pow(2, (double) _zoom / 10);
+    double sf = pow(10, (double) _zoom / 25);
+    if (_imw > 0 && _imh > 0) {
+        // clip sf
+        double sfs = qMin((double) width() / _imw, (double) height() / _imh);
+        if (sf < sfs) {
+            sf = sfs;
+            _zoom = (int) (log10(sf) * 25);   
+            sf = pow(10, (double) _zoom / 25);     
+            emit zoomChanged(_zoom);            
+        }        
+    }
     _w = (int) (width() / sf);
     _h = (int) (height() / sf);    
+    int maxX = qMax(_imw - _w, 0);
+    int maxY = qMax(_imh - _h, 0);
+    if (_maxX != maxX) {
+        _maxX = maxX;
+        emit maxXChanged(_maxX);
+    }
+    if (_maxY != maxY) {
+        _maxY = maxY;
+        emit maxYChanged(_maxY);
+    }    
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
@@ -537,3 +576,7 @@ void ffmpegViewer::updateViewport() {
 }
 
        
+SSpinBox::SSpinBox(QWidget *parent)
+    : QSpinBox(parent)
+{
+}

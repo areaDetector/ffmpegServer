@@ -5,6 +5,8 @@
 #include <QThread>
 #include <QWheelEvent>
 #include <QtDesigner/QDesignerExportWidget>
+#include <QSpinBox>
+
 /* ffmpeg includes */
 extern "C" {
 #include "libavformat/avformat.h"
@@ -20,7 +22,7 @@ class FFThread : public QThread
     Q_OBJECT
 
 public:
-    FFThread (const QString &url, QWidget* parent = 0);
+    FFThread (const QString &url, unsigned char* destFrame, QWidget* parent = 0);
     ~FFThread ();
     void run();    
 
@@ -28,7 +30,7 @@ public slots:
     void stopGracefully() { stopping=1; }
 
 signals:
-    void updateSignal(int imw, int imh, bool firstImage, void *data);
+    void updateSignal(int imw, int imh, bool firstImage);
     
 private:
     char *url;
@@ -65,6 +67,8 @@ public:
     int zoom() const        { return _zoom; }    
     int gx() const          { return _gx; }
     int gy() const          { return _gy; }
+    int maxGx() const       { return _maxGx; }
+    int maxGy() const       { return _maxGy; }                
     int gs() const          { return _gs; }
     QColor gcol() const     { return _gcol; }
     bool grid() const       { return _grid; }
@@ -78,6 +82,8 @@ signals:
     void zoomChanged(int zoom);    
     void gxChanged(int gx);
     void gyChanged(int gy);
+    void maxGxChanged(int maxGx);
+    void maxGyChanged(int maxGy);                
     void gsChanged(int gs);    
 //    void gcolChanged(QColor gcol);
     void gridChanged(bool grid);    
@@ -97,7 +103,7 @@ public slots:
     void setUrl(const QString &url);
     void setReset();    
     void ffInit();
-	void updateImage (int imw, int imh, bool firstImage, void * data);	
+	void updateImage (int imw, int imh, bool firstImage);	
 
 protected:
 	void initializeGL ();
@@ -112,16 +118,27 @@ protected:
     void init(); 
 
 private:       
-    int _x, _y, _maxX, _maxY, _zoom, _gx, _gy, _gs, _w, _h, _imw, _imh;
+    int _x, _y, _maxX, _maxY, _zoom, _gx, _gy, _maxGx, _maxGy, _gs, _w, _h, _imw, _imh;
     bool _grid; 
     QString _url; 
     unsigned char* destFrame;
     QColor _gcol;
     unsigned int tex, qlist;
     int clickx, clicky, oldx, oldy;
-/*    float gspacex, gspacey, gcolRGB, gcolA;*/
     FFThread *ff;  
     bool disableUpdates;    
+    
+};
+
+class SSpinBox : public QSpinBox
+{
+    Q_OBJECT
+
+public:
+    SSpinBox(QWidget *parent = 0);
+
+public slots:
+    void setMaximumSlot(int max) {setMaximum(max);}	
 };
 
 #endif
