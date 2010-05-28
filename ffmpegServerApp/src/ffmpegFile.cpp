@@ -7,8 +7,10 @@
 #include <epicsExport.h>
 #include <iocsh.h>
 
+/* video output */
+#define INT64_C
+#define __STDC_CONSTANT_MACROS
 #include "ffmpegFile.h"
-
 
 static const char *driverName2 = "ffmpegFile";
 #define MAX_ATTRIBUTE_STRING_SIZE 256
@@ -18,7 +20,9 @@ static const char *driverName2 = "ffmpegFile";
  * corresponding enum value in pasynUser->reason */
 static asynParamString_t ffmpegFileParamString[] = {
     {ffmpegFileBitrate,     "FFMPEG_BITRATE"},
-    {ffmpegFileFPS,         "FFMPEG_FPS"}    
+    {ffmpegFileFPS,         "FFMPEG_FPS"},    
+    {ffmpegFileHeight,      "FFMPEG_HEIGHT"},   
+    {ffmpegFileWidth,       "FFMPEG_WIDTH"}           
 };
 #define NUM_FFMPEG_FILE_PARAMS (sizeof(ffmpegFileParamString)/sizeof(ffmpegFileParamString[0]))
 
@@ -28,12 +32,14 @@ static asynParamString_t ffmpegFileParamString[] = {
   *            NDFileModeRead, NDFileModeWrite, NDFileModeAppend, NDFileModeMultiple
   * \param[in] pArray A pointer to an NDArray; this is used to determine the array and attribute properties.
   */
+  
+/**************************************************************/
 asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode, NDArray *pArray)
 {
     static const char *functionName = "openFile";
-    int colorMode = NDColorModeMono;
     int codi;
-    NDAttribute *pAttribute;
+	this->sheight = 0;
+	this->swidth = 0;
 
     /* We don't support reading yet */
     if (openMode & NDFileModeRead) return(asynError);
@@ -41,69 +47,151 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     /* We don't support opening an existing file for appending yet */
     if (openMode & NDFileModeAppend) return(asynError);
 
-   /* Create the file. */
-    if ((this->outFile = fopen(fileName, "wb")) == NULL ) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-        "%s:%s error opening file %s\n",
-        driverName2, functionName, fileName);
-        return(asynError);
+    /* initialize libavcodec, and register all codecs and formats */
+    av_register_all();
+
+    /* auto detect the output format from the name. default is
+       mpeg. */
+    fmt = av_guess_format(NULL, fileName, NULL);
+    if (!fmt) {
+        printf("Could not deduce output format from file extension: using MPEG.\n");
+        fmt = av_guess_format("mpeg", NULL, NULL);
     }
-
-    /* find the video encoder */
-    getIntegerParam(0, ffmpegFileBitrate, &codi);
-    switch (codi) {
-    	case 0: 		    	
-    	default:
-		    codec = avcodec_find_encoder(CODEC_ID_MSMPEG4V2);    	
-	}
-
-    if (!codec) {
-        fprintf(stderr, "codec not found\n");
-        exit(1);
-    }
-
-	/* Setup codec context */
-    c = avcodec_alloc_context();
-
-    /* We do some special treatment based on colorMode */
-    pAttribute = pArray->pAttributeList->find("ColorMode");
-    if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
-
-    if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
-        c->width  = pArray->dims[0].size;
-        c->height = pArray->dims[1].size;
-        outSize = c->width * c->height;
-    } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
-        c->width  = pArray->dims[1].size;
-        c->height = pArray->dims[2].size;
-        outSize = c->width * c->height * 3;        
-    } else {
+    if (!fmt) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: unsupported array structure\n",
+            "%s:%s Could not find suitable output format\n",
             driverName2, functionName);
         return(asynError);
-    }    
+    }
 
-    /* put sample parameters */
-    getIntegerParam(0, ffmpegFileBitrate, &(c->bit_rate));
-    
-    /* frames per second */
-    AVRational avr;
-    avr.num = 1;    
-    getIntegerParam(0, ffmpegFileFPS, &(avr.den));
-    c->time_base= avr;
-/*    c->gop_size = 10; /* emit one intra frame every ten frames */
-/*    c->max_b_frames=1;	*/
-    
-	/* pick a suitable format */
-    c->pix_fmt = codec->pix_fmts[0];
-    
-    /* open it */
-    if (avcodec_open(c, codec) < 0) {
-        fprintf(stderr, "could not open codec\n");
+    /* allocate the output media context */
+    oc = avformat_alloc_context();
+    if (!oc) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s Memory error: Cannot allocate context\n",
+            driverName2, functionName);
         return(asynError);
     }
-    
+    oc->oformat = fmt;
+    snprintf(oc->filename, sizeof(oc->filename), "%s", fileName);
+
+    /* add the audio and video streams using the default format codecs
+       and initialize the codecs */
+    if (fmt->video_codec == CODEC_ID_NONE) {    
+        video_st = NULL;
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s Selected codec cannot write video\n",
+            driverName2, functionName);   
+        return(asynError);
+    } else {
+        video_st = av_new_stream(oc, 0);
+        if (!video_st) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s Could not alloc stream\n",
+                driverName2, functionName);
+            return(asynError);
+        }
+        avcodec_get_context_defaults2(video_st->codec, CODEC_TYPE_VIDEO);
+          
+        /* find the video encoder */
+        getIntegerParam(0, NDFileFormat, &codi);
+        printf("Codi: %d\n", codi);
+        switch (codi) {
+        	case 0:
+                codec = avcodec_find_encoder(fmt->video_codec);        	
+        	    break;
+        	case 1:
+        	    codec = avcodec_find_encoder_by_name("msmpeg4v2");
+        	    break;
+        	case 2:
+        	    codec = avcodec_find_encoder_by_name("mpeg4");	     
+        	    break;  	        	    
+        	default:
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                    "%s:%s Invalid codec selection\n",
+                    driverName2, functionName);   
+            return(asynError);                    	
+	    }
+	    if (!codec) {
+	        printf("Codec cannot be found, trying msmpeg4v2\n");
+	        codec = avcodec_find_encoder_by_name("msmpeg4v2"); 
+	    }   
+	    if (!codec) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s Could not open any codecs\n",
+                driverName2, functionName);   
+            return(asynError);      
+	    }	    
+	    c = video_st->codec;
+        c->codec_id = codec->id;          
+        c->codec_type = CODEC_TYPE_VIDEO;
+
+        /* put sample parameters */
+        getIntegerParam(0, ffmpegFileBitrate, &(c->bit_rate));
+        
+        /* frames per second */
+        AVRational avr;
+        avr.num = 1;    
+        getIntegerParam(0, ffmpegFileFPS, &(avr.den));
+        
+        /* resolution must be a multiple of two */
+        getIntegerParam(0, ffmpegFileWidth, &(c->width));
+        getIntegerParam(0, ffmpegFileHeight, &(c->height));
+        /* time base: this is the fundamental unit of time (in seconds) in terms
+           of which frame timestamps are represented. for fixed-fps content,
+           timebase should be 1/framerate and timestamp increments should be
+           identically 1. */
+        c->time_base = avr;
+        c->gop_size = 12; /* emit one intra frame every twelve frames at most */
+        c->pix_fmt = PIX_FMT_YUV420P;
+        if(codec && codec->pix_fmts){
+            const enum PixelFormat *p= codec->pix_fmts;
+            for(; *p!=-1; p++){
+                if(*p == c->pix_fmt)
+                    break;
+            }
+            if(*p == -1)
+                c->pix_fmt = codec->pix_fmts[0];
+        }        
+
+        // some formats want stream headers to be separate
+        if(oc->oformat->flags & AVFMT_GLOBALHEADER)
+            c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+
+    }
+
+    /* set the output parameters (must be done even if no
+       parameters). */
+    if (av_set_parameters(oc, NULL) < 0) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s Invalid output format parameters\n",
+            driverName2, functionName);            
+        return(asynError);
+    }
+
+    dump_format(oc, 0, fileName, 1);
+
+    /* now that all the parameters are set, we can open the audio and
+       video codecs and allocate the necessary encode buffers */
+
+    /* find the video encoder */
+    codec = avcodec_find_encoder(c->codec_id);
+    if (!codec) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s codec not found\n",
+            driverName2, functionName);
+        return(asynError);
+    }
+
+    /* open the codec */
+    if (avcodec_open(c, codec) < 0) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s could not open codec\n",
+            driverName2, functionName);
+        return(asynError);
+    }
+	outSize = c->width * c->height * 6;   
+
     /* alloc array for output and compression */
     scArray = this->pNDArrayPool->alloc(1, &outSize, NDInt8, 0, NULL);
     outArray = this->pNDArrayPool->alloc(1, &outSize, NDInt8, 0, NULL);    
@@ -111,31 +199,61 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     /* alloc in and scaled pictures */
     inPicture = avcodec_alloc_frame();
     scPicture = avcodec_alloc_frame();
-	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);
+	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);       
+
+    /* open the output file, if needed */
+    if (!(fmt->flags & AVFMT_NOFILE)) {
+        if (url_fopen(&oc->pb, fileName, URL_WRONLY) < 0) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s error opening file %s\n",
+                driverName2, functionName, fileName);
+            return(asynError);
+        }
+    }
+
+    /* write the stream header, if any */
+    if (av_write_header(oc) < 0) 
+        printf("Could not write header for output file #%d (incorrect codec parameters ?)");    
+	needStop = 1;
     
     return(asynSuccess);
 }
+
 
 /** Writes single NDArray to the JPEG file.
   * \param[in] pArray Pointer to the NDArray to be written
   */
 asynStatus ffmpegFile::writeFile(NDArray *pArray)
 {
+
     static const char *functionName = "writeFile";
     int colorMode = NDColorModeMono;
-	int width, height, out_written;
+	int width, height, ret;
 	PixelFormat pix_fmt;
 	NDAttribute *pAttribute = NULL;
+	int Int16;
+
+    if (!needStop) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s: video stream not setup properly\n",
+            driverName2, functionName);
+        return(asynError);
+	}
 	
 	/* only support 8 bit data for now */
     switch (pArray->dataType) {
         case NDInt8:
         case NDUInt8:
+            Int16 = 0;
+            break;
+        case NDInt16:
+        case NDUInt16:       
+            Int16 = 1; 
             break;
         default:
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: only 8-bit data is supported\n",
-            driverName2, functionName);
+                "%s:%s: only 8 or 16-bit data is supported\n",
+                driverName2, functionName);
         return(asynError);
     }	
 	
@@ -146,11 +264,25 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
     if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
         width  = pArray->dims[0].size;
         height = pArray->dims[1].size;
-        pix_fmt = PIX_FMT_GRAY8;
+        if (Int16) {
+            pix_fmt = PIX_FMT_GRAY16;
+        } else {
+            pix_fmt = PIX_FMT_GRAY8;
+        }
+        /* setup the input picture */
+        inPicture->data[0] = (uint8_t*) pArray->pData;
+        inPicture->linesize[0] = width * (Int16 + 1);        
     } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
         width  = pArray->dims[1].size;
         height = pArray->dims[2].size;
-        pix_fmt = PIX_FMT_RGB24;
+        if (Int16) {
+            pix_fmt = PIX_FMT_RGB48;
+        } else {
+            pix_fmt = PIX_FMT_RGB24;
+        }
+        /* setup the input picture */
+        inPicture->data[0] = (uint8_t*) pArray->pData;
+        inPicture->linesize[0] = width * (Int16 + 1) * 3;        
     } else {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
             "%s:%s: unsupported array structure\n",
@@ -167,20 +299,52 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
                                    c->width, c->height, c->pix_fmt,
                                    SWS_BICUBIC, NULL, NULL, NULL);   
     }
-    
-    /* setup the input picture */
-    inPicture->data[0] = (uint8_t*) pArray->pData;
-    inPicture->linesize[0] = c->width;
-    
+
+    video_pts = (double)video_st->pts.val * video_st->time_base.num / video_st->time_base.den;
+            
     /* scale the picture so we can pass it to the encoder */
-    sws_scale(ctx, inPicture->data, inPicture->linesize, 0, height,
-              scPicture->data, scPicture->linesize);    
-   
-    /* encode the frame */
-    out_written = avcodec_encode_video(c, (uint8_t *)outArray->pData, outSize, scPicture);
-    printf("encoding frame (size=%5d)\n", out_written);
-    fwrite(outArray->pData, 1, out_written, this->outFile);    
-    
+    sws_scale(ctx, inPicture->data, inPicture->linesize, 0,
+		 height, scPicture->data, scPicture->linesize);        
+
+    if (oc->oformat->flags & AVFMT_RAWPICTURE) {
+        /* raw video case. The API will change slightly in the near
+            futur for that */
+        AVPacket pkt;
+        av_init_packet(&pkt);
+        printf("How did you manage to get in this mode?\n");
+        pkt.flags |= PKT_FLAG_KEY;
+        pkt.stream_index= video_st->index;
+        pkt.data= (uint8_t *)scPicture;
+        pkt.size= sizeof(AVPicture);
+
+        ret = av_interleaved_write_frame(oc, &pkt);
+    } else {
+        /* encode the image */
+        int out_size = avcodec_encode_video(c, (uint8_t *) outArray->pData, outSize, scPicture);
+        /* if zero size, it means the image was buffered */
+        if (out_size > 0) {
+            AVPacket pkt;
+            av_init_packet(&pkt);
+
+            if (c->coded_frame->pts != AV_NOPTS_VALUE)
+                pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
+            if(c->coded_frame->key_frame)
+                pkt.flags |= PKT_FLAG_KEY;
+            pkt.stream_index= video_st->index;
+            pkt.data= (uint8_t *) outArray->pData;
+            pkt.size= out_size;
+
+            /* write the compressed frame in the media file */
+            ret = av_interleaved_write_frame(oc, &pkt);
+        } else {
+            ret = 0;
+        }
+    }
+    if (ret != 0) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s Error while writing video frame\n",
+            driverName2, functionName);
+    }
     return(asynSuccess);
 }
 
@@ -198,24 +362,41 @@ asynStatus ffmpegFile::readFile(NDArray **pArray)
 /** Closes the JPEG file. */
 asynStatus ffmpegFile::closeFile()
 {
-    //static const char *functionName = "closeFile";
+	if (needStop == 0) {
+	    return asynSuccess;		
+	}
+	needStop = 0;
 
-    /* add sequence end code to have a real mpeg file */
-/*    ((uint8_t *)outArray->pData)[0] = 0x00;
-    ((uint8_t *)outArray->pData)[1] = 0x00;
-    ((uint8_t *)outArray->pData)[2] = 0x01;
-    ((uint8_t *)outArray->pData)[3] = 0xb7;
-    fwrite((uint8_t *)outArray->pData, 1, 4, this->outFile);*/
-    fclose(this->outFile);
+    /* write the trailer, if any.  the trailer must be written
+     * before you close the CodecContexts open when you wrote the
+     * header; otherwise write_trailer may try to use memory that
+     * was freed on av_codec_close() */
+    av_write_trailer(oc);
+
+    /* close each codec */
+    if (video_st) {
+	    avcodec_close(video_st->codec);
+	}
+	
+    /* free the streams */
+    for(int i = 0; i < oc->nb_streams; i++) {
+        av_freep(&oc->streams[i]->codec);
+        av_freep(&oc->streams[i]);
+    }
+
+    if (!(fmt->flags & AVFMT_NOFILE)) {
+        /* close the output file */
+        url_fclose(oc->pb);
+    }
+
+    /* free the stream */
+    av_free(oc);
+        
     scArray->release();
     outArray->release();
 
-/*    avcodec_close(c);
-    av_free(c);
     av_free(inPicture);
-    av_free(scPicture);    */
-    printf("\n");
-
+    av_free(scPicture);  
     return asynSuccess;
 }
 

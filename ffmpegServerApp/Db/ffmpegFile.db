@@ -10,25 +10,29 @@
 # File data format 
 record(mbbo, "$(P)$(R)FileFormat")
 {
-    field(ZRST, "msmpegv2")
+    field(ZRST, "Auto")
     field(ZRVL, "0")
-    field(ONST, "Invalid")
+    field(ONST, "msmpeg4v2")
     field(ONVL, "1")
+    field(TWST, "mpeg4")
+    field(TWVL, "2")    
 }
 
 record(mbbi, "$(P)$(R)FileFormat_RBV")
 {
-    field(ZRST, "msmpegv2")
+    field(ZRST, "Auto")
     field(ZRVL, "0")
-    field(ONST, "Undefined")
+    field(ONST, "MSMPEGV2")
     field(ONVL, "1")
+    field(TWST, "H264")
+    field(TWVL, "2") 
 }
 
 ## FFMPEG Bitrate
 record(ao, "$(P)$(R)BITRATE") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_BITRATE")
-  field(VAL, "200000")
+  field(VAL, "100000")
   field(PINI, "YES")  
 }
 
@@ -52,4 +56,34 @@ record(ai, "$(P)$(R)FPS_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT) 0)FFMPEG_FPS")
+}
+
+## FFMPEG Width
+record(ao, "$(P)$(R)WIDTH") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_WIDTH")
+  field(VAL, "640")
+  field(PINI, "YES")  
+}
+
+## FFMPEG Bitrate from driver
+record(ai, "$(P)$(R)WIDTH_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_WIDTH")
+}
+
+## FFMPEG Width
+record(ao, "$(P)$(R)HEIGHT") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_HEIGHT")
+  field(VAL, "480")
+  field(PINI, "YES")  
+}
+
+## FFMPEG Bitrate from driver
+record(ai, "$(P)$(R)HEIGHT_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_HEIGHT")
 }

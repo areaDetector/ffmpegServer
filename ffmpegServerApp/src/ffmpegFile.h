@@ -7,6 +7,7 @@
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libswscale/swscale.h"
+#include "libavformat/avformat.h"
 }
 
 /** Enums for plugin-specific parameters. */
@@ -14,7 +15,9 @@ typedef enum
 {
     ffmpegFileBitrate           /* (asynInt32, r/w) File bitrate */
         = NDPluginFileLastParam,
-	ffmpegFileFPS,               /* (asynInt32, r/w) Frames per second */        
+	ffmpegFileFPS,               /* (asynInt32, r/w) Frames per second */    
+	ffmpegFileHeight,               /* (asynInt32, r/w) Video Height */  
+	ffmpegFileWidth,               /* (asynInt32, r/w) Video Width */  		    
     ffmpegFileLastParam
 } ffmpegFileParam_t;
 
@@ -45,9 +48,13 @@ private:
     NDArray *scArray;
     NDArray *outArray;
     struct SwsContext *ctx;      
-    int outSize;      
+    int outSize, needStop;      
     int sheight, swidth;
     PixelFormat spix_fmt;
+    AVOutputFormat *fmt;
+    AVFormatContext *oc;
+    AVStream *video_st;
+    double video_pts;   
 };
 
 #endif

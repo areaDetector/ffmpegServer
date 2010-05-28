@@ -48,7 +48,7 @@ release 0
 x 5
 y 680
 w 380
-h 40
+h 110
 lineColor index 14
 fill
 fillColor index 3
@@ -62,13 +62,13 @@ minor 1
 release 0
 x 5
 y 670
-w 51
+w 100
 h 14
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
 value {
-  "  ffmpeg  "
+  "  Video attributes   "
 }
 autoSize
 border
@@ -234,5 +234,117 @@ displayFileName {
   1 "NDPluginBase"
 }
 noScroll
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 95
+y 725
+w 40
+h 20
+controlPv "$(P)$(R)WIDTH_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 50
+y 720
+w 40
+h 30
+controlPv "$(P)$(R)WIDTH"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 10
+y 725
+w 35
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Width"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 150
+y 725
+w 35
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Height"
+}
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 190
+y 720
+w 40
+h 30
+controlPv "$(P)$(R)HEIGHT"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 235
+y 725
+w 40
+h 20
+controlPv "$(P)$(R)HEIGHT_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
 endObjectProperties
 

@@ -21,7 +21,7 @@ USR_CXXFLAGS += -U_GNU_SOURCE
 SRC_DIRS += $(NULLHTTPD)/src
 
 # For some reason the windows build needs stdint.h and inttypes.h
-USR_INCLUDES_WIN32 += -I../winincludes
+USR_INCLUDES_WIN32 += -I$(FFMPEG)/ffmpeg/mingw32/include
 USR_CXXFLAGS_WIN32 += -DWIN32
 USR_CFLAGS_WIN32 += -DWIN32
 

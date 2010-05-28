@@ -275,7 +275,7 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
 	        flushbuffer(sid); 	        
 		}	               
         /* Send a boundary */
-        prints("--BOUNDARY\r\n");
+        prints("\r\n--BOUNDARY\r\n");
         flushbuffer(sid);
 //        printf("Done\n");        
         pArray->release();             
