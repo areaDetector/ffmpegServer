@@ -1,0 +1,363 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 0
+y 0
+w 412
+h 927
+ctlFgColor2 index 0
+topShadowColor index 1
+ctlFgColor1 index 25
+ctlBgColor2 index 14
+title "Device - "
+snapToGrid
+disableScroll
+ctlBgColor1 index 3
+showGrid
+btnFont "arial-bold-r-14.0"
+bgColor index 3
+ctlFont "arial-bold-r-14.0"
+botShadowColor index 11
+font "arial-medium-r-14.0"
+fgColor index 14
+textColor index 14
+endScreenProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 0
+y 0
+w 412
+h 30
+
+
+beginGroup
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 0
+y 2
+w 410
+h 25
+fillColor index 0
+lineColor index 1
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 1
+y 3
+w 410
+h 25
+fillColor index 0
+lineColor index 11
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 1
+y 3
+w 410
+h 24
+numDsps 1
+botShadowColor index 0
+xPosOffset 5
+topShadowColor index 0
+bgColor index 3
+yPosOffset 5
+button3Popup
+displayFileName {
+  0 "generic-tooltip"
+}
+numPvs 4
+invisible
+setPosition {
+  0 "button"
+}
+font "arial-bold-r-14.0"
+fgColor index 14
+buttonLabel "tooltip"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 1
+y 3
+w 411
+h 25
+fontAlign "center"
+value {
+  "example Top"
+}
+bgColor index 48
+font "arial-bold-r-16.0"
+fgColor index 14
+endObjectProperties
+
+endGroup
+
+
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 40
+w 392
+h 847
+
+
+beginGroup
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 40
+w 391
+h 25
+controlPv "LOC\\$(!W)tab=e:0,cam,camMJPG,camFFMPEG"
+orientation "horizontal"
+selectColor index 4
+topShadowColor index 1
+bgColor index 3
+botShadowColor index 11
+font "arial-bold-r-12.0"
+fgColor index 14
+inconsistentColor index 0
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 10
+y 66
+w 392
+h 821
+yPoints {
+  0 887
+  1 887
+  2 66
+}
+numPoints 3
+fillColor index 0
+lineColor index 1
+xPoints {
+  0 10
+  1 402
+  2 402
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 10
+y 66
+w 392
+h 821
+yPoints {
+  0 887
+  1 66
+  2 66
+}
+numPoints 3
+fillColor index 0
+lineColor index 11
+xPoints {
+  0 10
+  1 10
+  2 402
+}
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 11
+y 66
+w 390
+h 820
+sizeOfs 5
+symbols {
+  0 "P=TEST,R=:CAM:,label=cam"
+  1 "P=TEST,R=:MJPG:,label=camMJPG"
+  2 "P=TEST,R=:FFMPEG:,label=camFFMPEG"
+}
+filePv "LOC\\$(!W)tab"
+numDsps 3
+displaySource "menu"
+topShadowColor index 0
+bgColor index 3
+noScroll
+displayFileName {
+  0 "prosilica.edl"
+  1 "ffmpegServer.edl"
+  2 "ffmpegFile.edl"
+}
+botShadowColor index 0
+fgColor index 14
+endObjectProperties
+
+endGroup
+
+
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 0
+y 0
+w 50
+h 30
+
+
+beginGroup
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 0
+y 0
+w 48
+h 29
+fillColor index 0
+lineColor index 1
+lineWidth 2
+endObjectProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 2
+y 2
+w 48
+h 29
+fillColor index 0
+lineColor index 11
+lineWidth 2
+endObjectProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 2
+y 2
+w 47
+h 27
+fill
+fillColor index 48
+lineColor index 49
+lineWidth 3
+endObjectProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 12
+y 6
+w 4
+h 3
+fill
+fillColor index 0
+lineColor index 1
+lineWidth 2
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 0
+w 50
+h 30
+fontAlign "center"
+useDisplayBg
+value {
+  "exampleTop"
+}
+bgColor index 3
+font "arial-bold-r-14.0"
+fgColor index 14
+endObjectProperties
+
+endGroup
+
+
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 312
+y 897
+w 90
+h 20
+label "EXIT"
+topShadowColor index 1
+bgColor index 3
+botShadowColor index 11
+font "arial-medium-r-16.0"
+fgColor index 46
+3d
+endObjectProperties

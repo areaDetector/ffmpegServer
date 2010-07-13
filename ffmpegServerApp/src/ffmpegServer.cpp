@@ -1,3 +1,6 @@
+#define __STDC_CONSTANT_MACROS
+#include <stdint.h>
+
 /* ffmpeg and null-httpd includes */
 extern "C" {
 #include "nullhttpd.h"
