@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# DLS specific
-export http_proxy=wwwcache2.rl.ac.uk:8080
+# DLS specific http proxy
+#export http_proxy=wwwcache2.rl.ac.uk:8080
 
+# Variables telling us where to get things
 HERE="$(dirname "$0")"
 VERSION="ffmpeg-r24103-swscale-r31628"
 SOURCE="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/sources/${VERSION}.tar.bz2"
@@ -50,4 +51,4 @@ done
 mv "${HERE}/vendor/${VERSION}" "${HERE}/vendor/ffmpeg"
 mv ${HERE}/vendor/yasm* "${HERE}/vendor/yasm"
 
-echo "You can now type make to build this"
+echo "You can now type make to build this module"
