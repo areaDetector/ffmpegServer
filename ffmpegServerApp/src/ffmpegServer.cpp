@@ -174,12 +174,12 @@ int config_read()
 static int stopping = 0;
 
 void c_shutdown(void *) {
-	printf("Shutting down http server...");
-	stopping = 1;
-	server_shutdown();
-	sleep(1);
-	printf("OK\n");
-}	
+    printf("Shutting down http server...");
+    stopping = 1;
+    server_shutdown();
+    sleep(1);
+    printf("OK\n");
+}    
 
 /* configure and start the http server */
 void ffmpegServerConfigure(int port) {
@@ -223,9 +223,9 @@ void ffmpegStream::send_snapshot(int sid, int index) {
     time_t now=time((time_t*)0);
     int size, always_on;    
     NDArray* pArray;
-    printf("JPEG requested\n");
+//  printf("JPEG requested\n");
     /* Say we're listening */
-    getIntegerParam(0, ffmpeg_always_on, &always_on);
+    getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
     pthread_mutex_lock( &this->mutex );    
     this->nclients++;    
     pthread_mutex_unlock(&this->mutex);
@@ -272,11 +272,11 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
         prints("Content-Length: %d\r\n\r\n", pArray->dims[0].size);
         flushbuffer(sid);
         /* Send the jpeg */
-		for (int i=0; i<pArray->dims[0].size; i+=512) {
-	        ret = send(conn[sid].socket, ((const char *) pArray->pData) + i, MIN(512,pArray->dims[0].size-i), 0);
-	        if (ret<0) return ret;
-	        flushbuffer(sid); 	        
-		}	               
+        for (int i=0; i<pArray->dims[0].size; i+=512) {
+            ret = send(conn[sid].socket, ((const char *) pArray->pData) + i, MIN(512,pArray->dims[0].size-i), 0);
+            if (ret<0) return ret;
+            flushbuffer(sid);             
+        }                   
         /* Send a boundary */
         prints("\r\n--BOUNDARY\r\n");
         flushbuffer(sid);
@@ -314,7 +314,7 @@ void ffmpegStream::send_stream(int sid) {
     NDArray* pArray;
     time_t now=time((time_t*)0);    
     /* Say we're listening */
-    getIntegerParam(0, ffmpeg_always_on, &always_on);
+    getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
     pthread_mutex_lock( &this->mutex );    
     this->nclients++;    
     pthread_mutex_unlock(&this->mutex);    
@@ -384,12 +384,12 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     pthread_mutex_lock(&this->mutex);    
     clients = this->nclients;
     pthread_mutex_unlock(&this->mutex);  
-    setIntegerParam(0, ffmpeg_clients, clients);
+    setIntegerParam(0, ffmpegServerClients, clients);
     
     /* get the configuration values */
-    getIntegerParam(0, ffmpeg_quality, &quality);
-    getIntegerParam(0, ffmpeg_false_col, &false_col);
-    getIntegerParam(0, ffmpeg_always_on, &always_on);    
+    getIntegerParam(0, ffmpegServerQuality, &quality);
+    getIntegerParam(0, ffmpegServerFalseCol, &false_col);
+    getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);    
 
     /* if no-ones listening and we're not always on then do nothing */
     if (clients == 0 && always_on == 0) {
@@ -559,8 +559,8 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     
     /* lock the output plugin mutex */
     pthread_mutex_lock(&this->mutex);
-	
-	/* Set the quality */    
+    
+    /* Set the quality */    
     picture->quality = 3276 - (int) (quality * 32.76);
     if (picture->quality < 0) picture->quality = 0;
     if (picture->quality > 32767) picture->quality = 32768;    
@@ -590,11 +590,11 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         c->time_base = avr;
         /* open it */
         if (avcodec_open(c, codec) < 0) {
-			c = NULL;
-	        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-    		    "%s:%s: could not open codec\n",
-	            driverName, functionName);				
-	        return;
+            c = NULL;
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s: could not open codec\n",
+                driverName, functionName);                
+            return;
         }
         picture->linesize[0] = c->width;
         picture->linesize[1] = c->width / 2;
@@ -646,13 +646,14 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
  * - wwwPath = path to html files to serve up
  */
 ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCallbacks,
-                           const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory)
+                           const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
+                           int priority, int stackSize)
     /* Invoke the base class constructor */
     : NDPluginDriver(portName, queueSize, blockingCallbacks,
-                   NDArrayPort, NDArrayAddr, 1, ffmpegServerLastParam, maxBuffers, maxMemory,
+                   NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_SERVER_PARAMS, maxBuffers, maxMemory,
                    asynGenericPointerMask,
                    asynGenericPointerMask,
-                   0, 1, 0, 0)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
+                   0, 1, priority, stackSize)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
 {
     char host[64] = "";
     asynStatus status;
@@ -660,19 +661,27 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     this->jpeg = NULL;
     this->processedArray = NULL;
 
+    /* Create some parameters */
+    createParam(ffmpegServerQualityString,  asynParamInt32, &ffmpegServerQuality);
+    createParam(ffmpegServerFalseColString, asynParamInt32, &ffmpegServerFalseCol);
+    createParam(ffmpegServerHttpPortString, asynParamInt32, &ffmpegServerHttpPort);
+    createParam(ffmpegServerHostString,     asynParamOctet, &ffmpegServerHost);
+    createParam(ffmpegServerClientsString,  asynParamInt32, &ffmpegServerClients);
+    createParam(ffmpegServerAlwaysOnString, asynParamInt32, &ffmpegServerAlwaysOn);
+
     /* Try to connect to the NDArray port */
     status = connectToArrayPort();
 
     /* Set the initial values of some parameters */
-    setIntegerParam(0, ffmpeg_http_port, config.server_port);
-    setIntegerParam(0, ffmpeg_clients, 0);    
+    setIntegerParam(0, ffmpegServerHttpPort, config.server_port);
+    setIntegerParam(0, ffmpegServerClients, 0);    
     
     /* Set the plugin type string */    
     setStringParam(NDPluginDriverPluginType, "ffmpegServer");    
 
     /* Set the hostname */
     gethostname(host, 64);
-    setStringParam(ffmpeg_host, host);   
+    setStringParam(ffmpegServerHost, host);   
 
     /* must be called before using avcodec lib */
     avcodec_init();
@@ -698,28 +707,17 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     }
 }
 
-asynStatus ffmpegStream::drvUserCreate(asynUser *pasynUser, const char *drvInfo,
-                                       const char **pptypeName, size_t *psize)
-{
-    asynStatus status;
-    status = this->drvUserCreateParam(pasynUser, drvInfo, pptypeName, psize,
-                                      ffmpegServerParamString,  NUM_FFMPEG_SERVER_PARAMS);
-    /* If not, then call the base class method, see if it is known there */
-    if (status) status = NDPluginDriver::drvUserCreate(pasynUser, drvInfo, pptypeName, psize);
-    return(status);
-}
-
-
 /** Configuration routine.  Called directly, or from the iocsh function in ffmpegStreamRegister, calls ffmpegStream constructor*/
 extern "C" int ffmpegStreamConfigure(const char *portName, int queueSize, int blockingCallbacks,
-                                  const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory)
+                                  const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
+                                  int priority, int stackSize)
 {
     if (nstreams+1 > MAX_FFMPEG_STREAMS) {
         printf("%s:ffmpegStreamConfigure: Can only create %d streams\n",
             driverName, MAX_FFMPEG_STREAMS);
         return(asynError);        
     }
-    streams[nstreams++] = new ffmpegStream(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxBuffers, maxMemory);
+    streams[nstreams++] = new ffmpegStream(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxBuffers, maxMemory, priority, stackSize);
     return(asynSuccess);
 }
 
@@ -731,19 +729,23 @@ static const iocshArg streamArg3 = { "NDArray Port",iocshArgString};
 static const iocshArg streamArg4 = { "NDArray Addr",iocshArgInt};
 static const iocshArg streamArg5 = { "Max Buffers",iocshArgInt};
 static const iocshArg streamArg6 = { "Max memory",iocshArgInt};
+static const iocshArg streamArg7 = { "priority",iocshArgInt};
+static const iocshArg streamArg8 = { "stackSize",iocshArgInt};
 static const iocshArg * const streamArgs[] = {&streamArg0,
                                             &streamArg1,
                                             &streamArg2,
                                             &streamArg3,
                                             &streamArg4,
                                             &streamArg5,
-                                            &streamArg6};                                            
+                                            &streamArg6,
+                                            &streamArg7,                                            
+                                            &streamArg8};                                            
 
-static const iocshFuncDef streamFuncDef = {"ffmpegStreamConfigure",7,streamArgs};
+static const iocshFuncDef streamFuncDef = {"ffmpegStreamConfigure",9,streamArgs};
 
 static void streamCallFunc(const iocshArgBuf *args)
 {
-    ffmpegStreamConfigure(args[0].sval, args[1].ival, args[2].ival, args[3].sval, args[4].ival, args[5].ival, args[6].ival);
+    ffmpegStreamConfigure(args[0].sval, args[1].ival, args[2].ival, args[3].sval, args[4].ival, args[5].ival, args[6].ival, args[7].ival, args[8].ival);
 }
 
 static const iocshArg serverArg0 = { "Http Port",iocshArgInt};

@@ -1,30 +1,13 @@
-/*#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <netcdf.h>
+/* video output */
+#define __STDC_CONSTANT_MACROS
+#include <stdint.h>
+#include "ffmpegFile.h"
 
-#include <epicsStdio.h>*/
 #include <epicsExport.h>
 #include <iocsh.h>
 
-/* video output */
-#define INT64_C
-#define __STDC_CONSTANT_MACROS
-#include "ffmpegFile.h"
-
 static const char *driverName2 = "ffmpegFile";
 #define MAX_ATTRIBUTE_STRING_SIZE 256
-
-/** The command strings are the userParam argument for asyn device support links
- * The asynDrvUser interface in this driver parses these strings and puts the
- * corresponding enum value in pasynUser->reason */
-static asynParamString_t ffmpegFileParamString[] = {
-    {ffmpegFileBitrate,     "FFMPEG_BITRATE"},
-    {ffmpegFileFPS,         "FFMPEG_FPS"},    
-    {ffmpegFileHeight,      "FFMPEG_HEIGHT"},   
-    {ffmpegFileWidth,       "FFMPEG_WIDTH"}           
-};
-#define NUM_FFMPEG_FILE_PARAMS (sizeof(ffmpegFileParamString)/sizeof(ffmpegFileParamString[0]))
 
 /** Opens a JPEG file.
   * \param[in] fileName The name of the file to open.
@@ -207,13 +190,15 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
                 "%s:%s error opening file %s\n",
                 driverName2, functionName, fileName);
+            scArray->release();
+            outArray->release();
             return(asynError);
         }
     }
 
     /* write the stream header, if any */
     if (av_write_header(oc) < 0) 
-        printf("Could not write header for output file #%d (incorrect codec parameters ?)");    
+        printf("Could not write header for output file (incorrect codec parameters ?)");    
 	needStop = 1;
     
     return(asynSuccess);
@@ -326,7 +311,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
             AVPacket pkt;
             av_init_packet(&pkt);
 
-            if (c->coded_frame->pts != AV_NOPTS_VALUE)
+            if (c->coded_frame->pts != (uint) AV_NOPTS_VALUE)
                 pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
             if(c->coded_frame->key_frame)
                 pkt.flags |= PKT_FLAG_KEY;
@@ -379,7 +364,7 @@ asynStatus ffmpegFile::closeFile()
 	}
 	
     /* free the streams */
-    for(int i = 0; i < oc->nb_streams; i++) {
+    for(uint i = 0; i < oc->nb_streams; i++) {
         av_freep(&oc->streams[i]->codec);
         av_freep(&oc->streams[i]);
     }
@@ -399,32 +384,6 @@ asynStatus ffmpegFile::closeFile()
     av_free(scPicture);  
     return asynSuccess;
 }
-
-/* asynDrvUser interface methods */
-/** Sets pasynUser->reason to one of the enum values for the parameters defined for
-  * this class if the drvInfo field matches one the strings defined for it.
-  * If the parameter is not recognized by this class then calls NDPluginDriver::drvUserCreate.
-  * Uses asynPortDriver::drvUserCreateParam.
-  * \param[in] pasynUser pasynUser structure that driver modifies
-  * \param[in] drvInfo String containing information about what driver function is being referenced
-  * \param[out] pptypeName Location in which driver puts a copy of drvInfo.
-  * \param[out] psize Location where driver puts size of param 
-  * \return Returns asynSuccess if a matching string was found, asynError if not found. */
-asynStatus ffmpegFile::drvUserCreate(asynUser *pasynUser,
-                                       const char *drvInfo, 
-                                       const char **pptypeName, size_t *psize)
-{
-    asynStatus status;
-    //const char *functionName = "drvUserCreate";
-    
-    status = this->drvUserCreateParam(pasynUser, drvInfo, pptypeName, psize, 
-                                      ffmpegFileParamString,  NUM_FFMPEG_FILE_PARAMS);
-
-    /* If not, then call the base class method, see if it is known there */
-    if (status) status = NDPluginFile::drvUserCreate(pasynUser, drvInfo, pptypeName, psize);
-    return(status);
-}
-
 
 /** Constructor for ffmpegFile; all parameters are simply passed to NDPluginFile::NDPluginFile.
   * \param[in] portName The name of the asyn port driver to be created.
@@ -447,11 +406,16 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
      * This driver can block (because writing a file can be slow), and it is not multi-device.  
      * Set autoconnect to 1.  priority and stacksize can be 0, which will use defaults. */
     : NDPluginFile(portName, queueSize, blockingCallbacks,
-                   NDArrayPort, NDArrayAddr, 1, ffmpegFileLastParam,
+                   NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_FILE_PARAMS,
                    2, -1, asynGenericPointerMask, asynGenericPointerMask, 
                    ASYN_CANBLOCK, 1, priority, stackSize)
 {
     //const char *functionName = "ffmpegFile";
+
+    createParam(ffmpegFileBitrateString,  asynParamInt32, &ffmpegFileBitrate);
+    createParam(ffmpegFileFPSString,      asynParamInt32, &ffmpegFileFPS);
+    createParam(ffmpegFileHeightString,   asynParamInt32, &ffmpegFileHeight);
+    createParam(ffmpegFileWidthString,    asynParamInt32, &ffmpegFileWidth);
 
     /* Set the plugin type string */    
     setStringParam(NDPluginDriverPluginType, "ffmpegFile");

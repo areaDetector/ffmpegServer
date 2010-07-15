@@ -3,24 +3,17 @@
 
 #include "NDPluginFile.h"
 
-/* ffmpeg and null-httpd includes */
+/* ffmpeg includes */
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libswscale/swscale.h"
 #include "libavformat/avformat.h"
 }
 
-/** Enums for plugin-specific parameters. */
-typedef enum
-{
-    ffmpegFileBitrate           /* (asynInt32, r/w) File bitrate */
-        = NDPluginFileLastParam,
-	ffmpegFileFPS,               /* (asynInt32, r/w) Frames per second */    
-	ffmpegFileHeight,               /* (asynInt32, r/w) Video Height */  
-	ffmpegFileWidth,               /* (asynInt32, r/w) Video Width */  		    
-    ffmpegFileLastParam
-} ffmpegFileParam_t;
-
+#define ffmpegFileBitrateString "FFMPEG_BITRATE"  /* (asynInt32, r/w) File bitrate */
+#define ffmpegFileFPSString     "FFMPEG_FPS"      /* (asynInt32, r/w) Frames per second */
+#define ffmpegFileHeightString  "FFMPEG_HEIGHT"   /* (asynInt32, r/w) Video Height */
+#define ffmpegFileWidthString   "FFMPEG_WIDTH"    /* (asynInt32, r/w) Video Width */
 
 /** Writes NDArrays to a ffmpeg file. This can be one of many video formats
   */
@@ -29,15 +22,19 @@ public:
     ffmpegFile(const char *portName, int queueSize, int blockingCallbacks,
                const char *NDArrayPort, int NDArrayAddr,
                int priority, int stackSize);
-
-    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
-                                        const char **pptypeName, size_t *psize);
-
     /* The methods that this class implements */
     virtual asynStatus openFile(const char *fileName, NDFileOpenMode_t openMode, NDArray *pArray);
     virtual asynStatus readFile(NDArray **pArray);
     virtual asynStatus writeFile(NDArray *pArray);
     virtual asynStatus closeFile();
+
+protected:
+    int ffmpegFileBitrate;
+    #define FIRST_FFMPEG_FILE_PARAM ffmpegFileBitrate
+    int ffmpegFileFPS;
+    int ffmpegFileHeight;
+    int ffmpegFileWidth;
+    #define LAST_FFMPEG_FILE_PARAM ffmpegFileWidth
 
 private:
     FILE *outFile;
@@ -56,5 +53,6 @@ private:
     AVStream *video_st;
     double video_pts;   
 };
+#define NUM_FFMPEG_FILE_PARAMS (&LAST_FFMPEG_FILE_PARAM - &FIRST_FFMPEG_FILE_PARAM + 1)   
 
 #endif

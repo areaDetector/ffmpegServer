@@ -9,29 +9,12 @@
 /** maximum number of streams that the http server will host, fairly arbitrary */
 #define MAX_FFMPEG_STREAMS 64
 
-/** Enums for plugin-specific parameters. */
-typedef enum {
-    ffmpeg_quality      /** JPEG quality (int32 read/write) */ = NDPluginDriverLastParam,
-    ffmpeg_false_col    /** False Colour toggle (int32 (enum) read/write)*/,
-    ffmpeg_http_port    /** Http port (int32 read)*/,
-    ffmpeg_host         /** Host string (string read)*/,    
-    ffmpeg_clients      /** Number of connected clients (int32 read)*/,
-    ffmpeg_always_on    /** Always produce jpeg, even when no-one is listening (int32 read)*/,
-    ffmpegServerLastParam
-} ffmpegServerParam_t;
-
-/** The command strings are the userParam argument for asyn device support links
- * The asynDrvUser interface in this driver parses these strings and puts the
- * corresponding enum value in pasynUser->reason */
-static asynParamString_t ffmpegServerParamString[] = {
-    {ffmpeg_quality,     "FFMPEG_QUALITY"     },
-    {ffmpeg_false_col,   "FFMPEG_FALSE_COL"   },
-    {ffmpeg_http_port,   "FFMPEG_HTTP_PORT"   },
-    {ffmpeg_host,        "FFMPEG_HOST"        },    
-    {ffmpeg_clients,     "FFMPEG_CLIENTS"     },    
-    {ffmpeg_always_on,   "FFMPEG_ALWAYS_ON"   }            
-};
-#define NUM_FFMPEG_SERVER_PARAMS (sizeof(ffmpegServerParamString)/sizeof(ffmpegServerParamString[0]))
+#define ffmpegServerQualityString  "FFMPEG_QUALITY"   /* JPEG quality (int32 read/write) */
+#define ffmpegServerFalseColString "FFMPEG_FALSE_COL" /* False Colour toggle (int32 (enum) read/write)*/
+#define ffmpegServerHttpPortString "FFMPEG_HTTP_PORT" /* Http port (int32 read)*/
+#define ffmpegServerHostString     "FFMPEG_HOST"      /* Host string (string read)*/
+#define ffmpegServerClientsString  "FFMPEG_CLIENTS"   /* Number of connected clients (int32 read)*/
+#define ffmpegServerAlwaysOnString "FFMPEG_ALWAYS_ON" /* Always produce jpeg, even when no-one is listening (int32 read)*/
 
 /** Take an array source and compress it and serve it as an mjpeg stream.
   * Can also do false colour and grid
@@ -39,7 +22,26 @@ static asynParamString_t ffmpegServerParamString[] = {
 class ffmpegStream : public NDPluginDriver {
 public:
     ffmpegStream(const char *portName, int queueSize, int blockingCallbacks, 
-                 const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory);
+                 const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
+                 int priority, int stackSize);                
+    /* These methods override those in the base class */
+    void processCallbacks(NDArray *pArray);
+    /* These are used by the http server to access the data in this class */
+    int send_frame(int sid, NDArray *pArray);
+    void send_stream(int sid);
+    void send_snapshot(int sid, int index);   
+
+protected:
+    int ffmpegServerQuality;
+    #define FIRST_FFMPEG_SERVER_PARAM ffmpegServerQuality
+    int ffmpegServerFalseCol;
+    int ffmpegServerHttpPort;
+    int ffmpegServerHost;
+    int ffmpegServerClients;
+    int ffmpegServerAlwaysOn;
+    #define LAST_FFMPEG_SERVER_PARAM ffmpegServerAlwaysOn
+                                
+private:
     NDArray *processedArray;    
     NDArray *neutral;   
     NDArray *jpeg;
@@ -53,19 +55,12 @@ public:
     pthread_cond_t *cond;
     pthread_mutex_t mutex;    
 
-	int send_frame(int sid, NDArray *pArray);
-	void send_stream(int sid);
-	void send_snapshot(int sid, int index);
-	NDArray* get_jpeg();
-	NDArray* wait_for_jpeg(int sid);	
-	void allocProcessedArray(int size);
-                 
-    /* These methods override those in the base class */
-    void processCallbacks(NDArray *pArray);
-    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
-                             const char **pptypeName, size_t *psize);                             
+    NDArray* get_jpeg();
+    NDArray* wait_for_jpeg(int sid);    
+    void allocProcessedArray(int size);
 };
-
+#define NUM_FFMPEG_SERVER_PARAMS (&LAST_FFMPEG_SERVER_PARAM - &FIRST_FFMPEG_SERVER_PARAM + 1)                             
+                             
 /* These are global to the http server */
 static ffmpegStream **streams;
 static int nstreams;

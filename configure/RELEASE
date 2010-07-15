@@ -16,8 +16,8 @@ WORK=/dls_sw/work/R3.14.11/support
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-ASYN=$(SUPPORT)/asyn/4-12dls1
-AREA_DETECTOR=$(SUPPORT)/areaDetector/1-5dls1
+ASYN=$(SUPPORT)/asyn/4-13-1
+AREA_DETECTOR=$(WORK)/areaDetector
 NULLHTTPD=$(SUPPORT)/nullhttpd/0-5-1dls1
 
 # EPICS_BASE usually appears last so other apps can override stuff:
