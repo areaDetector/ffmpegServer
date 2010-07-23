@@ -446,6 +446,11 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     }
     size = width * height;
 
+    /* This function is called with the lock taken, and it must be set when we exit.
+     * The following code can be exected without the mutex because we are not accessing memory
+     * that other threads can access. */
+    this->unlock();
+
 /* from http://www.fourcc.org/fccyvrgb.php
  * Ey = 0.299R+0.587G+0.114B
  * Ecb = 0.564(B - Ey) = -0.169R-0.331G+0.500B
@@ -631,6 +636,9 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         pthread_cond_signal(&(this->cond[i]));
     }
     pthread_mutex_unlock(&this->mutex);
+
+    /* We must enter the loop and exit with the mutex locked */
+    this->lock();
 
     /* Update the parameters.  */
     callParamCallbacks(0, 0);

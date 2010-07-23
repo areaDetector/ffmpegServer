@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 809
-y 104
+x 454
+y 133
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -459,7 +459,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Qt Viewer Stream (fast)"
 numCmds 1
 command {
-  0 "ffmpegViewer `caget -t $(P)$(R)HOST_RBV $(P)$(R)HTTP_PORT_RBV $(P)$(R)PortName_RBV | sed 'N;N;s| *\\n|\\n|g;s|\\n|:|;s|\\n|/|;s/ *$/.mjpg/;s|^|http://|'`"
+  0 "/dls_sw/work/R3.14.11/support/ffmpegViewer/ffmpegViewer/ffmpegViewer `caget -t $(P)$(R)HOST_RBV $(P)$(R)HTTP_PORT_RBV $(P)$(R)PortName_RBV | sed 'N;N;s| *\\n|\\n|g;s|\\n|:|;s|\\n|/|;s/ *$/.mjpg/;s|^|http://|'`"
 }
 endObjectProperties
 
