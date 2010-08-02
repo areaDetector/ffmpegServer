@@ -41,7 +41,9 @@ static const char *driverName = "ffmpegServer";
 
 /* This is called whenever a client requests a stream */
 void dorequest(int sid) {
-    char *token;
+    char *portName;
+    int len;
+    char *ext;
     
     if (read_header(sid)<0) {
         closeconnect(sid, 1);
@@ -53,22 +55,28 @@ void dorequest(int sid) {
             sizeof(conn[sid].dat->out_ContentType)-1, "text/html");
 
     /* check if we are asking for a jpg or an mjpg file */
-    token = strtok(conn[sid].dat->in_RequestURI+1, ".");
+    ext = strrchr(conn[sid].dat->in_RequestURI+1, '.');
 
-    if (token != NULL) {
+    if (ext != NULL) {
+        len = ext - conn[sid].dat->in_RequestURI - 1;
+        portName = (char *)calloc(sizeof(char), 256);
+        strncpy(portName, conn[sid].dat->in_RequestURI+1, len);
+        ext++;
         for (int i=0; i<nstreams; i++) {
-            if (strcmp(token, streams[i]->portName) == 0) {
-                token = strtok(NULL, ".");
-                if (strcmp(token, "index") == 0) {
+            if (strcmp(portName, streams[i]->portName) == 0) {
+                if (strcmp(ext, "index") == 0) {
                     streams[i]->send_snapshot(sid, 1);
+                    free(portName);
                     return;
                 }                
-                if (strcmp(token, "jpg") == 0 || strcmp(token, "jpeg") == 0) {
+                if (strcmp(ext, "jpg") == 0 || strcmp(ext, "jpeg") == 0) {
                     streams[i]->send_snapshot(sid, 0);
+                    free(portName);
                     return;
                 }
-                if (strcmp(token, "mjpg") == 0 || strcmp(token, "mjpeg") == 0) {                    
+                if (strcmp(ext, "mjpg") == 0 || strcmp(ext, "mjpeg") == 0) {                    
                     streams[i]->send_stream(sid);
+                    free(portName);
                     return;
                 }
 
@@ -152,7 +160,7 @@ p { \n\
  </BODY> \n\
 </HTML> \n\
 ");
-    flushbuffer(sid);    
+    flushbuffer(sid);   
 }
 
 /* this dummy function is here to satisfy nullhttpd */
