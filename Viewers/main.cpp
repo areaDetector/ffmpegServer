@@ -2,6 +2,7 @@
 #include <QPushButton>
 #include <QGroupBox>
 #include <QLabel>
+#include <QComboBox>
 #include <QGridLayout>
 #include "ffmpegViewer.h"
 
@@ -74,7 +75,16 @@ int main(int argc, char *argv[])
     setSliderRange(x, X);
     controlsSlider(icontrolsLayout, y, Y, "Y Offset", 3, 100);
     setSliderRange(y, Y);
-    
+    QLabel falseColLbl("False Colour Map");
+    falseColLbl.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    icontrolsLayout.addWidget(&falseColLbl, 4, 0);
+    QComboBox falseColBtn;
+    icontrolsLayout.addWidget(&falseColBtn, 4, 1);
+    falseColBtn.addItem("None");
+    falseColBtn.addItem("Rainbow");
+    falseColBtn.addItem("Iron");        
+    view.connect(&falseColBtn, SIGNAL(currentIndexChanged(int)), SLOT(setFcol(int))); \
+        
     /* Grid controls box */
     QGroupBox gcontrols(QString("Grid"));
     topLayout.addWidget(&gcontrols, 1, 2);

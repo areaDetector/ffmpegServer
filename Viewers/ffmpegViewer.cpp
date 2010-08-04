@@ -2,6 +2,7 @@
 #include <QMutex>
 #include "ffmpegViewer.h"
 #include <QColorDialog>
+#include "colorMaps.h"
 
 /* set this when the ffmpeg lib is initialised */
 static int ffinit=0;
@@ -13,9 +14,9 @@ static QMutex *ffmutex;
  * each new frame is available
  */
 FFThread::FFThread (const QString &url, unsigned char * destFrame, QWidget* parent)
-	: QThread (parent)
+    : QThread (parent)
 {
-	/* setup frame */
+    /* setup frame */
     // this is the url to read the stream from
     ba = url.toAscii();
     this->url = ba.data();
@@ -34,7 +35,8 @@ FFThread::FFThread (const QString &url, unsigned char * destFrame, QWidget* pare
     // Allocate video frame for decoding into
     this->pFrame=avcodec_alloc_frame();
     this->pFrameRGB=avcodec_alloc_frame();  
-    this->destFrame = destFrame;    
+    this->destFrame = destFrame; 
+    this->_fcol = 0;   
 }
 
 // destroy widget
@@ -90,7 +92,7 @@ void FFThread::run()
         return; // Could not open codec
     }
     ffmutex->unlock();
-		
+        
     while ((stopping!=1) && (av_read_frame(pFormatCtx, &packet)>=0)) {        
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
@@ -113,9 +115,32 @@ void FFThread::run()
                     avpicture_fill((AVPicture *) pFrameRGB, this->destFrame, PIX_FMT_RGB24,
                                    width, height);                
                 }
-                // Do the software conversion to RGB / GRAY8
-                sws_scale(ctx, pFrame->data, pFrame->linesize, 0, height, 
-                          pFrameRGB->data, pFrameRGB->linesize);
+                if (this->_fcol) {
+                    // Assume we have a YUV input,
+                    // Throw away U and V, and use Y to generate RGB using
+                    // colourmap
+                    const unsigned char * colorMap;
+                    switch(this->_fcol) {
+                        case 1:
+                            colorMap = RainbowColorRGB;
+                            break;
+                        case 2:
+                            colorMap = IronColorRGB;
+                            break;
+                        default:
+                            colorMap = RainbowColorRGB;
+                            break;
+                    }                            
+                    for (int h=0; h<height; h++) {
+                        for (int w=0; w<width; w++) {
+                            memcpy(this->destFrame + 3*(h*width + w), colorMap + 3 * *(((unsigned char *)pFrame->data[0])+(pFrame->linesize[0]*h) + w), 3);
+                        }
+                    }
+                } else {
+                    // Do the software conversion to RGB / GRAY8
+                    sws_scale(ctx, pFrame->data, pFrame->linesize, 0, height, 
+                              pFrameRGB->data, pFrameRGB->linesize);
+                }                              
                 // Tell the GL widget that the picture is ready
                 emit updateSignal(width, height, firstImage);             
                 if (firstImage) firstImage = false;
@@ -147,18 +172,18 @@ void FFThread::run()
 }
 
 ffmpegViewer::ffmpegViewer (const QString &url, QWidget* parent)
-	: QGLWidget (parent)
+    : QGLWidget (parent)
 {
-	printf("Creating ffmpegViewer with url\n");
+    printf("Creating ffmpegViewer with url\n");
     init();
     setUrl(url);
     ffInit();
 }
 
 ffmpegViewer::ffmpegViewer (QWidget* parent)
-	: QGLWidget (parent)
+    : QGLWidget (parent)
 {
-	printf("Creating ffmpegViewer\n");
+    printf("Creating ffmpegViewer\n");
     init();
 }
 
@@ -184,7 +209,7 @@ void ffmpegViewer::init() {
     _url = QString("");  
     ff = NULL;
     tex = 0;
-	this->destFrame = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));      
+    this->destFrame = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));      
 }    
 
 
@@ -201,10 +226,10 @@ void ffmpegViewer::ffInit() {
     
     /* create the ffmpeg thread */
     ff = new FFThread(_url, this->destFrame, this);    
-	QObject::connect( ff, SIGNAL(updateSignal(int, int, bool)), 
-	                  this, SLOT(updateImage(int, int, bool)) );
-	QObject::connect( this, SIGNAL(aboutToQuit()),
-                      ff, SLOT(stopGracefully()) ); 	                  
+    QObject::connect( ff, SIGNAL(updateSignal(int, int, bool)), 
+                      this, SLOT(updateImage(int, int, bool)) );
+    QObject::connect( this, SIGNAL(aboutToQuit()),
+                      ff, SLOT(stopGracefully()) );                       
                       
     // allow GL updates, and start the image thread
     disableUpdates = false;                              
@@ -212,7 +237,7 @@ void ffmpegViewer::ffInit() {
 }
 
 void ffmpegViewer::ffQuit() {
-	printf("ffQuit\n");
+    printf("ffQuit\n");
     // Tell the ff thread to stop
     if (ff==NULL) return;
     emit aboutToQuit();
@@ -228,7 +253,7 @@ void ffmpegViewer::ffQuit() {
 
 // destroy widget
 ffmpegViewer::~ffmpegViewer() {
-	printf("Destroying ffmpegViewer\n");
+    printf("Destroying ffmpegViewer\n");
     ffQuit();
     free(destFrame);            
 }
@@ -348,12 +373,12 @@ void ffmpegViewer::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth (1.0f);
     glClear (GL_COLOR_BUFFER_BIT);
-	// enable blending
+    // enable blending
     glEnable (GL_BLEND); 
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if (tex) {
-	    glDeleteTextures(1, &tex);		
-	}
+        glDeleteTextures(1, &tex);        
+    }
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     // select replace to just draw the texture
@@ -466,7 +491,7 @@ void ffmpegViewer::paintGL() {
         }
         glEnd();
     }
-    glFlush ();	
+    glFlush ();    
 }
 
 // update grid centre
@@ -517,15 +542,15 @@ void ffmpegViewer::wheelEvent(QWheelEvent * event) {
     // disable automatic updates
     disableUpdates = true;   
     if (event->delta() > 0) {
-	    this->setZoom(this->zoom() + 1);
-	} else {
-		this->setZoom(this->zoom() - 1);
-	}
+        this->setZoom(this->zoom() + 1);
+    } else {
+        this->setZoom(this->zoom() - 1);
+    }
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth (1.0f);
     glClear (GL_COLOR_BUFFER_BIT);
 initializeGL();
-    updateViewport();	
+    updateViewport();    
     setX(_x + (int) (0.5 + ((float) (oldw - _w)*event->x()) / width()));
     setY(_y + (int) (0.5 + ((float) (oldh - _h)*event->y()) / height())); 
     updateViewport();    

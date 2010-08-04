@@ -28,7 +28,8 @@ public:
 
 public slots:
     void stopGracefully() { stopping=1; }
-
+    void setFcol(int x) { _fcol = x; }
+    
 signals:
     void updateSignal(int imw, int imh, bool firstImage);
     
@@ -40,6 +41,7 @@ private:
     AVFrame             *pFrameRGB;         
     uint8_t             *buffer;    
     unsigned char* destFrame;
+    int _fcol;
 };
 
 class QDESIGNER_WIDGET_EXPORT ffmpegViewer : public QGLWidget
@@ -104,6 +106,7 @@ public slots:
     void setReset();    
     void ffInit();
 	void updateImage (int imw, int imh, bool firstImage);	
+    void setFcol(int x) { this->ff->setFcol(x); }	
 
 protected:
 	void initializeGL ();
