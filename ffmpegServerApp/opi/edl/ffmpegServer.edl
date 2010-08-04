@@ -63,7 +63,7 @@ release 0
 x 5
 y 400
 w 380
-h 110
+h 105
 lineColor index 14
 fill
 fillColor index 3
@@ -116,7 +116,7 @@ major 4
 minor 0
 release 0
 x 95
-y 455
+y 480
 w 90
 h 20
 fgColor index 25
@@ -135,8 +135,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 290
-y 480
+x 195
+y 455
 w 90
 h 20
 controlPv "$(P)$(R)QUALITY_RBV"
@@ -154,9 +154,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 200
-y 480
-w 85
+x 95
+y 455
+w 90
 h 20
 controlPv "$(P)$(R)QUALITY"
 fgColor index 25
@@ -249,7 +249,7 @@ major 4
 minor 1
 release 0
 x 10
-y 455
+y 480
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -261,53 +261,14 @@ value {
 }
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 290
-y 455
-w 90
-h 20
-fgColor index 25
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(P)$(R)FALSE_COL"
-indicatorPv "$(P)$(R)FALSE_COL_RBV"
-font "arial-bold-r-12.0"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
 release 0
-x 205
+x 10
 y 455
-w 80
-h 20
-font "arial-bold-r-12.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "False Colour"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 110
-y 480
 w 85
 h 25
 font "arial-bold-r-12.0"

@@ -11,7 +11,7 @@ CONFORM_CXXFLAGS_STRICT =
 LIBRARY_IOC += ffmpegServer
 
 DBD += ffmpegServer.dbd
-INC += ffmpegServer.h
+#INC += ffmpegServer.h
 
 # ffmpeg must be built to c99 standard
 USR_CFLAGS += -std=c99
@@ -27,7 +27,9 @@ USR_CXXFLAGS_WIN32 += -DWIN32
 USR_CFLAGS_WIN32 += -DWIN32
 
 # The following are compiled and added to the support library
-ffmpegServer_SRCS += ffmpegServer.cpp cgi.c files.c format.c http.c server.c win32.c ffmpegFile.cpp
+ffmpegServer_SRCS += ffmpegCommon.cpp
+ffmpegServer_SRCS += ffmpegServer.cpp cgi.c files.c format.c http.c server.c win32.c 
+ffmpegServer_SRCS += ffmpegFile.cpp
 ffmpegServer_LIBS += avdevice avformat avcodec avutil swscale
 
 include $(TOP)/configure/RULES

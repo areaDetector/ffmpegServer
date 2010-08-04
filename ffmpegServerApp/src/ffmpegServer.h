@@ -42,14 +42,15 @@ protected:
     #define LAST_FFMPEG_SERVER_PARAM ffmpegServerAlwaysOn
                                 
 private:
-    NDArray *processedArray;    
-    NDArray *neutral;   
+    NDArray *scArray;    
     NDArray *jpeg;
     int nclients;
          
     AVCodec *codec;
     AVCodecContext *c;
-    AVFrame *picture;    
+    AVFrame *inPicture;
+    AVFrame *scPicture;            
+    struct SwsContext *ctx;      
     
     /* signal fresh frames */
     pthread_cond_t *cond;
@@ -57,7 +58,7 @@ private:
 
     NDArray* get_jpeg();
     NDArray* wait_for_jpeg(int sid);    
-    void allocProcessedArray(int size);
+    void allocScArray(int size);
 };
 #define NUM_FFMPEG_SERVER_PARAMS (&LAST_FFMPEG_SERVER_PARAM - &FIRST_FFMPEG_SERVER_PARAM + 1)                             
                              

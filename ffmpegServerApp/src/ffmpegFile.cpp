@@ -1,6 +1,5 @@
 /* video output */
-#define __STDC_CONSTANT_MACROS
-#include <stdint.h>
+#include "ffmpegCommon.h"
 #include "ffmpegFile.h"
 
 #include <epicsExport.h>
@@ -9,7 +8,7 @@
 static const char *driverName2 = "ffmpegFile";
 #define MAX_ATTRIBUTE_STRING_SIZE 256
 
-/** Opens a JPEG file.
+/** Opens an FFMPEG file.
   * \param[in] fileName The name of the file to open.
   * \param[in] openMode Mask defining how the file should be opened; bits are 
   *            NDFileModeRead, NDFileModeWrite, NDFileModeAppend, NDFileModeMultiple
@@ -30,9 +29,6 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     /* We don't support opening an existing file for appending yet */
     if (openMode & NDFileModeAppend) return(asynError);
 
-    /* initialize libavcodec, and register all codecs and formats */
-    av_register_all();
-
     /* auto detect the output format from the name. default is
        mpeg. */
     fmt = av_guess_format(NULL, fileName, NULL);
@@ -42,8 +38,8 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     }
     if (!fmt) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s Could not find suitable output format\n",
-            driverName2, functionName);
+            "%s:%s Could not find suitable output format for '%s'\n",
+            driverName2, functionName, fileName);
         return(asynError);
     }
 
@@ -78,7 +74,6 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
           
         /* find the video encoder */
         getIntegerParam(0, NDFileFormat, &codi);
-        printf("Codi: %d\n", codi);
         switch (codi) {
         	case 0:
                 codec = avcodec_find_encoder(fmt->video_codec);        	
@@ -212,11 +207,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
 {
 
     static const char *functionName = "writeFile";
-    int colorMode = NDColorModeMono;
-	int width, height, ret;
-	PixelFormat pix_fmt;
-	NDAttribute *pAttribute = NULL;
-	int Int16;
+	int ret;
 
     if (!needStop) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
@@ -225,72 +216,16 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
         return(asynError);
 	}
 	
-	/* only support 8 bit data for now */
-    switch (pArray->dataType) {
-        case NDInt8:
-        case NDUInt8:
-            Int16 = 0;
-            break;
-        case NDInt16:
-        case NDUInt16:       
-            Int16 = 1; 
-            break;
-        default:
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                "%s:%s: only 8 or 16-bit data is supported\n",
-                driverName2, functionName);
+	if (formatArray(pArray, this->pasynUserSelf, this->inPicture,
+		&(this->ctx), this->c, this->scPicture) != asynSuccess) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s: Could not format array for correct pix_fmt for codec\n",
+            driverName2, functionName);		
         return(asynError);
     }	
 	
-    /* We do some special treatment based on colorMode */
-    pAttribute = pArray->pAttributeList->find("ColorMode");
-    if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
-
-    if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
-        width  = pArray->dims[0].size;
-        height = pArray->dims[1].size;
-        if (Int16) {
-            pix_fmt = PIX_FMT_GRAY16;
-        } else {
-            pix_fmt = PIX_FMT_GRAY8;
-        }
-        /* setup the input picture */
-        inPicture->data[0] = (uint8_t*) pArray->pData;
-        inPicture->linesize[0] = width * (Int16 + 1);        
-    } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
-        width  = pArray->dims[1].size;
-        height = pArray->dims[2].size;
-        if (Int16) {
-            pix_fmt = PIX_FMT_RGB48;
-        } else {
-            pix_fmt = PIX_FMT_RGB24;
-        }
-        /* setup the input picture */
-        inPicture->data[0] = (uint8_t*) pArray->pData;
-        inPicture->linesize[0] = width * (Int16 + 1) * 3;        
-    } else {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: unsupported array structure\n",
-            driverName2, functionName);
-        return(asynError);
-    }
-
-	/* If things have changed then setup the swscale ctx */    
-	if (height != this->sheight || width != this->swidth || pix_fmt != this->spix_fmt) {
-		this->sheight = height;
-		this->swidth = width;
-		this->spix_fmt = pix_fmt;
-		ctx = sws_getCachedContext(ctx, width, height, pix_fmt,
-                                   c->width, c->height, c->pix_fmt,
-                                   SWS_BICUBIC, NULL, NULL, NULL);   
-    }
-
     video_pts = (double)video_st->pts.val * video_st->time_base.num / video_st->time_base.den;
             
-    /* scale the picture so we can pass it to the encoder */
-    sws_scale(ctx, inPicture->data, inPicture->linesize, 0,
-		 height, scPicture->data, scPicture->linesize);        
-
     if (oc->oformat->flags & AVFMT_RAWPICTURE) {
         /* raw video case. The API will change slightly in the near
             futur for that */
@@ -420,6 +355,10 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
     /* Set the plugin type string */    
     setStringParam(NDPluginDriverPluginType, "ffmpegFile");
     this->supportsMultipleArrays = 1;
+    
+    /* Initialise the ffmpeg library */
+    ffmpegInitialise();
+    
 }
 
 /* Configuration routine.  Called directly, or from the iocsh  */
@@ -429,7 +368,7 @@ extern "C" int ffmpegFileConfigure(const char *portName, int queueSize, int bloc
                                    int priority, int stackSize)
 {
     new ffmpegFile(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr,
-                   priority, stackSize);
+                   priority, stackSize);                   
     return(asynSuccess);
 }
 

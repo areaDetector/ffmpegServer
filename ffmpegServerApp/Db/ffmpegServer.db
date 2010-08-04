@@ -20,7 +20,6 @@ record(ai, "$(P)$(R)QUALITY_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT) 0)FFMPEG_QUALITY")
-  field(PINI, "YES")
 }
 
 ## Toggle False colour mode 

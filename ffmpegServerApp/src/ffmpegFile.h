@@ -2,13 +2,7 @@
 #define ffmpegFile_H
 
 #include "NDPluginFile.h"
-
-/* ffmpeg includes */
-extern "C" {
-#include "libavcodec/avcodec.h"
-#include "libswscale/swscale.h"
-#include "libavformat/avformat.h"
-}
+#include "ffmpegCommon.h"
 
 #define ffmpegFileBitrateString "FFMPEG_BITRATE"  /* (asynInt32, r/w) File bitrate */
 #define ffmpegFileFPSString     "FFMPEG_FPS"      /* (asynInt32, r/w) Frames per second */

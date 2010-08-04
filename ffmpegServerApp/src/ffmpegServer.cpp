@@ -1,15 +1,12 @@
-#define __STDC_CONSTANT_MACROS
-#include <stdint.h>
-
-/* ffmpeg and null-httpd includes */
-extern "C" {
-#include "nullhttpd.h"
-#include "libavcodec/avcodec.h"
-}
-
 /* local includes */
+#include "ffmpegCommon.h"
 #include "ffmpegServer.h"
 #include "conversionTables.h"
+
+/* null-httpd includes */
+extern "C" {
+#include "nullhttpd.h"
+}
 
 /* EPICS includes */
 #include "epicsExport.h"
@@ -348,17 +345,20 @@ void ffmpegStream::send_stream(int sid) {
 } 
 
 /* alloc the processed array */
-void ffmpegStream::allocProcessedArray(int size) {
-    if (this->processedArray) {
-        if (this->processedArray->dims[0].size >= size) {
+void ffmpegStream::allocScArray(int size) {
+    if (this->scArray) {
+        if (this->scArray->dims[0].size >= size) {
             /* the processed array is already big enough */
+			avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);               
             return;
         } else {
             /* need a new one, so discard the old one */
-            this->processedArray->release();
+            this->scArray->release();
         }
     }
-    this->processedArray = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
+    this->scArray = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
+    /* alloc in and scaled pictures */
+	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);   
 }       
     
 
@@ -370,20 +370,12 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* we're going to get these with getIntegerParam */
     int quality, clients, false_col, always_on;
     /* we're going to get these from the dims of the image */
-    int width, height;
-    /* these are just temporary vars */
-    int halfsize, size, x, y, i, i2, j, uoff, voff, twoOff;
-    /* these are for getting the colour mode */
-    int colorMode = NDColorModeMono;
-    NDAttribute *pAttribute = NULL;
-    /* use this if the array is copied */    
-    int useProcessedArray = 0;
-    /* set this if the array is yuv instead of grayscale */
-    int yuv = 0; 
-    /* these are so we can operate on the data char by char */
-    unsigned char *destFrame;
+    int width, height, size;
     /* for printing errors */
     const char *functionName = "processCallbacks";
+    /* for getting the colour mode */
+    int colorMode = NDColorModeMono;
+	NDAttribute *pAttribute = NULL;    
 
     /* Call the base class method */
     NDPluginDriver::processCallbacks(pArray);
@@ -405,186 +397,26 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         return;
     }
 
-    /* check it's the right format */
-    switch (pArray->dataType) {
-        case NDInt8:
-        case NDUInt8:
-            break;
-        default:
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: only 8-bit data is supported\n",
-            driverName, functionName);
-        return;
-    }
-
-    /* We do some special treatment based on colorMode */
-    pAttribute = pArray->pAttributeList->find("ColorMode");
-    if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
-
-    if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
-        /* Mono mode, just use the array as is */
-        width = (int) pArray->dims[0].size;
-        height = (int) pArray->dims[1].size;
-        destFrame = (unsigned char *) pArray->pData;
-        yuv = 0;
-//        printf("Mono\n");                     
-    } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
-        /* RGB pixel interleave */
-        width = (int) pArray->dims[1].size;
-        height = (int) pArray->dims[2].size;
-//        printf("RGB1\n");        
-        yuv = 1;
-    } else if ((pArray->ndims == 3) && (pArray->dims[1].size == 3) && (colorMode == NDColorModeRGB2)) {
-        /* RGB line interleave */
-        width = (int) pArray->dims[0].size;
-        height = (int) pArray->dims[2].size;
-//        printf("RGB2\n");                
-        yuv = 1;
-    } else if ((pArray->ndims == 3) && (pArray->dims[2].size == 3) && (colorMode == NDColorModeRGB3)) {
-        /* RGB plane interleave */
-        width = (int) pArray->dims[0].size;
-        height = (int) pArray->dims[1].size;
-//        printf("RGB3\n");                
-        yuv = 1;
-    } else {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: unsupported array structure\n",
-            driverName, functionName);
-        return;
-    }
-    size = width * height;
-
     /* This function is called with the lock taken, and it must be set when we exit.
      * The following code can be exected without the mutex because we are not accessing memory
      * that other threads can access. */
     this->unlock();
-
-/* from http://www.fourcc.org/fccyvrgb.php
- * Ey = 0.299R+0.587G+0.114B
- * Ecb = 0.564(B - Ey) = -0.169R-0.331G+0.500B
- * Ecr = 0.713(R - Ey) = 0.500R-0.419G-0.081B
- */
-#define RGB2Y(ri,gi,bi,j) destFrame[(j)] = (unsigned char) (\
-    conv_0299[srcFrame[(ri)]] + \
-    conv_0587[srcFrame[(gi)]] + \
-    conv_0114[srcFrame[(bi)]] );
-#define BY2U(bi,bi2,j) destFrame[uoff + (j) / 2] = (unsigned char) (0.282 * \
-  (srcFrame[(bi)] + srcFrame[(bi2)] - destFrame[(j)] - destFrame[(j)+1]) + 128);
-#define RY2V(ri,ri2,j) destFrame[voff + (j) / 2] = (unsigned char) (0.357 * \
-  (srcFrame[(ri)] + srcFrame[(ri2)] - destFrame[(j)] - destFrame[(j)+1]) + 128);
-    
-    /* Convert an rgb frame to yuv */
-    if (yuv) {
-        /* make sure our processed array is big enough */
-        this->allocProcessedArray(2 * size);
-        useProcessedArray = 1;
-        unsigned char *srcFrame = (unsigned char *) pArray->pData;
-        destFrame = (unsigned char *) this->processedArray->pData;
-        uoff = size;
-        voff = uoff * 3 / 2;
-        /* Convert it to a frame that we can do YUV422 conversion on it
-         * Y should be twice the length of U and V
-         * i = index of first red source pixel
-         * i2 = index of second red source pixel
-         */
-        switch (colorMode) {
-            case NDColorModeRGB1:
-                /* RGB pixel interleave */
-                for (j=0;j<size;j+=2) {
-                    i = 3*j;
-                    /* if i is not last pixel in array, use next pixel
-                     * else use i */
-                    i2 = j+1<size?i+3:i;
-                    RGB2Y(i, i+1, i+2, j); // Y0
-                    RGB2Y(i2, i2+1, i2+2, j+1); // Y1
-                    /* Only make U and V if we don't want false colour */
-                    if (false_col==0) {
-                        BY2U(i+2, i2+2, j); // U
-                        RY2V(i, i2, j); // V
-                    }
-                }
-                break;
-            case NDColorModeRGB2:
-                /* RGB line interleave */
-                twoOff = 2*width;
-                for (j=0;j<size;j+=2) {
-                    x = j % width;
-                    y = j / width;
-                    i = y*width*3 + x;
-                    /* if i is not last pixel in line, use next pixel
-                      * elif i is not last pixel in array, use next line
-                      * else use i */                        
-                    i2 = x+1<width?i+1:y+1<height?y+1*width*3:i;
-                    RGB2Y(i, i+width, i+twoOff, j); // Y0
-                    RGB2Y(i2, i2+width, i2+twoOff, j+1); // Y1
-                    /* Only make U and V if we don't want false colour */
-                    if (false_col==0) {
-                        BY2U(i+twoOff, i2+twoOff, j); // U
-                        RY2V(i, i2, j); //V
-                    }
-                }
-                break;                
-            case NDColorModeRGB3:
-                /* RGB plane interleave */
-                twoOff = 2*size;
-                for (j=0;j<size;j+=2) {
-                    i = j;
-                    /* if i is not last pixel in array, use next pixel
-                     * else use i */
-                    i2 = j+1<size?i+1:i;
-                    RGB2Y(i, i+size, i+twoOff, j); // Y0
-                    RGB2Y(i2, i2+size, i2+twoOff, j+1); //Y1
-                    /* Only make U and V if we don't want false colour */
-                    if (false_col==0) {
-                        BY2U(i+twoOff, i2+twoOff, j); // U
-                        RY2V(i, i2, j); // V
-                    }
-                }
-                break;                               
-        }
-    }                
-
-    /* make the image false colour */
-    if (false_col!=0) {
-        if (useProcessedArray==0) {
-            /* make sure our processed array is big enough */
-            this->allocProcessedArray(2 * size);
-            memcpy(this->processedArray->pData, pArray->pData, size);        
-            useProcessedArray = 1;
-        }
-        destFrame = (unsigned char *) this->processedArray->pData;
-        uoff = size;
-        voff = uoff * 3 / 2;
-        yuv = 1;
-        for (i=0;i<size;i+=2) {
-            /* if i is not last pixel in array, use next pixel
-                * else use i */
-            i2 = i+1<size?i+1:i;        
-            /* Take the average of the 2 Y points */
-            j = (destFrame[i] + destFrame[i2]) / 2;
-            destFrame[uoff + i / 2] = false_Cb[j];
-            destFrame[voff + i / 2] = false_Cr[j];
-            /* do the false y pixels */            
-            destFrame[i] = false_Y[destFrame[i]];
-            destFrame[i2] = false_Y[destFrame[i2]];
-        }
-    }
-    
-    /* lock the output plugin mutex */
-    pthread_mutex_lock(&this->mutex);
-    
-    /* Set the quality */    
-    picture->quality = 3276 - (int) (quality * 32.76);
-    if (picture->quality < 0) picture->quality = 0;
-    if (picture->quality > 32767) picture->quality = 32768;    
-    
-    /* Release the last jpeg created */
-    if (this->jpeg) {
-        this->jpeg->release();
+     
+	/* Get the colormode of the array */	
+    pAttribute = pArray->pAttributeList->find("ColorMode");
+    if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
+    if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
+        width  = pArray->dims[0].size;
+        height = pArray->dims[1].size;
+    } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
+        width  = pArray->dims[1].size;
+        height = pArray->dims[2].size;
+    } else {
+    	width  = 0;
+    	height = 0;
     }
 
     /* If width and height have changed then reinitialise the codec */
-    halfsize = size / 2;
     if (c == NULL || width != c->width || height != c->height) {
 //        printf("Setting width %d height %d\n", width, height);
         AVRational avr;
@@ -598,9 +430,18 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         c = avcodec_alloc_context();
         c->width = width;
         c->height = height;
-        c->pix_fmt = PIX_FMT_YUVJ422P;
         c->flags = CODEC_FLAG_QSCALE;
         c->time_base = avr;
+        c->pix_fmt = PIX_FMT_YUVJ420P;
+        if(codec && codec->pix_fmts){
+            const enum PixelFormat *p= codec->pix_fmts;
+            for(; *p!=-1; p++){
+                if(*p == c->pix_fmt)
+                    break;
+            }
+            if(*p == -1)
+                c->pix_fmt = codec->pix_fmts[0];
+        }           
         /* open it */
         if (avcodec_open(c, codec) < 0) {
             c = NULL;
@@ -609,34 +450,39 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
                 driverName, functionName);                
             return;
         }
-        picture->linesize[0] = c->width;
-        picture->linesize[1] = c->width / 2;
-        picture->linesize[2] = c->width / 2;
     }
-    /* setup linesize and data pointers */
-    if (yuv==0) {
-        /* Greyscale, format as YUV422P with U and V neutral colours */
-        picture->data[0] = destFrame;
-        /* need our neutral array */
-        if (this->neutral==NULL || this->neutral->dims[0].size < size / 2) {
-            if (this->neutral) {
-                this->neutral->release();
-            }
-            this->neutral = this->pNDArrayPool->alloc(1, &halfsize, NDInt8, 0, NULL);
-            memset(this->neutral->pData, 128, halfsize);            
-        }        
-        picture->data[1] = (uint8_t*) this->neutral->pData;
-        picture->data[2] = (uint8_t*) this->neutral->pData;
-    } else {
-        /* YUV422P data */
-        picture->data[0] = destFrame;
-        picture->data[1] = destFrame + size;
-        picture->data[2] = destFrame + (3 * halfsize);
-    }    
+    
+    /* make sure our processed array is big enough */
+    this->allocScArray(2 * size);
+
+    /* Set the quality */    
+    scPicture->quality = 3276 - (int) (quality * 32.76);
+    if (scPicture->quality < 0) scPicture->quality = 0;
+    if (scPicture->quality > 32767) scPicture->quality = 32768;    
+    
+	/* format the array */
+	if (formatArray(pArray, this->pasynUserSelf, this->inPicture,
+		&(this->ctx), this->c, this->scPicture) != asynSuccess) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s: Could not format array for correct pix_fmt for codec\n",
+            driverName, functionName);	
+        pthread_mutex_unlock(&this->mutex);
+        /* We must enter the loop and exit with the mutex locked */
+        this->lock();            	
+        return;
+    }	  
+
+    /* lock the output plugin mutex */
+    pthread_mutex_lock(&this->mutex);
+
+    /* Release the last jpeg created */
+    if (this->jpeg) {
+        this->jpeg->release();
+    }
     
     /* Convert it to a jpeg */        
     this->jpeg = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
-    this->jpeg->dims[0].size = avcodec_encode_video(c, (uint8_t*)this->jpeg->pData, c->width * c->height, picture);    
+    this->jpeg->dims[0].size = avcodec_encode_video(c, (uint8_t*)this->jpeg->pData, c->width * c->height, scPicture);    
 //    printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
     
     /* signal fresh_frame to output plugin and unlock mutex */
@@ -673,9 +519,8 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
 {
     char host[64] = "";
     asynStatus status;
-    this->neutral = NULL;
     this->jpeg = NULL;
-    this->processedArray = NULL;
+    this->scArray = NULL;
 
     /* Create some parameters */
     createParam(ffmpegServerQualityString,  asynParamInt32, &ffmpegServerQuality);
@@ -699,11 +544,12 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     gethostname(host, 64);
     setStringParam(ffmpegServerHost, host);   
 
-    /* must be called before using avcodec lib */
-    avcodec_init();
+    /* Initialise the ffmpeg library */
+    ffmpegInitialise();
 
-    /* register all the codecs */
-    avcodec_register_all();
+	/* make the input and output pictures */
+    inPicture = avcodec_alloc_frame();
+    scPicture = avcodec_alloc_frame();
 
     /* Setup correct codec for mjpeg */
     codec = avcodec_find_encoder(CODEC_ID_MJPEG);
@@ -712,9 +558,6 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
         exit(1);
     }
     
-    /* Create an AVFrame to encode into */
-    picture = avcodec_alloc_frame();
-
     /* this mutex and the conditional variable are used to synchronize access to the global picture buffer */
     pthread_mutex_init(&(this->mutex), NULL);
     this->cond = (pthread_cond_t *) calloc(config.server_maxconn, sizeof(pthread_cond_t));
