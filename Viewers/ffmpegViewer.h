@@ -14,8 +14,8 @@ extern "C" {
 #include "libavutil/avutil.h"
 }
 
-#define MAXWIDTH 1024
-#define MAXHEIGHT 768
+#define MAXWIDTH 4000
+#define MAXHEIGHT 3000
 
 class FFThread : public QThread
 {

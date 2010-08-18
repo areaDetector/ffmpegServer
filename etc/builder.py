@@ -20,15 +20,17 @@ class ffmpegServer(_NDPluginBase):
     gda_template = "ffmpegServer"
     template_class = _ffmpegServer
     
-    def __init__(self, QUEUE = 2, HTTP_PORT = 8080, MEMORY = -1, **args):
+    def __init__(self, QUEUE = 2, HTTP_PORT = 8080, MEMORY = -1, Enabled = 1, **args):
         # Init the superclass (_NDPluginBase)
+        args["Enabled"] = Enabled
         self.__super.__init__(**args)
         # Store the args
         self.__dict__.update(locals())
 
     # __init__ arguments
     # NOTE: _NDPluginBase comes 2nd so we overwrite NDARRAY_PORT argInfo
-    ArgInfo = _ffmpegServer.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,
+    ArgInfo = _ffmpegServer.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,    	
+    	Enabled   = Simple('Plugin Enabled at startup?', int),
         QUEUE     = Simple('Input array queue size', int),          
         HTTP_PORT = Simple('HTTP Port number', int),      
         MEMORY  = Simple('Max memory to allocate, should be maxw*maxh*nbuffer '

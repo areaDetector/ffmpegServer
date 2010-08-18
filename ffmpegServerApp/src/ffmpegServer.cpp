@@ -88,7 +88,7 @@ void dorequest(int sid) {
  <style type=\"text/css\"> \n\
 BODY {       \n\
   background-color: #f2f2f6; \n\
-  font-family: arial, verdana, helvetica, sans-serif; \n\
+  font-family: arial, sans-serif; \n\
 } \n\
 H1 { \n\
   font-size: 24px; \n\
@@ -114,9 +114,6 @@ A:active { \n\
 A:hover { \n\
   text-decoration: underline; color:#3b4aff; \n\
 } \n\
-table { \n\
-  border-spacing: 25px; \n\
-} \n\
 td { \n\
   background-color: #e0e0ee; \n\
   border-style: outset; \n\
@@ -135,20 +132,20 @@ p { \n\
  <BODY> \n\
   <CENTER> \n\
    <H1>ffmpegServer Content Listing</H1> \n\
-   <TABLE> \n\
+   <TABLE cellspacing=\"15\"> \n\
     <TR> \n\
 ");    
     /* make a table of streams */
     for (int i=0; i<nstreams; i++) {
-        if (i % 4 == 3) { //4 per row
-            prints("    </TR>\n    <TR>\n");                    
-        }
         prints("<TD>\n");
         prints("<H2>%s</H2>\n", streams[i]->portName);
-        prints("<img src=\"%s.index.jpg\" height=\"192\" title=\"Static JPEG\" alt=\"&lt;No image yet&gt;\"/>\n", streams[i]->portName);        
+        prints("<img src=\"%s.index\" height=\"192\" title=\"Static JPEG\" alt=\"&lt;No image yet&gt;\"/>\n", streams[i]->portName);        
         prints("<p><a href=\"%s.jpg\">Link to Static JPEG</a></p>\n", streams[i]->portName);
         prints("<p><a href=\"%s.mjpg\">Link to MJPEG Stream</a></p>\n", streams[i]->portName);        
         prints("</TD>\n");        
+        if (i % 3 == 2) { //3 per row
+            prints("    </TR>\n    <TR>\n");                    
+        }        
     }
     prints("\n\
     </TR> \n\
@@ -415,6 +412,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     	width  = 0;
     	height = 0;
     }
+    size = width *  height;
 
     /* If width and height have changed then reinitialise the codec */
     if (c == NULL || width != c->width || height != c->height) {
