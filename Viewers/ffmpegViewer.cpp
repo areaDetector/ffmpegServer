@@ -59,7 +59,7 @@ void FFThread::run()
     struct SwsContext   *ctx = NULL;
     bool                firstImage = true; 
 
-    printf("ffThread started on URL %s\n",url);
+//    printf("ffThread started on URL %s\n",url);
             
     // Open video file
     if(av_open_input_file(&pFormatCtx, url, NULL, 0, NULL)!=0)
@@ -167,14 +167,12 @@ void FFThread::run()
     pFormatCtx = NULL;
     
     ffmutex->unlock();        
-    printf("ffThread finished\n");
     
 }
 
 ffmpegViewer::ffmpegViewer (const QString &url, QWidget* parent)
     : QGLWidget (parent)
 {
-    printf("Creating ffmpegViewer with url\n");
     init();
     setUrl(url);
     ffInit();
@@ -183,7 +181,6 @@ ffmpegViewer::ffmpegViewer (const QString &url, QWidget* parent)
 ffmpegViewer::ffmpegViewer (QWidget* parent)
     : QGLWidget (parent)
 {
-    printf("Creating ffmpegViewer\n");
     init();
 }
 
@@ -219,8 +216,6 @@ void ffmpegViewer::ffInit() {
     if (_url=="") return;
     if ((ff!=NULL)&&(ff->isRunning())) ffQuit();
 
-    printf("ffInit\n");
-
     // first make sure we don't update anything too quickly
     disableUpdates = true;    
     
@@ -237,12 +232,10 @@ void ffmpegViewer::ffInit() {
 }
 
 void ffmpegViewer::ffQuit() {
-    printf("ffQuit\n");
     // Tell the ff thread to stop
     if (ff==NULL) return;
     emit aboutToQuit();
     if (!ff->wait(500)) {
-        printf("Kill unresponsive ffThread\n");
         // thread won't stop, kill it
         ff->terminate();
         ff->wait();   
@@ -253,7 +246,6 @@ void ffmpegViewer::ffQuit() {
 
 // destroy widget
 ffmpegViewer::~ffmpegViewer() {
-    printf("Destroying ffmpegViewer\n");
     ffQuit();
     free(destFrame);            
 }
