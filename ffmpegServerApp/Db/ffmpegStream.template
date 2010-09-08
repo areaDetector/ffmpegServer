@@ -2,6 +2,7 @@
 # % macro, R, Device Suffix
 # % macro, PORT, Asyn Port name
 # % macro, QUALITY, Jpeg Quality in percent
+# % macro, gda_name, Name to expose to GDA
 # % gui, $(PORT), edmtab, ffmpegServer.edl, P=$(P),R=$(R)
 
 # \file 

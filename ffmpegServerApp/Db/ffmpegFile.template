@@ -1,6 +1,7 @@
-#% macro, P, Device Prefix
-#% macro, R, Device Suffix
-#% macro, PORT, Asyn Port name
+# % macro, P, Device Prefix
+# % macro, R, Device Suffix
+# % macro, PORT, Asyn Port name
+# % macro, gda_name, Name to expose to GDA
 # % gui, $(PORT), edmtab, ffmpegFile.edl, P=$(P),R=$(R)
 
 # \file 
