@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
 <components arch="linux-x86">
-	<areaDetector.prosilica ADDR="0" ID="107565" P="TESTC1" PORT="C1.CAM" R=":CAM:" TIMEOUT="1"/>
+	<areaDetector.simDetector ADDR="0" HEIGHT="768" P="TESTC1" PORT="C1.CAM" R=":CAM:" TIMEOUT="1" WIDTH="1024"/>
 	<ffmpegServer.ffmpegServer ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="C1.CAM" P="TESTC1" PORT="C1.MJPG" R=":MJPG:" TIMEOUT="1"/>
 </components>

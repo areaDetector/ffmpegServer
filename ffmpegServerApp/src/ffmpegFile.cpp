@@ -322,6 +322,7 @@ asynStatus ffmpegFile::closeFile()
 
 /** Constructor for ffmpegFile; all parameters are simply passed to NDPluginFile::NDPluginFile.
 ffmpegFileConfigure() should be used to create an instance in the iocsh.
+See ffmpegStream.template for more details of usage.
 
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] queueSize The number of NDArrays that the input queue for this plugin can hold when 

@@ -503,6 +503,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
 /** Constructor for ffmpegStream; Class representing an mjpg stream served up by ffmpegServer. 
 ffmpegServerConfigure() must be called before creating any instances of this 
 class. ffmpegStreamConfigure() should be used to create an instance in the iocsh.
+See ffmpegStream.template for more details of usage.
 
   * \param portName The name of the asyn port driver to be created.
   * \param queueSize The number of NDArrays that the input queue for this plugin can hold when 
