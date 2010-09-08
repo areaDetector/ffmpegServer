@@ -25,6 +25,7 @@
 
 
 ## JPEG Quality
+# % gdatag, pv, rw, $(gda_name=$(PORT)), QUALITY, Set QUALITY [[ffmpegStream]]
 record(ao, "$(P)$(R)QUALITY") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_QUALITY")
@@ -35,6 +36,7 @@ record(ao, "$(P)$(R)QUALITY") {
 }
 
 ## JPEG Quality Readback from driver
+# % gdatag, pv, ro, $(gda_name=$(PORT)), QUALITY_RBV, Readback for QUALITY [[ffmpegStream]]
 record(ai, "$(P)$(R)QUALITY_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -42,6 +44,7 @@ record(ai, "$(P)$(R)QUALITY_RBV") {
 }
 
 ## Toggle False colour mode 
+# % gdatag, binary, rw, $(gda_name=$(PORT)), FALSE_COL, Set FALSE_COL [[ffmpegStream]]
 record(bo, "$(P)$(R)FALSE_COL") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_FALSE_COL")
@@ -52,6 +55,7 @@ record(bo, "$(P)$(R)FALSE_COL") {
 }
 
 ## False colour mode readback from driver
+# % gdatag, binary, ro, $(gda_name=$(PORT)), FALSE_COL_RBV, Readback for FALSE_COL [[ffmpegStream]]
 record(bi, "$(P)$(R)FALSE_COL_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -61,6 +65,7 @@ record(bi, "$(P)$(R)FALSE_COL_RBV") {
 }
 
 ## Always produce jpegs, even when no-one is listening
+# % gdatag, binary, rw, $(gda_name=$(PORT)), ALWAYS_ON, Set ALWAYS_ON [[ffmpegStream]]
 record(bo, "$(P)$(R)ALWAYS_ON") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_ALWAYS_ON")
@@ -71,6 +76,7 @@ record(bo, "$(P)$(R)ALWAYS_ON") {
 }
 
 ## Always on readback from driver
+# % gdatag, binary, ro, $(gda_name=$(PORT)), ALWAYS_ON_RBV, Readback for ALWAYS_ON [[ffmpegStream]]
 record(bi, "$(P)$(R)ALWAYS_ON_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -80,6 +86,7 @@ record(bi, "$(P)$(R)ALWAYS_ON_RBV") {
 }
 
 ## HTTP Port to connect an mjpg viewer to
+# % gdatag, pv, ro, $(gda_name=$(PORT)), HTTP_PORT_RBV, Readback for HTTP_PORT [[ffmpegStream]]
 record(ai, "$(P)$(R)HTTP_PORT_RBV")
 {
     field(PINI, "1")
@@ -89,6 +96,7 @@ record(ai, "$(P)$(R)HTTP_PORT_RBV")
 }
 
 ## Hostname of the HTTP server
+# % gdatag, pv, ro, $(gda_name=$(PORT)), HOST_RBV, Readback for HOST [[ffmpegStream]]
 record(stringin, "$(P)$(R)HOST_RBV")
 {
     field(PINI, "1")
@@ -98,6 +106,7 @@ record(stringin, "$(P)$(R)HOST_RBV")
 }
 
 ## Number of clients
+# % gdatag, pv, ro, $(gda_name=$(PORT)), CLIENTS_RBV, Readback for CLIENTS [[ffmpegStream]]
 record(ai, "$(P)$(R)CLIENTS_RBV")
 {
     field(PINI, "1")
