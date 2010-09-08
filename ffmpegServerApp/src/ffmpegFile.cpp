@@ -200,7 +200,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
 }
 
 
-/** Writes single NDArray to the JPEG file.
+/** Writes single NDArray to the ffmpeg file.
   * \param[in] pArray Pointer to the NDArray to be written
   */
 asynStatus ffmpegFile::writeFile(NDArray *pArray)
@@ -268,7 +268,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
     return(asynSuccess);
 }
 
-/** Reads single NDArray from a JPEG file; NOT CURRENTLY IMPLEMENTED.
+/** Reads single NDArray from a ffmpeg file; NOT CURRENTLY IMPLEMENTED.
   * \param[in] pArray Pointer to the NDArray to be read
   */
 asynStatus ffmpegFile::readFile(NDArray **pArray)
@@ -279,7 +279,7 @@ asynStatus ffmpegFile::readFile(NDArray **pArray)
 }
 
 
-/** Closes the JPEG file. */
+/** Closes the ffmpeg file. */
 asynStatus ffmpegFile::closeFile()
 {
 	if (needStop == 0) {
@@ -321,6 +321,8 @@ asynStatus ffmpegFile::closeFile()
 }
 
 /** Constructor for ffmpegFile; all parameters are simply passed to NDPluginFile::NDPluginFile.
+ffmpegFileConfigure() should be used to create an instance in the iocsh.
+
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] queueSize The number of NDArrays that the input queue for this plugin can hold when 
   *            NDPluginDriverBlockingCallbacks=0.  Larger queues can decrease the number of dropped arrays,
@@ -361,7 +363,10 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
     
 }
 
-/* Configuration routine.  Called directly, or from the iocsh  */
+/** Configuration routine.  Called directly, or from the iocsh function, calls ffmpegFile constructor:
+
+\copydoc ffmpegFile::ffmpegFile
+*/
 
 extern "C" int ffmpegFileConfigure(const char *portName, int queueSize, int blockingCallbacks,
                                    const char *NDArrayPort, int NDArrayAddr,

@@ -15,19 +15,19 @@ extern "C" {
 
 /* windows includes */
 #ifdef _MSC_VER /* Microsoft Compilers */
-//#define _WIN32_WINNT 0x500 /* WINBASE.H - Enable SignalObjectAndWait */
+/** win32 implementation of pthread_cond_init */
 int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
   cv->semaphore = CreateEvent (NULL, FALSE, FALSE, NULL);
   return 0;
 }
-
+/** win32 implementation of pthread_cond_wait */
 int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
   pthread_mutex_unlock(external_mutex);
   WaitForSingleObject (cv->semaphore, INFINITE);
   pthread_mutex_lock(external_mutex);
   return 0;
 }
-
+/** win32 implementation of pthread_cond_signal */
 int pthread_cond_signal (pthread_cond_t *cv) {
   SetEvent (cv->semaphore);
   return 0;
@@ -36,7 +36,7 @@ int pthread_cond_signal (pthread_cond_t *cv) {
 
 static const char *driverName = "ffmpegServer";
 
-/* This is called whenever a client requests a stream */
+/** This is called whenever a client requests a stream */
 void dorequest(int sid) {
     char *portName;
     int len;
@@ -157,7 +157,7 @@ p { \n\
     flushbuffer(sid);   
 }
 
-/* this dummy function is here to satisfy nullhttpd */
+/** this dummy function is here to satisfy nullhttpd */
 int config_read()
 {
     snprintf(config.server_base_dir, sizeof(config.server_base_dir)-1, "%s", DEFAULT_BASE_DIR);
@@ -175,6 +175,7 @@ int config_read()
 
 static int stopping = 0;
 
+/** c function that will be called at epicsExit that shuts down the http server cleanly */
 void c_shutdown(void *) {
     printf("Shutting down http server...");
     stopping = 1;
@@ -183,7 +184,10 @@ void c_shutdown(void *) {
     printf("OK\n");
 }    
 
-/* configure and start the http server */
+/** Configure and start the http server.
+Call this before creating any instances of ffmpegStream
+\param port port number to run the server on. Defaults to 8080
+*/
 void ffmpegServerConfigure(int port) {
     int status;
     if (port==0) {
@@ -220,7 +224,7 @@ void ffmpegServerConfigure(int port) {
     epicsAtExit(c_shutdown, NULL);    
 }
 
-/* this sends a single snapshot */
+/** Internal function to send a single snapshot */
 void ffmpegStream::send_snapshot(int sid, int index) {
     time_t now=time((time_t*)0);
     int size, always_on;    
@@ -264,7 +268,7 @@ void ffmpegStream::send_snapshot(int sid, int index) {
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
 
-/* This sends a jpeg frame as part of an mjpeg stream */
+/** Internal function to send a jpeg frame as part of an mjpeg stream */
 int ffmpegStream::send_frame(int sid, NDArray *pArray) {
     int ret = 0;
     if (pArray) {
@@ -288,7 +292,7 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
     return ret;
 }    
 
-/** Get the current jpeg and return it */
+/** Internal function to get the current jpeg and return it */
 NDArray* ffmpegStream::get_jpeg() {
     NDArray* pArray;
     pthread_mutex_lock(&this->mutex);
@@ -299,7 +303,7 @@ NDArray* ffmpegStream::get_jpeg() {
 }    
     
 
-/** Wait for a jpeg to be produced */
+/** Internal function to wait for a jpeg to be produced */
 NDArray* ffmpegStream::wait_for_jpeg(int sid) {
     NDArray* pArray;
     pthread_cond_wait(&this->cond[sid], &this->mutex);
@@ -309,7 +313,7 @@ NDArray* ffmpegStream::wait_for_jpeg(int sid) {
     return pArray;    
 }    
 
-
+/** Internal function to send an mjpg stream */
 void ffmpegStream::send_stream(int sid) {
     int ret = 0;
     int always_on;
@@ -341,7 +345,7 @@ void ffmpegStream::send_stream(int sid) {
     pthread_mutex_unlock(&this->mutex);            
 } 
 
-/* alloc the processed array */
+/** Internal function to alloc a correctly sized processed array */
 void ffmpegStream::allocScArray(int size) {
     if (this->scArray) {
         if (this->scArray->dims[0].size >= size) {
@@ -496,14 +500,25 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     callParamCallbacks(0, 0);
 }
 
-/** The constructor for this class
- *
- * - portName = asyn port name of this driver
- * - queueSize = size of the input queue (in number of NDArrays), normally 1
- * - blockingCallbacks = if 1 then block while processing, normally 0
- * - NDArrayport = asyn port name of the image source (driver or ROI)
- * - httpPort = port number to server ffmpeg stream on
- * - wwwPath = path to html files to serve up
+/** Constructor for ffmpegStream; Class representing an mjpg stream served up by ffmpegServer. 
+ffmpegServerConfigure() must be called before creating any instances of this 
+class. ffmpegStreamConfigure() should be used to create an instance in the iocsh.
+
+  * \param portName The name of the asyn port driver to be created.
+  * \param queueSize The number of NDArrays that the input queue for this plugin can hold when 
+  *        NDPluginDriverBlockingCallbacks=0.  Larger queues can decrease the number of dropped arrays,
+  *        at the expense of more NDArray buffers being allocated from the underlying driver's NDArrayPool.
+  * \param blockingCallbacks Initial setting for the NDPluginDriverBlockingCallbacks flag.
+  *        0=callbacks are queued and executed by the callback thread; 1 callbacks execute in the thread
+  *        of the driver doing the callbacks.
+  * \param NDArrayPort Name of asyn port driver for initial source of NDArray callbacks.
+  * \param NDArrayAddr asyn port driver address for initial source of NDArray callbacks.
+  * \param maxBuffers The maximum number of NDArray buffers that the NDArrayPool for this driver is 
+  *        allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
+  * \param maxMemory The maximum amount of memory that the NDArrayPool for this driver is 
+  *        allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
+  * \param priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+  * \param stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
  */
 ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCallbacks,
                            const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
@@ -552,7 +567,7 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     /* Setup correct codec for mjpeg */
     codec = avcodec_find_encoder(CODEC_ID_MJPEG);
     if (!codec) {
-        fprintf(stderr, "codec not found\n");
+        fprintf(stderr, "MJPG codec not found\n");
         exit(1);
     }
     
@@ -564,7 +579,10 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     }
 }
 
-/** Configuration routine.  Called directly, or from the iocsh function in ffmpegStreamRegister, calls ffmpegStream constructor*/
+/** Configuration routine.  Called directly, or from the iocsh function, calls ffmpegStream constructor:
+
+\copydoc ffmpegStream::ffmpegStream
+*/
 extern "C" int ffmpegStreamConfigure(const char *portName, int queueSize, int blockingCallbacks,
                                   const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
                                   int priority, int stackSize)

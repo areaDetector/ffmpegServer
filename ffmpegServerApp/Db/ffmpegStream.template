@@ -1,17 +1,36 @@
-# Macros:
-#% macro, P, Device Prefix
-#% macro, R, Device Suffix
-#% macro, PORT, Asyn Port name
-#% macro, QUALITY, Jpeg Quality in percent
-
-# This associates the template with an edm screen
+# % macro, P, Device Prefix
+# % macro, R, Device Suffix
+# % macro, PORT, Asyn Port name
+# % macro, QUALITY, Jpeg Quality in percent
 # % gui, $(PORT), edmtab, ffmpegServer.edl, P=$(P),R=$(R)
+
+# \file 
+# ffmpegServer contains a very simple http server based on
+# <a href="http://www.nulllogic.ca/httpd">nullhttpd</a>. If a file named 
+# \<port\>.jpg is requested for any ffmpegStream object named \<port\>, then it 
+# will return the last NDArray received by the object compressed to jpeg. If 
+# \<port\>.mjpg is requested then it will return an mjpg stream over http to the
+# client. Otherwise, it will return an index page listing all the available 
+# streams.
+# \section ffmpegStream_setup Setup
+# - In the database, an instance of NDPluginBase is required, followed by an
+# instance of this template. 
+# - In the startup scripts, call ffmpegServerConfigure() once per IOC to setup 
+# the http server, then call ffmpegStreamConfigure() once per ffmpegStream
+# instance to setup the areadetector plugin
+# - see \ref build_instructions
+# \section ffmpegStream_screenshots Screenshots
+# \image html server.png "Index page for ffmpegServer"
+# \image html ffmpegStreamEdm.png "Edm screen for ffmpegStream"
+
 
 ## JPEG Quality
 record(ao, "$(P)$(R)QUALITY") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_QUALITY")
   field(VAL, "$(QUALITY=100)")
+  field(DRVH, "100")
+  field(DRVL, "0")          
   field(PINI, "1")  
 }
 
@@ -69,7 +88,7 @@ record(ai, "$(P)$(R)HTTP_PORT_RBV")
     field(SCAN, "I/O Intr")
 }
 
-## hostname to look at
+## Hostname of the HTTP server
 record(stringin, "$(P)$(R)HOST_RBV")
 {
     field(PINI, "1")

@@ -1,12 +1,23 @@
-# Macros:
 #% macro, P, Device Prefix
 #% macro, R, Device Suffix
 #% macro, PORT, Asyn Port name
-
-# This associates the template with an edm screen
 # % gui, $(PORT), edmtab, ffmpegFile.edl, P=$(P),R=$(R)
 
-# We replace some fields in records defined in NDFile.template
+# \file 
+# ffmpegFile wraps the ffmpeg compression libraries in an areaDetector plugin.
+# It works in much the same way as the other NDFile plugins. By default, it
+# will try to guess the file format from the file extension, but you can force
+# it to a particular file format with the FileFormat record.
+# \section ffmpegStream_setup Setup
+# - In the database, an instance of NDPluginBase is required, followed by an
+# instance of NDFile, then an instance of this template. 
+# - In the startup scripts, call ffmpegFileConfigure() once per ffmpegStream
+# instance to setup the areadetector plugin
+# - see \ref build_instructions
+# \section ffmpegStream_screenshots Screenshots
+# \htmlinclude flashvideo.html
+# \image html ffmpegFileEdm.png "Edm screen for ffmpegFile"
+
 # File data format 
 record(mbbo, "$(P)$(R)FileFormat")
 {
@@ -18,6 +29,7 @@ record(mbbo, "$(P)$(R)FileFormat")
     field(TWVL, "2")    
 }
 
+# File data format from driver
 record(mbbi, "$(P)$(R)FileFormat_RBV")
 {
     field(ZRST, "Auto")

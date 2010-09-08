@@ -7,8 +7,8 @@ include $(TOP)/configure/CONFIG
 # In a Diamond Support Module, install
 # templates like this
 #
-DB += ffmpegServer.db
-DB += ffmpegFile.db
+DB += ffmpegStream.template
+DB += ffmpegFile.template
 
 
 include $(TOP)/configure/RULES

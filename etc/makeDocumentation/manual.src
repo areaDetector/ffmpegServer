@@ -1,18 +1,29 @@
 /**
-\mainpage ffmpeg EPICS Support Module
+\mainpage ffmpegServer EPICS Support Module
 \section intro_sec Introduction 
-I'm going to describe the module here, possibly with a <a href="http://www.google.co.uk">web link to the manufacturers webpage</a>. \endlink \n
-You can also link to internally generated documentation like this: \ref ffmpegServerApp/Db/ffmpegServer.db "Database Documentation" \n
-This documentation is split into 2 sections:
-\section user_sec User Manual 
-This contains instructions for the end user: \ref user_manual 
-\section build_sec Build Instructions 
-This contains instructions for the programmer using this module: \ref build_instructions
-**/
+ffmpegServer is a windows and linux <a href="http://cars9.uchicago.edu/software/epics/areaDetector.html">areaDetector</a> plugin wrapping the <a href="http://www.ffmpeg.org">ffmpeg</a> libraries that provides 2 functions:
 
-/* Build instructions page will be generated from the xml file given to dls-make-doxygen-documentation.py */
+- \ref ffmpegStream.template "ffmpegStream": Compression into an <a href="http://en.wikipedia.org/wiki/Motion_JPEG">mjpg</a> stream which is made available over http.
+- \ref ffmpegFile.template "ffmpegFile": Compression to disk into any file format that ffmpeg supports.
 
-/** 
-\page user_manual User Manual
-This needs to be hand generated. You can link directly to this page from the edm screen if you want
+Please click on one of the links above for documentation on the plugin.
+
+\section dep_sec Dependencies
+ffmpegServer requires the following:
+
+- <a href="http://cars9.uchicago.edu/software/epics/areaDetector.html">areaDetector</a> - tested with version 1-6
+- <a href="http://controls.diamond.ac.uk/downloads/support/nullhttpd">nullhttpd</a> - tested with version 0-5-1dls2
+
+\section install_sec Install instructions
+First of all, please read the information on <a href="http://www.ffmpeg.org/legal.html">ffmpeg legal information</a> to check that your usage of ffmpeg is legal in your country. As this module is just a wrapper to ffmpeg, it is not distributed with ffmpeg, so you need to download and compile ffmpeg in order to use the module. The following steps need to be accomplished, either using the bash script <tt>install.sh</tt> in the root of the module, or by doing them manually:
+
+- (Linux only) Download and unzip the <a href="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/sources/ffmpeg-r24103-swscale-r31628.tar.bz2">source</a> to vendor/ffmpeg
+- (Linux only) Download and unzip <a href="http://www.tortall.net/projects/yasm/releases/yasm-1.0.1.tar.gz">yasm</a> to vendor/yasm
+- (Win32 only) Download and unzip <a href="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/mingw32/shared/ffmpeg-r24103-swscale-r31628-mingw32-shared.7z">win32 libraries</a> to vendor/ffmpeg-mingw32-shared
+- (Win32 only) Download and unzip <a href="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/mingw32/dev/shared/ffmpeg-r24103-swscale-r31628-mingw32-shared-dev.7z">win32 devel libraries</a> to vendor/ffmpeg-mingw32-shared
+
+You can now edit <tt>configure/RELEASE</tt> and type <tt>make</tt> to build
+
+\section build_sec Build Instructions
+This section contains instructions for the programmer using this module: \subpage build_instructions
 **/

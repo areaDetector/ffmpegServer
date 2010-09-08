@@ -12,7 +12,7 @@ class FFmpegServer(Device):
     AutoInstantiate = True	
 
 class _ffmpegServer(AutoSubstitution):
-    TemplateFile = 'ffmpegServer.db'
+    TemplateFile = 'ffmpegStream.template'
 
 class ffmpegServer(_NDPluginBase):
     '''This plugin provides an http server that produces an mjpeg stream'''
@@ -49,7 +49,7 @@ class ffmpegServer(_NDPluginBase):
 
 class _ffmpegFile(AutoSubstitution):
     '''Template containing the records for an NDColorConvert'''
-    TemplateFile = 'ffmpegFile.db'
+    TemplateFile = 'ffmpegFile.template'
     SubstitutionOverwrites = [_NDFile]
 
 class ffmpegFile(_NDFileBase):

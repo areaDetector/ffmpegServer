@@ -16,9 +16,7 @@
 #define ffmpegServerClientsString  "FFMPEG_CLIENTS"   /* Number of connected clients (int32 read)*/
 #define ffmpegServerAlwaysOnString "FFMPEG_ALWAYS_ON" /* Always produce jpeg, even when no-one is listening (int32 read)*/
 
-/** Take an array source and compress it and serve it as an mjpeg stream.
-  * Can also do false colour and grid
-  */
+/** Take an array source and compress it and serve it as an mjpeg stream. */
 class ffmpegStream : public NDPluginDriver {
 public:
     ffmpegStream(const char *portName, int queueSize, int blockingCallbacks, 

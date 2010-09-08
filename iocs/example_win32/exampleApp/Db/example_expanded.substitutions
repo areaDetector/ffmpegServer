@@ -55,7 +55,7 @@ pattern { P, R, PORT, TIMEOUT, ADDR, NDARRAY_PORT, NDARRAY_ADDR, gda_name, gda_d
 #  R        Device Suffix
 #  PORT     Asyn Port name
 #  QUALITY  Jpeg Quality in percent
-file $(FFMPEGSERVER)/db/ffmpegServer.db
+file $(FFMPEGSERVER)/db/ffmpegStream.template
 {
 pattern { P, R, PORT, QUALITY }
     { "TEST", ":MJPG:", "camMJPG", "100" }
@@ -78,7 +78,7 @@ pattern { P, R, PORT, TIMEOUT, ADDR, gda_name }
 #  P     Device Prefix
 #  R     Device Suffix
 #  PORT  Asyn Port name
-file $(FFMPEGSERVER)/db/ffmpegFile.db
+file $(FFMPEGSERVER)/db/ffmpegFile.template
 {
 pattern { P, R, PORT }
     { "TEST", ":FFMPEG:", "camFFMPEG" }
