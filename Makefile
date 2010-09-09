@@ -16,10 +16,11 @@ ifeq ($(EPICS_HOST_ARCH),linux-x86)
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard Viewers))
 endif
 
+install: $(TOP)/Viewers/Makefile
+
 include $(TOP)/configure/RULES_TOP
 
 $(TOP)/Viewers/Makefile: $(TOP)/Viewers/ffmpegViewer.pro
 	/dls_sw/prod/tools/RHEL5/bin/qmake -o $@ $<
 	
-buildInstall: $(TOP)/Viewers/Makefile
 	
