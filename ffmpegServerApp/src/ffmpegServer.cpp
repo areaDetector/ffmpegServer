@@ -1,7 +1,6 @@
 /* local includes */
 #include "ffmpegCommon.h"
 #include "ffmpegServer.h"
-#include "conversionTables.h"
 
 /* null-httpd includes */
 extern "C" {
