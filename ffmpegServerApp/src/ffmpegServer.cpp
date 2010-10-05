@@ -423,7 +423,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         AVRational avr;
         avr.num = 1;
         avr.den = 25;
-        if (c) {
+        if (c != NULL) {
             /* width and height changed, close old codec */
             avcodec_close(c);
             av_free(c);
@@ -534,6 +534,7 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     asynStatus status;
     this->jpeg = NULL;
     this->scArray = NULL;
+    this->c = NULL;
 
     /* Create some parameters */
     createParam(ffmpegServerQualityString,  asynParamInt32, &ffmpegServerQuality);
