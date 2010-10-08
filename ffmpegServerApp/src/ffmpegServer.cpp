@@ -271,8 +271,8 @@ void ffmpegStream::send_snapshot(int sid, int index) {
 /** Internal function to send a jpeg frame as part of an mjpeg stream */
 int ffmpegStream::send_frame(int sid, NDArray *pArray) {
     int ret = 0;
-    double difftime;
-    struct timeval start, end;
+//    double difftime;
+//    struct timeval start, end;
     if (pArray) {
         /* Send metadata */
 //        printf("Send frame %d to sid %d\n", pArray->dims[0].size, sid);                        
@@ -280,14 +280,14 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
         prints("Content-Length: %d\r\n\r\n", pArray->dims[0].size);
         flushbuffer(sid);
         /* Send the jpeg */
-		gettimeofday(&start, NULL);         
+//        gettimeofday(&start, NULL);         
         ret = send(conn[sid].socket, (const char *) pArray->pData, pArray->dims[0].size, 0);                  
-		gettimeofday(&end, NULL);         
+//        gettimeofday(&end, NULL);         
         /* Send a boundary */
         prints("\r\n--BOUNDARY\r\n");
         flushbuffer(sid);
-		difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
-		if (difftime > 0.1) printf ("It took %.2lf seconds to send a frame to %d. That's a bit slow\n", difftime, sid);
+//        difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
+//        if (difftime > 0.1) printf ("It took %.2lf seconds to send a frame to %d. That's a bit slow\n", difftime, sid);
 //        printf("Done\n");        
         pArray->release();             
     }
@@ -352,7 +352,7 @@ void ffmpegStream::allocScArray(int size) {
     if (this->scArray) {
         if (this->scArray->dims[0].size >= size) {
             /* the processed array is already big enough */
-			avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);               
+            avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);               
             return;
         } else {
             /* need a new one, so discard the old one */
@@ -361,7 +361,7 @@ void ffmpegStream::allocScArray(int size) {
     }
     this->scArray = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
     /* alloc in and scaled pictures */
-	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);   
+    avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);   
 }       
     
 
@@ -370,9 +370,9 @@ void ffmpegStream::allocScArray(int size) {
  */
 void ffmpegStream::processCallbacks(NDArray *pArray)
 {
-    double difftime;
-    struct timeval start, end;
-	gettimeofday(&start, NULL);     
+//    double difftime;
+//    struct timeval start, end;
+//    gettimeofday(&start, NULL);     
     /* we're going to get these with getIntegerParam */
     int quality, clients, false_col, always_on;
     /* we're going to get these from the dims of the image */
@@ -381,7 +381,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     const char *functionName = "processCallbacks";
     /* for getting the colour mode */
     int colorMode = NDColorModeMono;
-	NDAttribute *pAttribute = NULL;    
+    NDAttribute *pAttribute = NULL;    
 
     /* Call the base class method */
     NDPluginDriver::processCallbacks(pArray);
@@ -408,7 +408,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
      * that other threads can access. */
     this->unlock();
      
-	/* Get the colormode of the array */	
+    /* Get the colormode of the array */    
     pAttribute = pArray->pAttributeList->find("ColorMode");
     if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
     if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
@@ -418,8 +418,8 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         width  = pArray->dims[1].size;
         height = pArray->dims[2].size;
     } else {
-    	width  = 0;
-    	height = 0;
+        width  = 0;
+        height = 0;
     }
     size = width *  height;
 
@@ -467,17 +467,17 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     if (scPicture->quality < 0) scPicture->quality = 0;
     if (scPicture->quality > 32767) scPicture->quality = 32768;    
     
-	/* format the array */
-	if (formatArray(pArray, this->pasynUserSelf, this->inPicture,
-		&(this->ctx), this->c, this->scPicture) != asynSuccess) {
+    /* format the array */
+    if (formatArray(pArray, this->pasynUserSelf, this->inPicture,
+        &(this->ctx), this->c, this->scPicture) != asynSuccess) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
             "%s:%s: Could not format array for correct pix_fmt for codec\n",
-            driverName, functionName);	
+            driverName, functionName);    
         pthread_mutex_unlock(&this->mutex);
         /* We must enter the loop and exit with the mutex locked */
-        this->lock();            	
+        this->lock();                
         return;
-    }	  
+    }      
 
     /* lock the output plugin mutex */
     pthread_mutex_lock(&this->mutex);
@@ -503,10 +503,10 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
 
     /* Update the parameters.  */
     callParamCallbacks(0, 0);
-	gettimeofday(&end, NULL);   
-	difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
-	if (difftime > 0.1) printf ("It took %.2lf seconds to process callbacks. That's a bit slow\n", difftime);	  
-	
+//    gettimeofday(&end, NULL);   
+//    difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
+//    if (difftime > 0.1) printf ("It took %.2lf seconds to process callbacks. That's a bit slow\n", difftime);      
+    
 }
 
 /** Constructor for ffmpegStream; Class representing an mjpg stream served up by ffmpegServer. 
@@ -547,7 +547,7 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     this->scArray = NULL;
     this->nclients = 0;
     this->c = NULL;
-	this->codec = NULL;         
+    this->codec = NULL;         
     this->inPicture = NULL;
     this->scPicture = NULL;            
     this->ctx = NULL;      
@@ -584,7 +584,7 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     /* Initialise the ffmpeg library */
     ffmpegInitialise();
 
-	/* make the input and output pictures */
+    /* make the input and output pictures */
     inPicture = avcodec_alloc_frame();
     scPicture = avcodec_alloc_frame();
 
