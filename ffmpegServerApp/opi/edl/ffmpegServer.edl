@@ -48,7 +48,7 @@ release 0
 x 5
 y 530
 w 380
-h 190
+h 205
 lineColor index 14
 fill
 fillColor index 3
@@ -298,7 +298,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Firefox Snapshot"
 numCmds 1
 command {
-  0 "firefox http://`caget -t $(P)$(R)HOST_RBV`:`caget -t $(P)$(R)HTTP_PORT_RBV`/`caget -t $(P)$(R)PortName_RBV`.jpg"
+  0 "firefox `caget -t -S $(P)$(R)JPG_URL_RBV`"
 }
 endObjectProperties
 
@@ -340,46 +340,6 @@ font "arial-bold-r-12.0"
 fontAlign "center"
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 15
-y 585
-w 213
-h 14
-font "arial-bold-r-12.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "http://<host>:<http_port>/<port>.jpg"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 15
-y 700
-w 225
-h 14
-font "arial-bold-r-12.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "http://<host>:<http_port>/<port>.mjpg"
-}
-autoSize
-endObjectProperties
-
 # (Shell Command)
 object shellCmdClass
 beginObjectProperties
@@ -387,7 +347,7 @@ major 4
 minor 2
 release 0
 x 15
-y 605
+y 615
 w 360
 h 40
 fgColor index 43
@@ -398,7 +358,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Firefox Stream (slow)"
 numCmds 1
 command {
-  0 "firefox http://`caget -t $(P)$(R)HOST_RBV`:`caget -t $(P)$(R)HTTP_PORT_RBV`/`caget -t $(P)$(R)PortName_RBV`.mjpg"
+  0 "firefox `caget -t -S $(P)$(R)MJPG_URL_RBV`"
 }
 endObjectProperties
 
@@ -409,7 +369,7 @@ major 4
 minor 2
 release 0
 x 15
-y 650
+y 660
 w 360
 h 40
 fgColor index 43
@@ -420,7 +380,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Qt Viewer Stream (fast)"
 numCmds 1
 command {
-  0 "ffmpegViewer http://`caget -t $(P)$(R)HOST_RBV`:`caget -t $(P)$(R)HTTP_PORT_RBV`/`caget -t $(P)$(R)PortName_RBV`.mjpg"
+  0 "ffmpegViewer `caget -t -S $(P)$(R)MJPG_URL_RBV`"
 }
 endObjectProperties
 
@@ -447,5 +407,47 @@ displayFileName {
   1 "NDPluginBase"
 }
 noScroll
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 15
+y 585
+w 360
+h 20
+controlPv "$(P)$(R)JPG_URL_RBV"
+font "arial-medium-r-10.0"
+fgColor index 16
+bgColor index 10
+limitsFromDb
+nullColor index 25
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 15
+y 705
+w 360
+h 20
+controlPv "$(P)$(R)MJPG_URL_RBV"
+font "arial-medium-r-10.0"
+fgColor index 16
+bgColor index 10
+limitsFromDb
+nullColor index 25
+useHexPrefix
+newPos
+objType "monitors"
 endObjectProperties
 

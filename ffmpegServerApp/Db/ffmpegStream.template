@@ -115,6 +115,29 @@ record(ai, "$(P)$(R)CLIENTS_RBV")
     field(INP,  "@asyn($(PORT) 0)FFMPEG_CLIENTS")
     field(SCAN, "I/O Intr")
 }
+
+## URL of the jpg snapshot
+# % gdatag, pv, ro, $(gda_name=$(PORT)), JPG_URL_RBV, Readback for JPG URL [[ffmpegStream]]
+record(waveform, "$(P)$(R)JPG_URL_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT) 0)FFMPEG_JPG_URL")
+    field(FTVL, "UCHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+## URL of the mjpg stream
+# % gdatag, pv, ro, $(gda_name=$(PORT)), MJPG_URL_RBV, Readback for MJPG URL [[ffmpegStream]]
+record(waveform, "$(P)$(R)MJPG_URL_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT) 0)FFMPEG_MJPG_URL")
+    field(FTVL, "UCHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 # \section License
 # Author: Diamond Light Source, Copyright 2010
 #

@@ -11,6 +11,7 @@ extern "C" {
 #include "epicsExport.h"
 #include "iocsh.h"
 #include <epicsExit.h>
+#include <time.h>
 
 /* windows includes */
 #ifdef _MSC_VER /* Microsoft Compilers */
@@ -270,6 +271,8 @@ void ffmpegStream::send_snapshot(int sid, int index) {
 /** Internal function to send a jpeg frame as part of an mjpeg stream */
 int ffmpegStream::send_frame(int sid, NDArray *pArray) {
     int ret = 0;
+    double difftime;
+    struct timeval start, end;
     if (pArray) {
         /* Send metadata */
 //        printf("Send frame %d to sid %d\n", pArray->dims[0].size, sid);                        
@@ -277,14 +280,14 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
         prints("Content-Length: %d\r\n\r\n", pArray->dims[0].size);
         flushbuffer(sid);
         /* Send the jpeg */
-        for (int i=0; i<pArray->dims[0].size; i+=512) {
-            ret = send(conn[sid].socket, ((const char *) pArray->pData) + i, MIN(512,pArray->dims[0].size-i), 0);
-            if (ret<0) return ret;
-            flushbuffer(sid);             
-        }                   
+		gettimeofday(&start, NULL);         
+        ret = send(conn[sid].socket, (const char *) pArray->pData, pArray->dims[0].size, 0);                  
+		gettimeofday(&end, NULL);         
         /* Send a boundary */
         prints("\r\n--BOUNDARY\r\n");
         flushbuffer(sid);
+		difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
+		if (difftime > 0.1) printf ("It took %.2lf seconds to send a frame to %d. That's a bit slow\n", difftime, sid);
 //        printf("Done\n");        
         pArray->release();             
     }
@@ -367,6 +370,9 @@ void ffmpegStream::allocScArray(int size) {
  */
 void ffmpegStream::processCallbacks(NDArray *pArray)
 {
+    double difftime;
+    struct timeval start, end;
+	gettimeofday(&start, NULL);     
     /* we're going to get these with getIntegerParam */
     int quality, clients, false_col, always_on;
     /* we're going to get these from the dims of the image */
@@ -497,6 +503,10 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
 
     /* Update the parameters.  */
     callParamCallbacks(0, 0);
+	gettimeofday(&end, NULL);   
+	difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
+	if (difftime > 0.1) printf ("It took %.2lf seconds to process callbacks. That's a bit slow\n", difftime);	  
+	
 }
 
 /** Constructor for ffmpegStream; Class representing an mjpg stream served up by ffmpegServer. 
@@ -531,16 +541,25 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
                    0, 1, priority, stackSize)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
 {
     char host[64] = "";
+    char url[256] = "";
     asynStatus status;
     this->jpeg = NULL;
     this->scArray = NULL;
+    this->nclients = 0;
     this->c = NULL;
+	this->codec = NULL;         
+    this->inPicture = NULL;
+    this->scPicture = NULL;            
+    this->ctx = NULL;      
+    this->cond = NULL;
 
     /* Create some parameters */
     createParam(ffmpegServerQualityString,  asynParamInt32, &ffmpegServerQuality);
     createParam(ffmpegServerFalseColString, asynParamInt32, &ffmpegServerFalseCol);
     createParam(ffmpegServerHttpPortString, asynParamInt32, &ffmpegServerHttpPort);
     createParam(ffmpegServerHostString,     asynParamOctet, &ffmpegServerHost);
+    createParam(ffmpegServerJpgUrlString,   asynParamOctet, &ffmpegServerJpgUrl);
+    createParam(ffmpegServerMjpgUrlString,  asynParamOctet, &ffmpegServerMjpgUrl);
     createParam(ffmpegServerClientsString,  asynParamInt32, &ffmpegServerClients);
     createParam(ffmpegServerAlwaysOnString, asynParamInt32, &ffmpegServerAlwaysOn);
 
@@ -557,6 +576,10 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     /* Set the hostname */
     gethostname(host, 64);
     setStringParam(ffmpegServerHost, host);   
+    sprintf(url, "http://%s:%d/%s.jpg", host, config.server_port, portName);
+    setStringParam(ffmpegServerJpgUrl, url);
+    sprintf(url, "http://%s:%d/%s.mjpg", host, config.server_port, portName);
+    setStringParam(ffmpegServerMjpgUrl, url);
 
     /* Initialise the ffmpeg library */
     ffmpegInitialise();

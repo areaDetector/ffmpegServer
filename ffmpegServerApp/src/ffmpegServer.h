@@ -13,6 +13,8 @@
 #define ffmpegServerFalseColString "FFMPEG_FALSE_COL" /* False Colour toggle (int32 (enum) read/write)*/
 #define ffmpegServerHttpPortString "FFMPEG_HTTP_PORT" /* Http port (int32 read)*/
 #define ffmpegServerHostString     "FFMPEG_HOST"      /* Host string (string read)*/
+#define ffmpegServerJpgUrlString   "FFMPEG_JPG_URL"   /* JPEG Snapshot URL string (string read)*/
+#define ffmpegServerMjpgUrlString  "FFMPEG_MJPG_URL"  /* MJPG Stream URL string (string read)*/
 #define ffmpegServerClientsString  "FFMPEG_CLIENTS"   /* Number of connected clients (int32 read)*/
 #define ffmpegServerAlwaysOnString "FFMPEG_ALWAYS_ON" /* Always produce jpeg, even when no-one is listening (int32 read)*/
 
@@ -35,6 +37,8 @@ protected:
     int ffmpegServerFalseCol;
     int ffmpegServerHttpPort;
     int ffmpegServerHost;
+    int ffmpegServerJpgUrl;
+    int ffmpegServerMjpgUrl;            
     int ffmpegServerClients;
     int ffmpegServerAlwaysOn;
     #define LAST_FFMPEG_SERVER_PARAM ffmpegServerAlwaysOn
