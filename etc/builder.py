@@ -11,14 +11,13 @@ class FFmpegServer(Device):
     DbdFileList = ['ffmpegServer']  
     AutoInstantiate = True	
 
-class _ffmpegServer(AutoSubstitution):
+class _ffmpegStream(AutoSubstitution):
     TemplateFile = 'ffmpegStream.template'
 
-class ffmpegServer(_NDPluginBase):
+class ffmpegStream(_NDPluginBase):
     '''This plugin provides an http server that produces an mjpeg stream'''
     Dependencies = (FFmpegServer,)    
-    gda_template = "ffmpegServer"
-    template_class = _ffmpegServer
+    _SpecificTemplate = _ffmpegStream
     
     def __init__(self, QUEUE = 2, HTTP_PORT = 8080, MEMORY = -1, Enabled = 1, **args):
         # Init the superclass (_NDPluginBase)
@@ -29,7 +28,7 @@ class ffmpegServer(_NDPluginBase):
 
     # __init__ arguments
     # NOTE: _NDPluginBase comes 2nd so we overwrite NDARRAY_PORT argInfo
-    ArgInfo = _ffmpegServer.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,    	
+    ArgInfo = _SpecificTemplate.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,    	
     	Enabled   = Simple('Plugin Enabled at startup?', int),
         QUEUE     = Simple('Input array queue size', int),          
         HTTP_PORT = Simple('HTTP Port number', int),      
@@ -55,8 +54,7 @@ class _ffmpegFile(AutoSubstitution):
 class ffmpegFile(_NDFileBase):
     '''This plugin can compress NDArrays to video and write them to file'''
     Dependencies = (FFmpegServer,)    
-    gda_template = "ffmpegFile"
-    template_class = _ffmpegFile        
+    _SpecificTemplate = _ffmpegFile        
     # NOTE: _NDFileBase comes 2nd so we overwrite NDARRAY_PORT argInfo
-    ArgInfo = template_class.ArgInfo + _NDFileBase.ArgInfo 
+    ArgInfo = _SpecificTemplate.ArgInfo + _NDFileBase.ArgInfo 
     

@@ -1,7 +1,6 @@
 # % macro, P, Device Prefix
 # % macro, R, Device Suffix
 # % macro, PORT, Asyn Port name
-# % macro, gda_name, Name to expose to GDA
 # % gui, $(PORT), edmtab, ffmpegFile.edl, P=$(P),R=$(R)
 
 # \file 
@@ -19,8 +18,11 @@
 # \htmlinclude flashvideo.html
 # \image html ffmpegFileEdm.png "Edm screen for ffmpegFile"
 
+# All tags starting with gdatag are DLS specific for GDA
+# % gdatag, template, ffmpegFile, $(PORT)_ffmpegFile, $(PORT) ffmpegFile class instance
+
 # File data format 
-# % gdatag, mbbinary, rw, $(gda_name=$(PORT)), FileFormat, Set FileFormat [[ffmpegFile]]
+# % gdatag, mbbinary, rw, $(PORT)_ffmpegFile, FileFormat, Set FileFormat
 record(mbbo, "$(P)$(R)FileFormat")
 {
     field(ZRST, "Auto")
@@ -32,7 +34,7 @@ record(mbbo, "$(P)$(R)FileFormat")
 }
 
 # File data format from driver
-# % gdatag, mbbinary, ro, $(gda_name=$(PORT)), FileFormat_RBV, Readback for FileFormat [[ffmpegFile]]
+# % gdatag, mbbinary, ro, $(PORT)_ffmpegFile, FileFormat_RBV, Readback for FileFormat
 record(mbbi, "$(P)$(R)FileFormat_RBV")
 {
     field(ZRST, "Auto")
@@ -44,7 +46,7 @@ record(mbbi, "$(P)$(R)FileFormat_RBV")
 }
 
 ## FFMPEG Bitrate
-# % gdatag, pv, rw, $(gda_name=$(PORT)), BITRATE, Set BITRATE [[ffmpegFile]]
+# % gdatag, pv, rw, $(PORT)_ffmpegFile, BITRATE, Set BITRATE
 record(ao, "$(P)$(R)BITRATE") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_BITRATE")
@@ -53,7 +55,7 @@ record(ao, "$(P)$(R)BITRATE") {
 }
 
 ## FFMPEG Bitrate from driver
-# % gdatag, pv, ro, $(gda_name=$(PORT)), BITRATE_RBV, Readback for BITRATE [[ffmpegFile]]
+# % gdatag, pv, ro, $(PORT)_ffmpegFile, BITRATE_RBV, Readback for BITRATE
 record(ai, "$(P)$(R)BITRATE_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -61,7 +63,7 @@ record(ai, "$(P)$(R)BITRATE_RBV") {
 }
 
 ## FFMPEG Frames Per Second
-# % gdatag, pv, rw, $(gda_name=$(PORT)), FPS, Set FPS [[ffmpegFile]]
+# % gdatag, pv, rw, $(PORT)_ffmpegFile, FPS, Set FPS
 record(ao, "$(P)$(R)FPS") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_FPS")
@@ -70,7 +72,7 @@ record(ao, "$(P)$(R)FPS") {
 }
 
 ## FFMPEG Frames Per Second from driver
-# % gdatag, pv, ro, $(gda_name=$(PORT)), FPS_RBV, Readback for FPS [[ffmpegFile]]
+# % gdatag, pv, ro, $(PORT)_ffmpegFile, FPS_RBV, Readback for FPS
 record(ai, "$(P)$(R)FPS_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -78,7 +80,7 @@ record(ai, "$(P)$(R)FPS_RBV") {
 }
 
 ## FFMPEG Width
-# % gdatag, pv, rw, $(gda_name=$(PORT)), WIDTH, Set WIDTH [[ffmpegFile]]
+# % gdatag, pv, rw, $(PORT)_ffmpegFile, WIDTH, Set WIDTH
 record(ao, "$(P)$(R)WIDTH") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_WIDTH")
@@ -87,7 +89,7 @@ record(ao, "$(P)$(R)WIDTH") {
 }
 
 ## FFMPEG Bitrate from driver
-# % gdatag, pv, ro, $(gda_name=$(PORT)), WIDTH_RBV, Readback for WIDTH [[ffmpegFile]]
+# % gdatag, pv, ro, $(PORT)_ffmpegFile, WIDTH_RBV, Readback for WIDTH
 record(ai, "$(P)$(R)WIDTH_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -95,7 +97,7 @@ record(ai, "$(P)$(R)WIDTH_RBV") {
 }
 
 ## FFMPEG Width
-# % gdatag, pv, rw, $(gda_name=$(PORT)), HEIGHT, Set HEIGHT [[ffmpegFile]]
+# % gdatag, pv, rw, $(PORT)_ffmpegFile, HEIGHT, Set HEIGHT
 record(ao, "$(P)$(R)HEIGHT") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_HEIGHT")
@@ -104,7 +106,7 @@ record(ao, "$(P)$(R)HEIGHT") {
 }
 
 ## FFMPEG Bitrate from driver
-# % gdatag, pv, ro, $(gda_name=$(PORT)), HEIGHT_RBV, Readback for HEIGHT [[ffmpegFile]]
+# % gdatag, pv, ro, $(PORT)_ffmpegFile, HEIGHT_RBV, Readback for HEIGHT
 record(ai, "$(P)$(R)HEIGHT_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")

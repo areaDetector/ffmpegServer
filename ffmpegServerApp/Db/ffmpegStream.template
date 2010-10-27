@@ -2,7 +2,6 @@
 # % macro, R, Device Suffix
 # % macro, PORT, Asyn Port name
 # % macro, QUALITY, Jpeg Quality in percent
-# % macro, gda_name, Name to expose to GDA
 # % gui, $(PORT), edmtab, ffmpegServer.edl, P=$(P),R=$(R)
 
 # \file 
@@ -24,9 +23,11 @@
 # \image html server.png "Index page for ffmpegServer"
 # \image html ffmpegStreamEdm.png "Edm screen for ffmpegStream"
 
+# All tags starting with gdatag are DLS specific for GDA
+# % gdatag, template, ffmpegStream, $(PORT)_ffmpegStream, $(PORT) ffmpegStream class instance
 
 ## JPEG Quality
-# % gdatag, pv, rw, $(gda_name=$(PORT)), QUALITY, Set QUALITY [[ffmpegStream]]
+# % gdatag, pv, rw, $(PORT)_ffmpegStream, QUALITY, Set QUALITY
 record(ao, "$(P)$(R)QUALITY") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_QUALITY")
@@ -37,7 +38,7 @@ record(ao, "$(P)$(R)QUALITY") {
 }
 
 ## JPEG Quality Readback from driver
-# % gdatag, pv, ro, $(gda_name=$(PORT)), QUALITY_RBV, Readback for QUALITY [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, QUALITY_RBV, Readback for QUALITY
 record(ai, "$(P)$(R)QUALITY_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -45,7 +46,7 @@ record(ai, "$(P)$(R)QUALITY_RBV") {
 }
 
 ## Toggle False colour mode 
-# % gdatag, binary, rw, $(gda_name=$(PORT)), FALSE_COL, Set FALSE_COL [[ffmpegStream]]
+# % gdatag, binary, rw, $(PORT)_ffmpegStream, FALSE_COL, Set FALSE_COL
 record(bo, "$(P)$(R)FALSE_COL") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_FALSE_COL")
@@ -56,7 +57,7 @@ record(bo, "$(P)$(R)FALSE_COL") {
 }
 
 ## False colour mode readback from driver
-# % gdatag, binary, ro, $(gda_name=$(PORT)), FALSE_COL_RBV, Readback for FALSE_COL [[ffmpegStream]]
+# % gdatag, binary, ro, $(PORT)_ffmpegStream, FALSE_COL_RBV, Readback for FALSE_COL
 record(bi, "$(P)$(R)FALSE_COL_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -66,7 +67,7 @@ record(bi, "$(P)$(R)FALSE_COL_RBV") {
 }
 
 ## Always produce jpegs, even when no-one is listening
-# % gdatag, binary, rw, $(gda_name=$(PORT)), ALWAYS_ON, Set ALWAYS_ON [[ffmpegStream]]
+# % gdatag, binary, rw, $(PORT)_ffmpegStream, ALWAYS_ON, Set ALWAYS_ON
 record(bo, "$(P)$(R)ALWAYS_ON") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_ALWAYS_ON")
@@ -77,7 +78,7 @@ record(bo, "$(P)$(R)ALWAYS_ON") {
 }
 
 ## Always on readback from driver
-# % gdatag, binary, ro, $(gda_name=$(PORT)), ALWAYS_ON_RBV, Readback for ALWAYS_ON [[ffmpegStream]]
+# % gdatag, binary, ro, $(PORT)_ffmpegStream, ALWAYS_ON_RBV, Readback for ALWAYS_ON
 record(bi, "$(P)$(R)ALWAYS_ON_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
@@ -87,7 +88,7 @@ record(bi, "$(P)$(R)ALWAYS_ON_RBV") {
 }
 
 ## HTTP Port to connect an mjpg viewer to
-# % gdatag, pv, ro, $(gda_name=$(PORT)), HTTP_PORT_RBV, Readback for HTTP_PORT [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, HTTP_PORT_RBV, Readback for HTTP_PORT
 record(ai, "$(P)$(R)HTTP_PORT_RBV")
 {
     field(PINI, "1")
@@ -97,7 +98,7 @@ record(ai, "$(P)$(R)HTTP_PORT_RBV")
 }
 
 ## Hostname of the HTTP server
-# % gdatag, pv, ro, $(gda_name=$(PORT)), HOST_RBV, Readback for HOST [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, HOST_RBV, Readback for HOST
 record(stringin, "$(P)$(R)HOST_RBV")
 {
     field(PINI, "1")
@@ -107,7 +108,7 @@ record(stringin, "$(P)$(R)HOST_RBV")
 }
 
 ## Number of clients
-# % gdatag, pv, ro, $(gda_name=$(PORT)), CLIENTS_RBV, Readback for CLIENTS [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, CLIENTS_RBV, Readback for CLIENTS
 record(ai, "$(P)$(R)CLIENTS_RBV")
 {
     field(PINI, "1")
@@ -117,7 +118,7 @@ record(ai, "$(P)$(R)CLIENTS_RBV")
 }
 
 ## URL of the jpg snapshot
-# % gdatag, pv, ro, $(gda_name=$(PORT)), JPG_URL_RBV, Readback for JPG URL [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, JPG_URL_RBV, Readback for JPG URL
 record(waveform, "$(P)$(R)JPG_URL_RBV")
 {
     field(DTYP, "asynOctetRead")
@@ -128,7 +129,7 @@ record(waveform, "$(P)$(R)JPG_URL_RBV")
 }
 
 ## URL of the mjpg stream
-# % gdatag, pv, ro, $(gda_name=$(PORT)), MJPG_URL_RBV, Readback for MJPG URL [[ffmpegStream]]
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, MJPG_URL_RBV, Readback for MJPG URL
 record(waveform, "$(P)$(R)MJPG_URL_RBV")
 {
     field(DTYP, "asynOctetRead")
