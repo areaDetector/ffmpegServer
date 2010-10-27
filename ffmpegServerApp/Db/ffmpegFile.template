@@ -3,25 +3,25 @@
 # % macro, PORT, Asyn Port name
 # % gui, $(PORT), edmtab, ffmpegFile.edl, P=$(P),R=$(R)
 
-# \file 
-# ffmpegFile wraps the ffmpeg compression libraries in an areaDetector plugin.
-# It works in much the same way as the other NDFile plugins. By default, it
-# will try to guess the file format from the file extension, but you can force
-# it to a particular file format with the FileFormat record.
-# \section ffmpegStream_setup Setup
-# - In the database, an instance of NDPluginBase is required, followed by an
-# instance of NDFile, then an instance of this template. 
-# - In the startup scripts, call ffmpegFileConfigure() once per ffmpegStream
-# instance to setup the areadetector plugin
-# - see \ref build_instructions
-# \section ffmpegStream_screenshots Screenshots
-# \htmlinclude flashvideo.html
-# \image html ffmpegFileEdm.png "Edm screen for ffmpegFile"
+# # \file 
+# # ffmpegFile wraps the ffmpeg compression libraries in an areaDetector plugin.
+# # It works in much the same way as the other NDFile plugins. By default, it
+# # will try to guess the file format from the file extension, but you can force
+# # it to a particular file format with the FileFormat record.
+# # \section ffmpegStream_setup Setup
+# # - In the database, an instance of NDPluginBase is required, followed by an
+# # instance of NDFile, then an instance of this template. 
+# # - In the startup scripts, call ffmpegFileConfigure() once per ffmpegStream
+# # instance to setup the areadetector plugin
+# # - see \ref build_instructions
+# # \section ffmpegStream_screenshots Screenshots
+# # \htmlinclude flashvideo.html
+# # \image html ffmpegFileEdm.png "Edm screen for ffmpegFile"
 
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, ffmpegFile, $(PORT)_ffmpegFile, $(PORT) ffmpegFile class instance
 
-# File data format 
+# # File data format 
 # % gdatag, mbbinary, rw, $(PORT)_ffmpegFile, FileFormat, Set FileFormat
 record(mbbo, "$(P)$(R)FileFormat")
 {
@@ -33,7 +33,7 @@ record(mbbo, "$(P)$(R)FileFormat")
     field(TWVL, "2")    
 }
 
-# File data format from driver
+# # File data format from driver
 # % gdatag, mbbinary, ro, $(PORT)_ffmpegFile, FileFormat_RBV, Readback for FileFormat
 record(mbbi, "$(P)$(R)FileFormat_RBV")
 {
@@ -45,7 +45,7 @@ record(mbbi, "$(P)$(R)FileFormat_RBV")
     field(TWVL, "2") 
 }
 
-## FFMPEG Bitrate
+# # FFMPEG Bitrate
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, BITRATE, Set BITRATE
 record(ao, "$(P)$(R)BITRATE") {
   field(DTYP, "asynInt32")
@@ -54,7 +54,7 @@ record(ao, "$(P)$(R)BITRATE") {
   field(PINI, "YES")  
 }
 
-## FFMPEG Bitrate from driver
+# # FFMPEG Bitrate from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, BITRATE_RBV, Readback for BITRATE
 record(ai, "$(P)$(R)BITRATE_RBV") {
   field(SCAN, "I/O Intr")
@@ -62,7 +62,7 @@ record(ai, "$(P)$(R)BITRATE_RBV") {
   field(INP, "@asyn($(PORT) 0)FFMPEG_BITRATE")
 }
 
-## FFMPEG Frames Per Second
+# # FFMPEG Frames Per Second
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, FPS, Set FPS
 record(ao, "$(P)$(R)FPS") {
   field(DTYP, "asynInt32")
@@ -71,7 +71,7 @@ record(ao, "$(P)$(R)FPS") {
   field(PINI, "YES")  
 }
 
-## FFMPEG Frames Per Second from driver
+# # FFMPEG Frames Per Second from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, FPS_RBV, Readback for FPS
 record(ai, "$(P)$(R)FPS_RBV") {
   field(SCAN, "I/O Intr")
@@ -79,7 +79,7 @@ record(ai, "$(P)$(R)FPS_RBV") {
   field(INP, "@asyn($(PORT) 0)FFMPEG_FPS")
 }
 
-## FFMPEG Width
+# # FFMPEG Width
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, WIDTH, Set WIDTH
 record(ao, "$(P)$(R)WIDTH") {
   field(DTYP, "asynInt32")
@@ -88,7 +88,7 @@ record(ao, "$(P)$(R)WIDTH") {
   field(PINI, "YES")  
 }
 
-## FFMPEG Bitrate from driver
+# # FFMPEG Bitrate from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, WIDTH_RBV, Readback for WIDTH
 record(ai, "$(P)$(R)WIDTH_RBV") {
   field(SCAN, "I/O Intr")
@@ -96,7 +96,7 @@ record(ai, "$(P)$(R)WIDTH_RBV") {
   field(INP, "@asyn($(PORT) 0)FFMPEG_WIDTH")
 }
 
-## FFMPEG Width
+# # FFMPEG Width
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, HEIGHT, Set HEIGHT
 record(ao, "$(P)$(R)HEIGHT") {
   field(DTYP, "asynInt32")
@@ -105,25 +105,10 @@ record(ao, "$(P)$(R)HEIGHT") {
   field(PINI, "YES")  
 }
 
-## FFMPEG Bitrate from driver
+# # FFMPEG Bitrate from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, HEIGHT_RBV, Readback for HEIGHT
 record(ai, "$(P)$(R)HEIGHT_RBV") {
   field(SCAN, "I/O Intr")
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT) 0)FFMPEG_HEIGHT")
 }
-# \section License
-# Author: Diamond Light Source, Copyright 2010
-#
-# 'ffmpegServer' is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# 'ffmpegServer' is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with 'ffmpegServer'.  If not, see http://www.gnu.org/licenses/.
