@@ -2,7 +2,7 @@
 # % macro, R, Device Suffix
 # % macro, PORT, Asyn Port name
 # % macro, QUALITY, Jpeg Quality in percent
-# % gui, $(PORT), edmtab, ffmpegServer.edl, P=$(P),R=$(R)
+# % gui, $(PORT), edmtab, ffmpegStream.edl, P=$(P),R=$(R)
 
 # # \file 
 # # ffmpegServer contains a very simple http server based on

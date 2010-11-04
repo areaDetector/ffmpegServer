@@ -380,7 +380,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Qt Viewer Stream (fast)"
 numCmds 1
 command {
-  0 "ffmpegViewer `caget -t -S $(P)$(R)MJPG_URL_RBV`"
+  0 "unset http_proxy; ffmpegViewer `caget -t -S $(P)$(R)MJPG_URL_RBV`"
 }
 endObjectProperties
 
