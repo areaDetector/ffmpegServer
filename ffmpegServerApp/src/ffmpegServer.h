@@ -6,6 +6,14 @@
 
 #include "NDPluginDriver.h"
 
+/* null-httpd includes */
+#define __STDC_CONSTANT_MACROS
+extern "C" {
+#include "nullhttpd.h"
+}
+#include "ffmpegCommon.h"
+
+
 /** maximum number of streams that the http server will host, fairly arbitrary */
 #define MAX_FFMPEG_STREAMS 64
 

@@ -1,11 +1,5 @@
 /* local includes */
-#include "ffmpegCommon.h"
 #include "ffmpegServer.h"
-
-/* null-httpd includes */
-extern "C" {
-#include "nullhttpd.h"
-}
 
 /* EPICS includes */
 #include "epicsExport.h"
