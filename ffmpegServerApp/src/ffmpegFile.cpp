@@ -361,6 +361,18 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
     
     /* Initialise the ffmpeg library */
     ffmpegInitialise();
+    this->ctx = NULL;
+    this->outFile = NULL;
+    this->codec = NULL;
+    this->c = NULL;
+    this->inPicture = NULL;
+    this->scPicture = NULL;    
+    this->scArray = NULL;
+    this->outArray = NULL;
+    this->ctx = NULL;      
+    this->fmt = NULL;
+    this->oc = NULL;
+    this->video_st = NULL;    
     
 }
 

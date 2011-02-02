@@ -11,6 +11,7 @@ extern "C" {
 #include "epicsExport.h"
 #include "iocsh.h"
 #include <epicsExit.h>
+#include <epicsThread.h>
 #include <time.h>
 
 /* windows includes */
