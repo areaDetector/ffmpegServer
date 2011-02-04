@@ -3,6 +3,9 @@
 
 #include "NDPluginFile.h"
 #include "ffmpegCommon.h"
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
 
 #define ffmpegFileBitrateString "FFMPEG_BITRATE"  /* (asynInt32, r/w) File bitrate */
 #define ffmpegFileFPSString     "FFMPEG_FPS"      /* (asynInt32, r/w) Frames per second */

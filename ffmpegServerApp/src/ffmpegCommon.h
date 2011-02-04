@@ -1,7 +1,9 @@
 #ifndef ffmpegCommon_H
 #define ffmpegCommon_H
 
+#ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
+#endif
 
 /* ffmpeg includes */
 extern "C" {

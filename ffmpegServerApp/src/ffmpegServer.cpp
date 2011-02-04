@@ -17,7 +17,7 @@ int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
 }
 /** win32 implementation of pthread_cond_wait */
 int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
-  pthread_mutex_unlock(external_mutex);
+//  pthread_mutex_unlock(external_mutex);
   WaitForSingleObject (cv->semaphore, INFINITE);
   pthread_mutex_lock(external_mutex);
   return 0;
@@ -228,10 +228,11 @@ void ffmpegStream::send_snapshot(int sid, int index) {
     /* Say we're listening */
     getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
     pthread_mutex_lock( &this->mutex );    
-    this->nclients++;    
+    this->nclients++;   
+    if (this->nclients > 1) always_on = 1;
     pthread_mutex_unlock(&this->mutex);
     /* if always on or clients already listening then there is already a frame */        
-    if (always_on || this->nclients > 1 || index) {
+    if (always_on || index) {
         pArray = get_jpeg();
     } else {
         pArray = wait_for_jpeg(sid);
@@ -303,7 +304,7 @@ NDArray* ffmpegStream::get_jpeg() {
 /** Internal function to wait for a jpeg to be produced */
 NDArray* ffmpegStream::wait_for_jpeg(int sid) {
     NDArray* pArray;
-    pthread_cond_wait(&this->cond[sid], &this->mutex);
+    pthread_cond_wait(&(this->cond[sid]), &this->mutex);
     pArray = this->jpeg;
     pArray->reserve();  
     pthread_mutex_unlock(&this->mutex);   
@@ -320,13 +321,14 @@ void ffmpegStream::send_stream(int sid) {
     getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
     pthread_mutex_lock( &this->mutex );    
     this->nclients++;    
+    if (this->nclients > 1) always_on = 1;
     pthread_mutex_unlock(&this->mutex);    
     /* Send the appropriate header */
     send_fileheader(sid, 0, 200, "OK", "1", "multipart/x-mixed-replace;boundary=BOUNDARY", -1, now);
     prints("--BOUNDARY\r\n");
     flushbuffer(sid);
     /* if always on or clients already listening then there is already a frame */    
-    if (always_on || this->nclients > 1) {
+    if (always_on) {
         pArray = get_jpeg();
         ret = send_frame(sid, pArray);    
     }
@@ -468,7 +470,6 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
             "%s:%s: Could not format array for correct pix_fmt for codec\n",
             driverName, functionName);    
-        pthread_mutex_unlock(&this->mutex);
         /* We must enter the loop and exit with the mutex locked */
         this->lock();                
         return;

@@ -7,7 +7,9 @@
 #include "NDPluginDriver.h"
 
 /* null-httpd includes */
+#ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
+#endif
 extern "C" {
 #include "nullhttpd.h"
 }

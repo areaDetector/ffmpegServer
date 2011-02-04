@@ -14,10 +14,12 @@ DBD += ffmpegServer.dbd
 #INC += ffmpegServer.h
 
 # ffmpeg must be built to c99 standard
-USR_CFLAGS += -std=c99
+USR_CFLAGS_Linux += -std=c99
 USR_CXXFLAGS += -U_GNU_SOURCE
 
 # Include the srcs from nullhttpd
+#SRC_DIRS += /dls_sw/work/R3.14.11/support/nullhttpd/src
+#SRC_DIRS += W:\work/R3.14.11/support/nullhttpd/src
 SRC_DIRS += $(NULLHTTPD)/src
 
 # For some reason the windows build needs stdint.h and inttypes.h

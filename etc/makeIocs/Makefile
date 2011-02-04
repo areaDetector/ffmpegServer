@@ -2,8 +2,8 @@ TOP = ../..
 include $(TOP)/configure/CONFIG
 
 # this is the dls-xml-iocbuilder.py file
-XMLBUILDER := dls-xml-iocbuilder.py
-#XMLBUILDER := /dls_sw/work/common/python/iocbuilder/xmlbuilder/xmlbuilder.py
+#XMLBUILDER := dls-xml-iocbuilder.py
+XMLBUILDER := /dls_sw/work/common/python/iocbuilder/xmlbuilder/xmlbuilder.py
 
 # set to -d to get debugging
 # DEBUG := -d
@@ -25,7 +25,7 @@ install: $(IOC_DIRS)
 
 # General rule for building a Standard IOC from an XML file
 $(TOP)/iocs/%: %.xml
-	$(XMLBUILDER) $(DEBUG) -e $<
+	$(XMLBUILDER) $(DEBUG) -e -b $<
 	
 # General rule for building a Simulation IOC from an XML file
 $(TOP)/iocs/%_sim: %.xml

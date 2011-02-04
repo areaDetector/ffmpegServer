@@ -1,4 +1,4 @@
-from iocbuilder import Device, AutoSubstitution
+from iocbuilder import Device, AutoSubstitution, Architecture
 from iocbuilder.arginfo import *
 
 from iocbuilder.modules.areaDetector import AreaDetector, _NDPluginBase, _NDFile, _NDFileBase
@@ -7,9 +7,13 @@ class FFmpegServer(Device):
     '''Library dependencies for ffmpeg'''
     Dependencies = (AreaDetector,)
     # Device attributes
-    LibFileList = ['ffmpegServer']
+    if Architecture() == "win32-x86":
+        LibFileList = ['swscale', 'avutil', 'avcodec', 'avformat', 'avdevice']
+    else:
+        LibFileList = []
+    LibFileList += ['ffmpegServer']
     DbdFileList = ['ffmpegServer']  
-    AutoInstantiate = True	
+    AutoInstantiate = True    
 
 class _ffmpegStream(AutoSubstitution):
     TemplateFile = 'ffmpegStream.template'
@@ -28,8 +32,8 @@ class ffmpegStream(_NDPluginBase):
 
     # __init__ arguments
     # NOTE: _NDPluginBase comes 2nd so we overwrite NDARRAY_PORT argInfo
-    ArgInfo = _SpecificTemplate.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,    	
-    	Enabled   = Simple('Plugin Enabled at startup?', int),
+    ArgInfo = _SpecificTemplate.ArgInfo + _NDPluginBase.ArgInfo + makeArgInfo(__init__,        
+        Enabled   = Simple('Plugin Enabled at startup?', int),
         QUEUE     = Simple('Input array queue size', int),          
         HTTP_PORT = Simple('HTTP Port number', int),      
         MEMORY  = Simple('Max memory to allocate, should be maxw*maxh*nbuffer '

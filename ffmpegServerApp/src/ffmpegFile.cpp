@@ -246,7 +246,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
             AVPacket pkt;
             av_init_packet(&pkt);
 
-            if (c->coded_frame->pts != (uint) AV_NOPTS_VALUE)
+            if (c->coded_frame->pts != (int64_t) AV_NOPTS_VALUE)
                 pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
             if(c->coded_frame->key_frame)
                 pkt.flags |= PKT_FLAG_KEY;
@@ -299,7 +299,7 @@ asynStatus ffmpegFile::closeFile()
 	}
 	
     /* free the streams */
-    for(uint i = 0; i < oc->nb_streams; i++) {
+    for(unsigned int i = 0; i < oc->nb_streams; i++) {
         av_freep(&oc->streams[i]->codec);
         av_freep(&oc->streams[i]);
     }
