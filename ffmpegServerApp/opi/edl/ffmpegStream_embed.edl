@@ -203,6 +203,9 @@ numDsps 1
 displayFileName {
   0 "$(filename)"
 }
+replaceSymbols {
+  0 1
+}
 endObjectProperties
 
 # (Shell Command)
