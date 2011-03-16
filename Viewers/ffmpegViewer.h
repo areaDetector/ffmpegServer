@@ -27,6 +27,7 @@ public:
     FFThread (const QString &url, unsigned char* destFrame, QWidget* parent = 0);
     ~FFThread ();
     void run();    
+    int fcol() { return _fcol; }
 
 public slots:
     void stopGracefully() { stopping=1; }

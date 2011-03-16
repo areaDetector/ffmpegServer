@@ -197,7 +197,7 @@ void ffmpegViewer::init() {
     _maxGy = 0;
     _gs = 20;    
     _fps = 0.0;
-    _gcol = Qt::black;   
+    _gcol = Qt::white;   
     _gcol.setAlpha(50); 
     _w = 0;
     _h = 0;         
@@ -225,8 +225,12 @@ void ffmpegViewer::calcFps() {
 // Initialise the ffthread
 void ffmpegViewer::ffInit() { 
     // must have a url
+    int fcol = 0;
     if (_url=="") return;
-    if ((ff!=NULL)&&(ff->isRunning())) ffQuit();
+    if ((ff!=NULL)&&(ff->isRunning())) {
+    	fcol = ff->fcol();
+    	ffQuit();
+    }
 
     // first make sure we don't update anything too quickly
     disableUpdates = true;    
@@ -241,6 +245,7 @@ void ffmpegViewer::ffInit() {
     // allow GL updates, and start the image thread
     disableUpdates = false;                              
     ff->start(); 
+    ff->setFcol(fcol);
 }
 
 void ffmpegViewer::ffQuit() {
