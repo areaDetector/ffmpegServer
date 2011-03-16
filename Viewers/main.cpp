@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QGroupBox>
+#include <QLineEdit>
 #include <QLabel>
 #include <QComboBox>
 #include <QGridLayout>
@@ -49,6 +50,10 @@ int main(int argc, char *argv[])
     QWidget top;
     QGridLayout topLayout;
     top.setLayout(&topLayout);
+    QString windowTitle(argv[1]);
+    QStringList wlist = windowTitle.split("/");
+    windowTitle = QString("ffmpegViewer: ") + wlist[wlist.size() - 1];    
+    top.setWindowTitle(windowTitle);
 
     /* view */
     QFrame frame(&top);
@@ -66,7 +71,7 @@ int main(int argc, char *argv[])
     topLayout.addWidget(&icontrols, 0, 2);
     QGridLayout icontrolsLayout;
     icontrols.setLayout(&icontrolsLayout);
-
+    
     /* Image controls */
     clickButton(icontrolsLayout, reset, Reset, "Reset Image", 0)
     controlsSlider(icontrolsLayout, zoom, Zoom, "Zoom", 1, 50);
@@ -84,6 +89,13 @@ int main(int argc, char *argv[])
     falseColBtn.addItem("Rainbow");
     falseColBtn.addItem("Iron");        
     view.connect(&falseColBtn, SIGNAL(currentIndexChanged(int)), SLOT(setFcol(int))); \
+    QLabel fpsLbl("fps");
+    fpsLbl.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    icontrolsLayout.addWidget(&(fpsLbl), 5, 0);
+    QLineEdit fpsVal("0.0");
+    fpsVal.setReadOnly(true);
+    icontrolsLayout.addWidget(&(fpsVal), 5, 1);
+    fpsVal.connect(&(view), SIGNAL(fpsChanged(const QString &)), SLOT(setText(const QString &)));    
         
     /* Grid controls box */
     QGroupBox gcontrols(QString("Grid"));

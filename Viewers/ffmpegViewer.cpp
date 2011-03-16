@@ -196,6 +196,7 @@ void ffmpegViewer::init() {
     _maxGx = 0;
     _maxGy = 0;
     _gs = 20;    
+    _fps = 0.0;
     _gcol = Qt::black;   
     _gcol.setAlpha(50); 
     _w = 0;
@@ -205,10 +206,21 @@ void ffmpegViewer::init() {
     _grid = false;
     _url = QString("");  
     ff = NULL;
+    lastFrameTime = NULL;
     tex = 0;
-    this->destFrame = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));      
+    this->destFrame = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));   
+    this->timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(calcFps()));
+    this->timer->start(100);
 }    
 
+void ffmpegViewer::calcFps() {
+	if (this->lastFrameTime != NULL) {
+		if (this->lastFrameTime->elapsed() > 1500.0 / this->_fps) {
+	    	emit fpsChanged(QString("0.0"));
+	    }
+	}
+}
 
 // Initialise the ffthread
 void ffmpegViewer::ffInit() { 
@@ -238,7 +250,7 @@ void ffmpegViewer::ffQuit() {
     if (!ff->wait(500)) {
         // thread won't stop, kill it
         ff->terminate();
-        ff->wait();   
+        ff->wait(100);   
     }    
     delete ff;
     ff = NULL;
@@ -401,6 +413,10 @@ void ffmpegViewer::resizeGL (int width, int height) {
 }
 
 void ffmpegViewer::setReset() {
+	ffInit();
+}
+
+void ffmpegViewer::zoomOntoImage() {
     // zoom onto the image
     makeCurrent();
     disableUpdates = true;
@@ -418,13 +434,22 @@ void ffmpegViewer::updateImage(int imw, int imh, bool firstImage)
     // make sure we update the current OpenGL window
     makeCurrent();
     // draw the subimage onto the texture        
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imw, imh, GL_RGB, GL_UNSIGNED_BYTE, destFrame);          
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imw, imh, GL_RGB, GL_UNSIGNED_BYTE, destFrame);     
+    
+    // time since last frame    
+    if (this->lastFrameTime == NULL) {
+    	this->lastFrameTime = new QTime();
+    } else {
+    	this->_fps = (1000.0 / this->lastFrameTime->elapsed()) * 0.5 + this->_fps * 0.5;
+    	emit fpsChanged(QString("%1").arg(this->_fps));
+    }
+    this->lastFrameTime->start();
 
     // if this is the first image, then make sure we zoom onto it
     if (firstImage || _imw != imw || _imh != imh) {
         _imw = imw;
         _imh = imh;        
-        setReset();
+        zoomOntoImage();
         _maxGx = _imw - 1;
         emit maxGxChanged(_maxGx);
         _maxGy = _imh - 1;

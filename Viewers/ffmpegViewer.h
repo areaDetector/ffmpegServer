@@ -6,6 +6,8 @@
 #include <QWheelEvent>
 #include <QtDesigner/QDesignerExportWidget>
 #include <QSpinBox>
+#include <QTime>
+#include <QTimer>
 
 /* ffmpeg includes */
 extern "C" {
@@ -90,7 +92,7 @@ signals:
 //    void gcolChanged(QColor gcol);
     void gridChanged(bool grid);    
     void urlChanged(const QString &);
-
+    void fpsChanged(const QString &);
     void aboutToQuit();
 
 public slots:
@@ -104,9 +106,11 @@ public slots:
     void setGrid(bool grid);    
     void setUrl(const QString &url);
     void setReset();    
+    void zoomOntoImage();
     void ffInit();
 	void updateImage (int imw, int imh, bool firstImage);	
     void setFcol(int x) { this->ff->setFcol(x); }	
+    void calcFps();
 
 protected:
 	void initializeGL ();
@@ -122,6 +126,9 @@ protected:
 
 private:       
     int _x, _y, _maxX, _maxY, _zoom, _gx, _gy, _maxGx, _maxGy, _gs, _w, _h, _imw, _imh;
+    QTime *lastFrameTime;
+    float _fps;
+    QTimer *timer;
     bool _grid; 
     QString _url; 
     unsigned char* destFrame;
