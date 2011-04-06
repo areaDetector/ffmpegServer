@@ -296,7 +296,7 @@ void ffmpegViewer::setY(int y) {
 
 // zoom frame
 void ffmpegViewer::setZoom(int zoom) { 
-    zoom = (zoom < -50) ? -50 : (zoom > 50) ? 50 : zoom;   
+    zoom = (zoom < -30) ? -30 : (zoom > 30) ? 30 : zoom;   
     if (_zoom != zoom) { 
         _zoom = zoom;
         emit zoomChanged(zoom);
@@ -427,7 +427,7 @@ void ffmpegViewer::zoomOntoImage() {
     disableUpdates = true;
     setX(0);
     setY(0);
-    setZoom(0);    
+    setZoom(-30);    
     disableUpdates = false;     
     initializeGL();
     updateViewport();
@@ -571,7 +571,7 @@ void ffmpegViewer::wheelEvent(QWheelEvent * event) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth (1.0f);
     glClear (GL_COLOR_BUFFER_BIT);
-initializeGL();
+    initializeGL();
     updateViewport();    
     setX(_x + (int) (0.5 + ((float) (oldw - _w)*event->x()) / width()));
     setY(_y + (int) (0.5 + ((float) (oldh - _h)*event->y()) / height())); 
@@ -586,14 +586,14 @@ void ffmpegViewer::updateViewport() {
 //    initializeGL();
 //    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-    double sf = pow(10, (double) _zoom / 25);
+    double sf = pow(10, (double) _zoom / 20);
     if (_imw > 0 && _imh > 0) {
         // clip sf
         double sfs = qMin((double) width() / _imw, (double) height() / _imh);
         if (sf < sfs) {
             sf = sfs;
-            _zoom = (int) (log10(sf) * 25);   
-            sf = pow(10, (double) _zoom / 25);     
+            _zoom = (int) (log10(sf) * 20 - 1);   
+            sf = pow(10, (double) _zoom / 20);                 
             emit zoomChanged(_zoom);            
         }        
     }
