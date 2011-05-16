@@ -1,3 +1,5 @@
+#undef USE_XV_PLAYER
+
 #include <QApplication>
 #include <QPushButton>
 #include <QGroupBox>
@@ -5,7 +7,14 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QGridLayout>
+
+#ifdef USE_XV_PLAYER
+#include "ffmpegViewerXv.h"
+#else
 #include "ffmpegViewer.h"
+#endif
+
+#include "SSpinBox.h"
 
 #define clickButton( layout, name, Name, text, y ) \
     QLabel ( name ## Lbl ) ( text ); \
@@ -63,7 +72,11 @@ int main(int argc, char *argv[])
     policy.setHorizontalStretch(3);
     frame.setSizePolicy(policy);
     topLayout.addWidget(&frame, 0, 0, 2, 2);
+#ifdef USE_XV_PLAYER
+    ffmpegViewerXv view(argv[1], &frame);
+#else
     ffmpegViewer view(argv[1], &frame);
+#endif
     frame.layout()->addWidget(&view);
 
     /* Image controls box */

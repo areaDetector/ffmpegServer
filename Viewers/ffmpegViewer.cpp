@@ -618,9 +618,3 @@ void ffmpegViewer::updateViewport() {
                 1.0 - ((float) _y + (float) _h) / (float) _imh, 
                 1.0 - (float) _y / (float) _imh);        
 }
-
-       
-SSpinBox::SSpinBox(QWidget *parent)
-    : QSpinBox(parent)
-{
-}
