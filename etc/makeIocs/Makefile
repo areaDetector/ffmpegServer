@@ -2,8 +2,8 @@ TOP = ../..
 include $(TOP)/configure/CONFIG
 
 # this is the dls-xml-iocbuilder.py file
-#XMLBUILDER := dls-xml-iocbuilder.py
-XMLBUILDER := /dls_sw/work/common/python/iocbuilder/xmlbuilder/xmlbuilder.py
+XMLBUILDER := dls-xml-iocbuilder.py
+#XMLBUILDER := /dls_sw/work/common/python/iocbuilder/xmlbuilder/xmlbuilder.py
 
 # set to -d to get debugging
 # DEBUG := -d
