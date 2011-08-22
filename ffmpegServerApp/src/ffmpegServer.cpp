@@ -17,7 +17,7 @@ int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
 }
 /** win32 implementation of pthread_cond_wait */
 int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
-//  pthread_mutex_unlock(external_mutex);
+  pthread_mutex_unlock(external_mutex);
   WaitForSingleObject (cv->semaphore, INFINITE);
   pthread_mutex_lock(external_mutex);
   return 0;
@@ -304,6 +304,7 @@ NDArray* ffmpegStream::get_jpeg() {
 /** Internal function to wait for a jpeg to be produced */
 NDArray* ffmpegStream::wait_for_jpeg(int sid) {
     NDArray* pArray;
+    pthread_mutex_lock(&this->mutex);
     pthread_cond_wait(&(this->cond[sid]), &this->mutex);
     pArray = this->jpeg;
     pArray->reserve();  
