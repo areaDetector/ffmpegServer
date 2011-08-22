@@ -50,7 +50,7 @@ record(mbbi, "$(P)$(R)FileFormat_RBV")
 record(ao, "$(P)$(R)BITRATE") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_BITRATE")
-  field(VAL, "100000")
+  field(VAL, "10000000")
   field(PINI, "YES")  
 }
 

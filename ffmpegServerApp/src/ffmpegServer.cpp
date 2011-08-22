@@ -371,7 +371,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
 //    struct timeval start, end;
 //    gettimeofday(&start, NULL);     
     /* we're going to get these with getIntegerParam */
-    int quality, clients, false_col, always_on;
+    int quality, clients, false_col, always_on, maxw, maxh;
     /* we're going to get these from the dims of the image */
     int width, height, size;
     /* for printing errors */
@@ -392,7 +392,9 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* get the configuration values */
     getIntegerParam(0, ffmpegServerQuality, &quality);
     getIntegerParam(0, ffmpegServerFalseCol, &false_col);
-    getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);    
+    getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
+    getIntegerParam(0, ffmpegServerMaxW, &maxw);
+    getIntegerParam(0, ffmpegServerMaxH, &maxh);
 
     /* if no-ones listening and we're not always on then do nothing */
     if (clients == 0 && always_on == 0) {
@@ -417,6 +419,13 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     } else {
         width  = 0;
         height = 0;
+    }
+
+    /* If we exceed the maximum size */
+    if (width > maxw || height > maxh) {
+    	double sf = MIN(((double)maxw)/width, ((double)maxh)/height);
+    	width = (int) (sf * width);
+    	height = (int) (sf * height);
     }
     size = width *  height;
 
@@ -558,6 +567,8 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     createParam(ffmpegServerMjpgUrlString,  asynParamOctet, &ffmpegServerMjpgUrl);
     createParam(ffmpegServerClientsString,  asynParamInt32, &ffmpegServerClients);
     createParam(ffmpegServerAlwaysOnString, asynParamInt32, &ffmpegServerAlwaysOn);
+    createParam(ffmpegServerMaxWString,     asynParamInt32, &ffmpegServerMaxW);
+    createParam(ffmpegServerMaxHString,     asynParamInt32, &ffmpegServerMaxH);
 
     /* Try to connect to the NDArray port */
     status = connectToArrayPort();

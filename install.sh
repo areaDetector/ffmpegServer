@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # DLS specific http proxy
-#export http_proxy=wwwcache2.rl.ac.uk:8080
+export http_proxy=wwwcache.rl.ac.uk:8080
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
-VERSION="ffmpeg-r24103-swscale-r31628"
-SOURCE="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/sources/${VERSION}.tar.bz2"
-WIN32SHARED="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/mingw32/shared/${VERSION}-mingw32-shared.7z"
-WIN32SHAREDDEV="http://ffmpeg.arrozcru.org/autobuilds/ffmpeg/mingw32/dev/shared/${VERSION}-mingw32-shared-dev.7z"
+VERSION="ffmpeg-0.8"
+SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.bz2"
+WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
+WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
 YASM="http://www.tortall.net/projects/yasm/releases/yasm-1.0.1.tar.gz"
 
 # First check whether the user has 7zr, needed for the windows build

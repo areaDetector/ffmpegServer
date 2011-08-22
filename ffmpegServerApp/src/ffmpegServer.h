@@ -27,6 +27,8 @@ extern "C" {
 #define ffmpegServerMjpgUrlString  "FFMPEG_MJPG_URL"  /* MJPG Stream URL string (string read)*/
 #define ffmpegServerClientsString  "FFMPEG_CLIENTS"   /* Number of connected clients (int32 read)*/
 #define ffmpegServerAlwaysOnString "FFMPEG_ALWAYS_ON" /* Always produce jpeg, even when no-one is listening (int32 read)*/
+#define ffmpegServerMaxWString     "FFMPEG_MAXW"      /* Maximum width of jpg to produce (int32 read/write)*/
+#define ffmpegServerMaxHString     "FFMPEG_MAXH"      /* Maximum height of jpg to produce (int32 read/write)*/
 
 /** Take an array source and compress it and serve it as an mjpeg stream. */
 class ffmpegStream : public NDPluginDriver {
@@ -50,6 +52,8 @@ protected:
     int ffmpegServerJpgUrl;
     int ffmpegServerMjpgUrl;            
     int ffmpegServerClients;
+    int ffmpegServerMaxW;
+    int ffmpegServerMaxH;
     int ffmpegServerAlwaysOn;
     #define LAST_FFMPEG_SERVER_PARAM ffmpegServerAlwaysOn
                                 

@@ -70,7 +70,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
                 driverName2, functionName);
             return(asynError);
         }
-        avcodec_get_context_defaults2(video_st->codec, CODEC_TYPE_VIDEO);
+        avcodec_get_context_defaults2(video_st->codec, AVMEDIA_TYPE_VIDEO);
           
         /* find the video encoder */
         getIntegerParam(0, NDFileFormat, &codi);
@@ -82,7 +82,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
         	    codec = avcodec_find_encoder_by_name("msmpeg4v2");
         	    break;
         	case 2:
-        	    codec = avcodec_find_encoder_by_name("mpeg4");	     
+        	    codec = avcodec_find_encoder_by_name("mpeg");
         	    break;  	        	    
         	default:
                 asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
@@ -102,7 +102,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
 	    }	    
 	    c = video_st->codec;
         c->codec_id = codec->id;          
-        c->codec_type = CODEC_TYPE_VIDEO;
+        c->codec_type = AVMEDIA_TYPE_VIDEO;
 
         /* put sample parameters */
         getIntegerParam(0, ffmpegFileBitrate, &(c->bit_rate));
@@ -147,7 +147,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
         return(asynError);
     }
 
-    dump_format(oc, 0, fileName, 1);
+    av_dump_format(oc, 0, fileName, 1);
 
     /* now that all the parameters are set, we can open the audio and
        video codecs and allocate the necessary encode buffers */
@@ -180,8 +180,8 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
 	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);       
 
     /* open the output file, if needed */
-    if (!(fmt->flags & AVFMT_NOFILE)) {
-        if (url_fopen(&oc->pb, fileName, URL_WRONLY) < 0) {
+    if (!(fmt->flags & AVFMT_NOFILE)) {    
+        if (avio_open(&oc->pb, fileName, AVIO_FLAG_WRITE) < 0) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
                 "%s:%s error opening file %s\n",
                 driverName2, functionName, fileName);
@@ -232,7 +232,6 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
         AVPacket pkt;
         av_init_packet(&pkt);
         printf("How did you manage to get in this mode?\n");
-        pkt.flags |= PKT_FLAG_KEY;
         pkt.stream_index= video_st->index;
         pkt.data= (uint8_t *)scPicture;
         pkt.size= sizeof(AVPicture);
@@ -249,7 +248,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
             if (c->coded_frame->pts != (int64_t) AV_NOPTS_VALUE)
                 pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
             if(c->coded_frame->key_frame)
-                pkt.flags |= PKT_FLAG_KEY;
+                pkt.flags |= AV_PKT_FLAG_KEY;
             pkt.stream_index= video_st->index;
             pkt.data= (uint8_t *) outArray->pData;
             pkt.size= out_size;
@@ -306,7 +305,7 @@ asynStatus ffmpegFile::closeFile()
 
     if (!(fmt->flags & AVFMT_NOFILE)) {
         /* close the output file */
-        url_fclose(oc->pb);
+        avio_close(oc->pb);
     }
 
     /* free the stream */

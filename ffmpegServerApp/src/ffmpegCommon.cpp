@@ -64,7 +64,9 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
         width  = pArray->dims[0].size;
         height = pArray->dims[1].size;
         if (Int16) {
-            pix_fmt = PIX_FMT_GRAY16;                   
+            pix_fmt = PIX_FMT_GRAY16;
+        } else if (width != c->width || height != c->height) {
+        	pix_fmt = PIX_FMT_GRAY8;
         } else {
         	int stride;
             pix_fmt = PIX_FMT_GRAY8;

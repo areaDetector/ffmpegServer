@@ -68,7 +68,7 @@ void FFThread::run()
     // Find the first video stream
     videoStream=-1;
     for(unsigned int i=0; i<pFormatCtx->nb_streams; i++) {
-        if(pFormatCtx->streams[i]->codec->codec_type==CODEC_TYPE_VIDEO) {
+        if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
             videoStream=i;
             break;
         }
@@ -92,7 +92,7 @@ void FFThread::run()
         return; // Could not open codec
     }
     ffmutex->unlock();
-        
+    av_dump_format(pFormatCtx, 0, url, 0);
     while ((stopping!=1) && (av_read_frame(pFormatCtx, &packet)>=0)) {        
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
@@ -378,7 +378,6 @@ void ffmpegViewer::setUrl(const QString &url) {
 }
 
 void ffmpegViewer::initializeGL() {
-
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth (1.0f);
     glClear (GL_COLOR_BUFFER_BIT);
@@ -585,18 +584,21 @@ void ffmpegViewer::wheelEvent(QWheelEvent * event) {
 void ffmpegViewer::updateViewport() {  
 //    initializeGL();
 //    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-    double sf = pow(10, (double) _zoom / 20);
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   
+	int newzoom = _zoom + 1;
+	double newsf = pow(10, (double) (newzoom)/ 20); 		
     if (_imw > 0 && _imh > 0) {
-        // clip sf
-        double sfs = qMin((double) width() / _imw, (double) height() / _imh);
-        if (sf < sfs) {
-            sf = sfs;
-            _zoom = (int) (log10(sf) * 20 - 1);   
-            sf = pow(10, (double) _zoom / 20);                 
-            emit zoomChanged(_zoom);            
-        }        
+    	// work out new scale factor
+    	while (_imw * newsf < width() && _imh * newsf < height()) {
+    		newzoom += 1;
+	    	newsf = pow(10, (double) (newzoom)/ 20);     		
+    	}
     }
+    if (newzoom - 1 > _zoom) {
+    	_zoom = newzoom - 1;
+        emit zoomChanged(_zoom);                	
+    }    
+    double sf = pow(10, (double) _zoom / 20);    
     _w = (int) (width() / sf);
     _h = (int) (height() / sf);    
     int maxX = qMax(_imw - _w, 0);

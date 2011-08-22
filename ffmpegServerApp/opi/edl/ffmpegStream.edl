@@ -46,7 +46,7 @@ major 4
 minor 0
 release 0
 x 5
-y 530
+y 550
 w 380
 h 205
 lineColor index 14
@@ -63,7 +63,7 @@ release 0
 x 5
 y 400
 w 380
-h 105
+h 130
 lineColor index 14
 fill
 fillColor index 3
@@ -96,7 +96,7 @@ major 4
 minor 1
 release 0
 x 5
-y 520
+y 540
 w 79
 h 14
 font "arial-medium-r-12.0"
@@ -116,7 +116,7 @@ major 4
 minor 0
 release 0
 x 95
-y 480
+y 505
 w 90
 h 20
 fgColor index 25
@@ -249,7 +249,7 @@ major 4
 minor 1
 release 0
 x 10
-y 480
+y 505
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -287,7 +287,7 @@ major 4
 minor 2
 release 0
 x 15
-y 540
+y 560
 w 360
 h 40
 fgColor index 43
@@ -347,7 +347,7 @@ major 4
 minor 2
 release 0
 x 15
-y 615
+y 635
 w 360
 h 40
 fgColor index 43
@@ -369,7 +369,7 @@ major 4
 minor 2
 release 0
 x 15
-y 660
+y 680
 w 360
 h 40
 fgColor index 43
@@ -416,7 +416,7 @@ major 4
 minor 5
 release 0
 x 15
-y 585
+y 605
 w 360
 h 20
 controlPv "$(P)$(R)JPG_URL_RBV"
@@ -437,7 +437,7 @@ major 4
 minor 5
 release 0
 x 15
-y 705
+y 725
 w 360
 h 20
 controlPv "$(P)$(R)MJPG_URL_RBV"
@@ -449,5 +449,98 @@ nullColor index 25
 useHexPrefix
 newPos
 objType "monitors"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 195
+y 480
+w 55
+h 20
+controlPv "$(P)$(R)MAXW_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 130
+y 480
+w 55
+h 20
+controlPv "$(P)$(R)MAXW"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 10
+y 480
+w 115
+h 25
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Max Width/Height"
+}
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 325
+y 480
+w 55
+h 20
+controlPv "$(P)$(R)MAXH_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 260
+y 480
+w 55
+h 20
+controlPv "$(P)$(R)MAXH"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
 endObjectProperties
 

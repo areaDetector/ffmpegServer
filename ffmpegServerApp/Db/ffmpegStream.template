@@ -2,6 +2,8 @@
 # % macro, R, Device Suffix
 # % macro, PORT, Asyn Port name
 # % macro, QUALITY, Jpeg Quality in percent
+# % macro, MAXW, Maximum Jpeg Width
+# % macro, MAXH, Maximum Jpeg Height
 # % gui, $(PORT), edmtab, ffmpegStream.edl, P=$(P),R=$(R)
 
 # # \file 
@@ -44,6 +46,41 @@ record(ai, "$(P)$(R)QUALITY_RBV") {
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT) 0)FFMPEG_QUALITY")
 }
+
+# # Maximum jpg width
+# % gdatag, pv, rw, $(PORT)_ffmpegStream, MAXW, Set MAXW
+record(ao, "$(P)$(R)MAXW") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXW")
+  field(VAL, "$(MAXW=640)")
+  field(PINI, "1")  
+}
+
+# # Maximum jpg width Readback from driver
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, MAXW_RBV, Readback for MAXW
+record(ai, "$(P)$(R)MAXW_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_MAXW")
+}
+
+# # Maximum jpg width
+# % gdatag, pv, rw, $(PORT)_ffmpegStream, MAXH, Set MAXH
+record(ao, "$(P)$(R)MAXH") {
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXH")
+  field(VAL, "$(MAXH=480)")
+  field(PINI, "1")  
+}
+
+# # Maximum jpg width Readback from driver
+# % gdatag, pv, ro, $(PORT)_ffmpegStream, MAXH_RBV, Readback for MAXH
+record(ai, "$(P)$(R)MAXH_RBV") {
+  field(SCAN, "I/O Intr")
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT) 0)FFMPEG_MAXH")
+}
+
 
 # # Toggle False colour mode 
 # % gdatag, binary, rw, $(PORT)_ffmpegStream, FALSE_COL, Set FALSE_COL
