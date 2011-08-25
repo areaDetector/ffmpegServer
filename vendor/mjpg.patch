@@ -1,0 +1,16 @@
+--- vendor/ffmpeg/libavcodec/mjpeg_parser.c	2011-08-25 13:37:07.000000000 +0100
++++ vendor_patched/ffmpeg/libavcodec/mjpeg_parser.c	2011-08-25 13:40:20.000000000 +0100
+@@ -58,6 +58,13 @@
+             return 0;
+         for(; i<buf_size; i++){
+             state= (state<<8) | buf[i];
++            /* Found the end of this frame */
++            if(state == 0xFFD9){
++                pc->frame_start_found=0;
++                pc->state=0;
++                return i+1;
++            }                        
++            /* Found the start of the next frame */            
+             if(state == 0xFFD8){
+                 pc->frame_start_found=0;
+                 pc->state=0;

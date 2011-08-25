@@ -51,4 +51,7 @@ done
 mv "${HERE}/vendor/${VERSION}" "${HERE}/vendor/ffmpeg"
 mv ${HERE}/vendor/yasm* "${HERE}/vendor/yasm"
 
+# patch mjpg parser
+patch -d "${HERE}" -p0 < "${HERE}/vendor/mjpg.patch"
+
 echo "You can now type make to build this module"
