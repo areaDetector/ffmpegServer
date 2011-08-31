@@ -52,7 +52,7 @@ record(ai, "$(P)$(R)QUALITY_RBV") {
 record(ao, "$(P)$(R)MAXW") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXW")
-  field(VAL, "$(MAXW=640)")
+  field(VAL, "$(MAXW=1600)")
   field(PINI, "1")  
 }
 
@@ -69,7 +69,7 @@ record(ai, "$(P)$(R)MAXW_RBV") {
 record(ao, "$(P)$(R)MAXH") {
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXH")
-  field(VAL, "$(MAXH=480)")
+  field(VAL, "$(MAXH=1200)")
   field(PINI, "1")  
 }
 
