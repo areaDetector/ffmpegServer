@@ -6,8 +6,8 @@ ifeq ($(EPICS_HOST_ARCH),linux-x86)
 	FFMPEGMAK = $(TOP)/vendor/ffmpeg/config.mak   
 endif
 
-BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-mingw32-shared/bin/*.*)
-LIB_INSTALLS_WIN32  += $(wildcard ../ffmpeg-mingw32-shared/lib/*.*)
+BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-win32-shared/bin/*.*)
+LIB_INSTALLS_WIN32  += $(wildcard ../ffmpeg-win32-dev/lib/*.*)
 BIN_INSTALLS_Linux  += $(wildcard ../ffmpeg/bin/*)
 LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg/lib/*.a)
 

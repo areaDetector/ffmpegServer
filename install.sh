@@ -35,8 +35,8 @@ echo "Untarring source..."
 tar xjf "${HERE}/vendor/$(basename $SOURCE)" -C "${HERE}/vendor"
 
 # unzip the 7z archives
-7zr x "-o${HERE}/vendor/ffmpeg-mingw32-shared" "${HERE}/vendor/$(basename $WIN32SHARED)"
-7zr x -y "-o${HERE}/vendor/ffmpeg-mingw32-shared" "${HERE}/vendor/$(basename $WIN32SHAREDDEV)"
+7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHARED)"
+7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHAREDDEV)"
 
 # untar yasm
 echo "Untarring yasm..."
@@ -49,6 +49,8 @@ done
 
 # move the untarred archives to the correct names
 mv "${HERE}/vendor/${VERSION}" "${HERE}/vendor/ffmpeg"
+mv "${HERE}/vendor/${VERSION}-win32-dev" "${HERE}/vendor/ffmpeg-win32-dev"
+mv "${HERE}/vendor/${VERSION}-win32-shared" "${HERE}/vendor/ffmpeg-win32-shared"
 mv ${HERE}/vendor/yasm* "${HERE}/vendor/yasm"
 
 # patch mjpg parser
