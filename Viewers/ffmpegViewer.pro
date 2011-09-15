@@ -10,7 +10,7 @@ SOURCES += main.cpp ffmpegViewer.cpp SSpinBox.cpp
 
 QT += opengl
 TARGET = ffmpegViewer
-INCLUDEPATH += ../vendor/ffmpeg/include
+INCLUDEPATH += ../vendor/ffmpeg-linux-x86/include
 LIBPATH += ../lib/linux-x86
 LIBS += -lavdevice -lavformat -lavcodec -lavutil -lbz2 -lswscale 
 QTDIR_build:REQUIRES="contains(QT_CONFIG, small-config)"

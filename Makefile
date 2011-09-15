@@ -10,12 +10,13 @@ DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
 ifeq ($(EPICS_HOST_ARCH),linux-x86)
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard etc))
-    # Comment out the following line to disable building of example iocs
-    DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
     # This builds the QT viewer
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard Viewers))
     install: $(TOP)/Viewers/Makefile
 endif
+
+# Comment out the following line to disable building of example iocs
+DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
 
 include $(TOP)/configure/RULES_TOP
 

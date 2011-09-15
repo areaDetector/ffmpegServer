@@ -18,14 +18,21 @@ USR_CFLAGS_Linux += -std=c99
 USR_CXXFLAGS += -U_GNU_SOURCE
 
 # Include the srcs from nullhttpd
-#SRC_DIRS += /dls_sw/work/R3.14.11/support/nullhttpd/src
-#SRC_DIRS += W:\work/R3.14.11/support/nullhttpd/src
 SRC_DIRS += $(NULLHTTPD)/src
 
 # For some reason the windows build needs stdint.h and inttypes.h
-USR_INCLUDES_WIN32 += -I$(TOP)/vendor/ffmpeg-win32-dev/include
 USR_INCLUDES_WIN32 += -I$(TOP)/vendor/msinttypes
-USR_INCLUDES_Linux += -I$(TOP)/vendor/ffmpeg/include
+# add the right include files
+ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
+	USR_INCLUDES_WIN32 += -I$(TOP)/vendor/ffmpeg-win32-dev/include
+else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
+	USR_INCLUDES_WIN32 += -I$(TOP)/vendor/ffmpeg-win64-dev/include
+else ifeq (linux-x86_64, $(findstring linux-x86_64, $(T_A)))
+	USR_INCLUDES_Linux += -I$(TOP)/vendor/ffmpeg-linux-x86_64/include	
+else ifeq (linux-x86, $(findstring linux-x86, $(T_A)))
+	USR_INCLUDES_Linux += -I$(TOP)/vendor/ffmpeg-linux-x86/include
+endif
+
 USR_CXXFLAGS_WIN32 += -DWIN32
 USR_CFLAGS_WIN32 += -DWIN32
 
