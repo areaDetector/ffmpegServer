@@ -1,8 +1,18 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 
+# config options for linux builds
+CONFIGOPTIONS += --prefix=$(shell cd $(TOP)/vendor && pwd)/ffmpeg-$(T_A)
+CONFIGOPTIONS += --disable-indev=v4l --disable-bzlib --disable-zlib --enable-shared
+
 # install libs
-FFMPEG_LINUX_LIBS = libavcodec.a libavdevice.a libavfilter.a libavformat.a libavutil.a libswscale.a
+FFMPEG_LINUX_LIBS += libavcodec.so libavcodec.so.53 libavcodec.so.53.7.0 
+FFMPEG_LINUX_LIBS += libavdevice.so libavdevice.so.53 libavdevice.so.53.1.1
+FFMPEG_LINUX_LIBS += libavfilter.so libavfilter.so.2 libavfilter.so.2.23.0
+FFMPEG_LINUX_LIBS += libavformat.so libavformat.so.53 libavformat.so.53.4.0
+FFMPEG_LINUX_LIBS += libavutil.so libavutil.so.51 libavutil.so.51.9.1
+FFMPEG_LINUX_LIBS += libswscale.so libswscale.so.2 libswscale.so.2.0.0
+
 FFMPEG_LINUX_BINS = ffmpeg ffprobe ffserver
 ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
 	BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-win32-shared/bin/*.*)
@@ -20,9 +30,6 @@ else ifeq (linux-x86, $(findstring linux-x86, $(T_A)))
 	FFMPEGMAK = $(TOP)/vendor/ffmpeg-linux-x86/config.mak	
 endif
 
-# config options for linux builds
-CONFIGOPTIONS += --prefix=$(shell cd $(TOP)/vendor && pwd)/ffmpeg-$(T_A)
-CONFIGOPTIONS += --disable-indev=v4l --disable-bzlib --disable-zlib
 
 install: $(FFMPEGMAK)
 
