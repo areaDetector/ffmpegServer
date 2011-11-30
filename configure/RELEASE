@@ -16,12 +16,12 @@ WORK=/dls_sw/work/R3.14.11/support
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-ASYN=/dls_sw/work/64_R3.14.11/support/asyn
-AREADETECTOR=/dls_sw/work/64_R3.14.11/support/areaDetector
-NULLHTTPD=/dls_sw/work/64_R3.14.11/support/nullhttpd
+ASYN=$(SUPPORT)/asyn/4-17
+AREADETECTOR=$(WORK)/areaDetector
+NULLHTTPD=$(SUPPORT)/nullhttpd/0-5-1dls3
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/dls_sw/work/epics/R3.14.11_with_64/base
+EPICS_BASE=/dls_sw/epics/R3.14.11/base
 
 #Capfast users may need the following definitions
 #CAPFAST_TEMPLATES=
