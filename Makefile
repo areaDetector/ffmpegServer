@@ -8,8 +8,16 @@ DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *App))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *app))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
-ifeq ($(EPICS_HOST_ARCH),linux-x86)
+
+# make sure example are only created on linux-x86[_64]
+ifeq ($(findstring linux-x86, $(EPICS_HOST_ARCH)), linux-x86)
+	# Comment out the following lines to disable creation of example iocs
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard etc))
+	ifeq ($(wildcard etc),etc)
+		include $(TOP)/etc/makeIocs/Makefile.iocs
+		UNINSTALL_DIRS += documentation/doxygen $(IOC_DIRS)
+	endif
+
     # This builds the QT viewer
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard Viewers))
     install: $(TOP)/Viewers/Makefile
