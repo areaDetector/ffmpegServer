@@ -418,8 +418,8 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         width  = pArray->dims[1].size;
         height = pArray->dims[2].size;
     } else {
-        width  = 0;
-        height = 0;
+        width  = pArray->dims[0].size;
+        height = pArray->dims[1].size;
     }
 
     /* If we exceed the maximum size */

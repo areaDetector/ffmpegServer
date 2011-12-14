@@ -9,8 +9,8 @@ DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *app))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
 
-# make sure example are only created on linux-x86[_64]
-ifeq ($(findstring linux-x86, $(EPICS_HOST_ARCH)), linux-x86)
+# make sure examples are only built on linux-x86
+ifeq ($(EPICS_HOST_ARCH), linux-x86)
 	# Comment out the following lines to disable creation of example iocs
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard etc))
 	ifeq ($(wildcard etc),etc)
