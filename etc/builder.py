@@ -7,8 +7,13 @@ class FFmpegServer(Device):
     '''Library dependencies for ffmpeg'''
     Dependencies = (AreaDetector,)
     # Device attributes
-    SysLibFileList = ['swscale', 'avutil', 'avcodec', 'avformat', 'avdevice']
-    LibFileList = ['ffmpegServer']
+    LibFileList = []
+    libraries = ['swscale', 'avutil', 'avcodec', 'avformat', 'avdevice']
+    if Architecture() == "win32-x86" or Architecture() == "windows-x64":
+        LibFileList = libraries
+    else:
+        SysLibFileList = libraries
+    LibFileList += ['ffmpegServer']
     DbdFileList = ['ffmpegServer']  
     AutoInstantiate = True    
 
