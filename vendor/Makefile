@@ -3,7 +3,7 @@ include $(TOP)/configure/CONFIG
 
 # config options for linux builds
 CONFIGOPTIONS += --prefix=$(shell cd $(TOP)/vendor && pwd)/ffmpeg-$(T_A)
-CONFIGOPTIONS += --disable-indev=v4l --disable-bzlib --disable-zlib --enable-shared
+CONFIGOPTIONS += --disable-indev=v4l --disable-bzlib --disable-zlib --enable-shared --enable-gpl --enable-x11grab
 
 # install libs
 FFMPEG_LINUX_LIBS += libavcodec.so libavcodec.so.53 libavcodec.so.53.7.0 
