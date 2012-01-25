@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>438</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QDockWidget" name="gridDock">
+   <property name="windowTitle">
+    <string>Grid</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="gridLbl">
+       <property name="text">
+        <string>Display Grid</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="gridBtn">
+       <property name="text">
+        <string>Grid</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="gridxLbl">
+       <property name="text">
+        <string>Grid X</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="gridxSpin"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="gridyLbl">
+       <property name="text">
+        <string>Grid Y</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="gridySpin"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="gridsLbl">
+       <property name="text">
+        <string>Grid Spacing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="gridsSpin"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="gridcolLbl">
+       <property name="text">
+        <string>Grid Colour</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="gridcolBtn">
+       <property name="text">
+        <string>Grid</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="imageDock">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Image</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="resetBtn">
+       <property name="text">
+        <string>Reset</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="zoomLbl">
+       <property name="text">
+        <string>Zoom</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="zoomSpin"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="xoffLbl">
+       <property name="text">
+        <string>X Offset</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="xoffSpin"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="yoffLbl">
+       <property name="text">
+        <string>Y Offset</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="yoffSpin"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="fcolLbl">
+       <property name="text">
+        <string>False Colour Map</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="fcolCombo"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="fcolLbl_2">
+       <property name="text">
+        <string>fps</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLCDNumber" name="fpsNumber">
+       <property name="segmentStyle">
+        <enum>QLCDNumber::Flat</enum>
+       </property>
+       <property name="value" stdset="0">
+        <double>5.755500000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="resetLbl">
+       <property name="text">
+        <string>Reset Image</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
