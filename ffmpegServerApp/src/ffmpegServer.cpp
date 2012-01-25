@@ -7,6 +7,7 @@
 #include <epicsExit.h>
 #include <epicsThread.h>
 #include <time.h>
+#include <math.h>
 
 /* windows includes */
 #ifdef _MSC_VER /* Microsoft Compilers */
@@ -442,6 +443,12 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
             av_free(c);
         }
         c = avcodec_alloc_context();
+        /* Make sure that we don't try and create an image smaller than FF_MIN_BUFFER_SIZE */
+        if (width * height < FF_MIN_BUFFER_SIZE) {
+        	double sf = sqrt(1.0 * FF_MIN_BUFFER_SIZE / width / height);
+        	height = (int) (height * sf + 1);
+        	width = (int) (width * sf + 1);        	
+		}        	
         c->width = width;
         c->height = height;
         c->flags = CODEC_FLAG_QSCALE;
