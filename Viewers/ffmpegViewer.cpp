@@ -1,5 +1,3 @@
-#define USE_XV_PLAYER
-
 #include <QApplication>
 #include <QPushButton>
 #include <QGroupBox>
@@ -7,12 +5,7 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QGridLayout>
-
-#ifdef USE_XV_PLAYER
 #include "ffmpegWidget.h"
-#else
-#include "ffmpegViewer.h"
-#endif
 
 #include "SSpinBox.h"
 
@@ -72,11 +65,7 @@ int main(int argc, char *argv[])
     policy.setHorizontalStretch(3);
     frame.setSizePolicy(policy);
     topLayout.addWidget(&frame, 0, 0, 2, 2);
-#ifdef USE_XV_PLAYER
     ffmpegWidget view(argv[1], &frame);
-#else
-    ffmpegViewer view(argv[1], &frame);
-#endif
     frame.layout()->addWidget(&view);
 
     /* Image controls box */
@@ -88,7 +77,6 @@ int main(int argc, char *argv[])
     /* Image controls */
     clickButton(icontrolsLayout, reset, Reset, "Reset Image", 0)
     controlsSlider(icontrolsLayout, zoom, Zoom, "Zoom", 1, 30);
-    zoomSld.setMinimum(0);
     controlsSlider(icontrolsLayout, x, X, "X Offset", 2, 100);
     setSliderRange(x, X);
     controlsSlider(icontrolsLayout, y, Y, "Y Offset", 3, 100);
@@ -125,7 +113,6 @@ int main(int argc, char *argv[])
     controlsSlider(gcontrolsLayout, gs, Gs, "Grid Spacing", 3, 100);
     gsSld.setMinimum(2);    
     gsSld.setValue(20);        
-    clickButton(gcontrolsLayout, gcol, Gcol, "Grid Colour", 4)    
 
     /* Run the program */
     top.resize(1266,808);

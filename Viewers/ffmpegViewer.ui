@@ -6,14 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>438</height>
+    <width>813</width>
+    <height>466</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="video">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="ffmpegWidget" name="widget" native="true"/>
+    </item>
+   </layout>
+  </widget>
   <widget class="QDockWidget" name="gridDock">
    <property name="windowTitle">
     <string>Grid</string>
@@ -23,6 +35,9 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QFormLayout" name="formLayout_2">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="gridLbl">
        <property name="text">
@@ -40,41 +55,31 @@
      <item row="1" column="0">
       <widget class="QLabel" name="gridxLbl">
        <property name="text">
-        <string>Grid X</string>
+        <string>Grid X Position</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QSpinBox" name="gridxSpin"/>
+      <widget class="SSpinBox" name="gridxSpin"/>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="gridyLbl">
        <property name="text">
-        <string>Grid Y</string>
+        <string>Grid Y Position</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QSpinBox" name="gridySpin"/>
+      <widget class="SSpinBox" name="gridySpin"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="gridsLbl">
-       <property name="text">
-        <string>Grid Spacing</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QSpinBox" name="gridsSpin"/>
-     </item>
-     <item row="4" column="0">
       <widget class="QLabel" name="gridcolLbl">
        <property name="text">
         <string>Grid Colour</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="3" column="1">
       <widget class="QPushButton" name="gridcolBtn">
        <property name="text">
         <string>Grid</string>
@@ -99,81 +104,273 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="1">
-      <widget class="QPushButton" name="resetBtn">
-       <property name="text">
-        <string>Reset</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
+     <item row="0" column="0">
       <widget class="QLabel" name="zoomLbl">
        <property name="text">
         <string>Zoom</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="0" column="1">
       <widget class="QSpinBox" name="zoomSpin"/>
      </item>
-     <item row="2" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="xoffLbl">
        <property name="text">
         <string>X Offset</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QSpinBox" name="xoffSpin"/>
+     <item row="1" column="1">
+      <widget class="SSpinBox" name="xoffSpin"/>
      </item>
-     <item row="3" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="yoffLbl">
        <property name="text">
         <string>Y Offset</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QSpinBox" name="yoffSpin"/>
+     <item row="2" column="1">
+      <widget class="SSpinBox" name="yoffSpin"/>
      </item>
-     <item row="4" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="fcolLbl">
        <property name="text">
         <string>False Colour Map</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="3" column="1">
       <widget class="QComboBox" name="fcolCombo"/>
      </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="fcolLbl_2">
+     <item row="4" column="0">
+      <widget class="QLabel" name="fpsLbl">
        <property name="text">
-        <string>fps</string>
+        <string>Frames / s</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="fpsNumber">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="heightLbl">
+       <property name="text">
+        <string>Displayed Height</string>
        </property>
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QLCDNumber" name="fpsNumber">
-       <property name="segmentStyle">
-        <enum>QLCDNumber::Flat</enum>
-       </property>
-       <property name="value" stdset="0">
-        <double>5.755500000000000</double>
+      <widget class="QLineEdit" name="heightNumber">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="resetLbl">
+     <item row="6" column="0">
+      <widget class="QLabel" name="widthLbl">
        <property name="text">
-        <string>Reset Image</string>
+        <string>Displayed Width</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="widthNumber">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
     </layout>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>813</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>Connection</string>
+    </property>
+    <addaction name="actionReset"/>
+   </widget>
+   <widget class="QMenu" name="menuImage">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionToggle_Image_Panel"/>
+    <addaction name="actionGrid_Panel"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuImage"/>
+  </widget>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionToggle_Image_Panel">
+   <property name="text">
+    <string>Image Panel</string>
+   </property>
+  </action>
+  <action name="actionToggle_Grid_Panel">
+   <property name="text">
+    <string>Toggle Grid Panel</string>
+   </property>
+  </action>
+  <action name="actionFullscreen">
+   <property name="text">
+    <string>Fullscreen</string>
+   </property>
+  </action>
+  <action name="actionEPICS_Aware">
+   <property name="text">
+    <string>EPICS Aware</string>
+   </property>
+  </action>
+  <action name="actionGrid_Panel">
+   <property name="text">
+    <string>Grid Panel</string>
+   </property>
+  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>SSpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ffmpegWidget</class>
+   <extends>QWidget</extends>
+   <header>ffmpegWidget.h</header>
+   <container>1</container>
+   <slots>
+    <signal>xChanged(int)</signal>
+    <signal>yChanged(int)</signal>
+    <signal>maxXChanged(int)</signal>
+    <signal>maxYChanged(int)</signal>
+    <signal>zoomChanged(int)</signal>
+    <signal>gxChanged(int)</signal>
+    <signal>gyChanged(int)</signal>
+    <signal>maxGxChanged(int)</signal>
+    <signal>maxGyChanged(int)</signal>
+    <signal>gsChanged(int)</signal>
+    <signal>gridChanged(bool)</signal>
+   </slots>
+  </customwidget>
+ </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>widget</sender>
+   <signal>gridChanged(bool)</signal>
+   <receiver>gridBtn</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>92</x>
+     <y>103</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>700</x>
+     <y>72</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>widget</sender>
+   <signal>gxChanged(int)</signal>
+   <receiver>gridxSpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>170</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>722</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>widget</sender>
+   <signal>gyChanged(int)</signal>
+   <receiver>gridySpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>374</x>
+     <y>237</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>660</x>
+     <y>137</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>widget</sender>
+   <signal>zoomChanged(int)</signal>
+   <receiver>zoomSpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>486</x>
+     <y>273</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>713</x>
+     <y>251</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>widget</sender>
+   <signal>xChanged(int)</signal>
+   <receiver>xoffSpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>513</x>
+     <y>300</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>699</x>
+     <y>280</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>widget</sender>
+   <signal>yChanged(int)</signal>
+   <receiver>yoffSpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>476</x>
+     <y>329</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>707</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

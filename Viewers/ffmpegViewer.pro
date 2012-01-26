@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += qt warn_on thread debug
+CONFIG += qt warn_on thread
 
 HEADERS += colorMaps.h SSpinBox.h
 SOURCES += ffmpegViewer.cpp SSpinBox.cpp
