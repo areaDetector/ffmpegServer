@@ -1,12 +1,10 @@
 TEMPLATE = app
 CONFIG += qt warn_on thread
 
-HEADERS += colorMaps.h SSpinBox.h
-SOURCES += ffmpegViewer.cpp SSpinBox.cpp
+HEADERS += colorMaps.h SSpinBox.h ffmpegWidget.h
+SOURCES += ffmpegViewer.cpp SSpinBox.cpp ffmpegWidget.cpp
+FORMS += ffmpegViewer.ui
 
-# uncomment these for Xv support
-HEADERS += ffmpegWidget.h
-SOURCES += ffmpegWidget.cpp
 LIBS += -lXv
 
 TARGET = ffmpegViewer

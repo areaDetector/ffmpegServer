@@ -57,7 +57,6 @@ class QDESIGNER_WIDGET_EXPORT ffmpegWidget : public QWidget
     Q_PROPERTY( int zoom READ zoom WRITE setZoom)    
     Q_PROPERTY( int gx READ gx WRITE setGx)
     Q_PROPERTY( int gy READ gy WRITE setGy)
-    Q_PROPERTY( int gs READ gs WRITE setGs)
     Q_PROPERTY( bool grid READ grid WRITE setGrid)    
     Q_PROPERTY( QString url READ url WRITE setUrl)  
           
@@ -76,7 +75,6 @@ public:
     int gy() const          { return _gy; }
     int maxGx() const       { return _maxGx; }
     int maxGy() const       { return _maxGy; }                
-    int gs() const          { return _gs; }
     bool grid() const       { return _grid; }
     QString url() const     { return _url; }
     
@@ -90,10 +88,11 @@ signals:
     void gyChanged(int gy);
     void maxGxChanged(int maxGx);
     void maxGyChanged(int maxGy);                
-    void gsChanged(int gs);    
     void gcolChanged(int r, int g, int b);
     void gridChanged(bool grid);
     void urlChanged(const QString &);
+    void displayedWChanged(const QString &);
+    void displayedHChanged(const QString &);        
     void fpsChanged(const QString &);
     void aboutToQuit();
 
@@ -103,7 +102,6 @@ public slots:
     void setZoom(int zoom);    
     void setGx(int gx);
     void setGy(int gy);
-    void setGs(int gs);
     void setGcol();
     void setGcol(int r, int g, int b);    
     void setGrid(bool grid);    
@@ -125,7 +123,7 @@ protected:
     void init(); 
 
 private:       
-    int _x, _y, _maxX, _maxY, _zoom, _gx, _gy, _maxGx, _maxGy, _gs, _w, _h, _imw, _imh, _r, _g, _b;
+    int _x, _y, _maxX, _maxY, _zoom, _gx, _gy, _maxGx, _maxGy, _w, _h, _imw, _imh, _r, _g, _b;
     int xvwidth, xvheight, srcw, srch;     
     double sf;
     QTime *lastFrameTime;

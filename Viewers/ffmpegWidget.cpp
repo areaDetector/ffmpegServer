@@ -42,16 +42,6 @@ FFThreadXv::FFThreadXv (const QString &url, unsigned char * destFrame, QWidget* 
     this->_fcol = 0;   
 }
 
-static void printBytes(uint8_t * buf)
-{
-    for(int n = 0; n < 8; n++)
-    {
-        printf("%02x ", buf[n]);
-    }
-    printf("\n");
-}
-
-
 // destroy widget
 FFThreadXv::~FFThreadXv() {
     // free the frames
@@ -241,7 +231,7 @@ ffmpegWidget::ffmpegWidget (const QString &url, QWidget* parent)
 }
 
 ffmpegWidget::ffmpegWidget (QWidget* parent)
-    : QWidget (parent)
+    : QWidget (parent), bmp(NULL)
 {
     init();
 }
@@ -259,7 +249,6 @@ void ffmpegWidget::init() {
     _gy = 100;
     _maxGx = 0;
     _maxGy = 0;
-    _gs = 20;    
     _fps = 0.0;
     _imw = 0;
     _imh = 0;      
@@ -377,8 +366,10 @@ void ffmpegWidget::updateScalefactor() {
     /* Now work out how much of the image we need to scale */
     xvwidth = qMin((int) (_imw*sf + 0.5), _w);    
     xvheight = qMin((int) (_imh*sf + 0.5), _h);
-    srcw = (int) (xvwidth / sf + 0.5);
-    srch = (int) (xvheight / sf + 0.5);     
+    srcw = qMin((int) (xvwidth / sf + 0.5), _imw);
+    srch = qMin((int) (xvheight / sf + 0.5), _imh);   
+    emit displayedWChanged(QString("%1").arg(srcw));
+    emit displayedHChanged(QString("%1").arg(srch));    
     /* Now work out max x and y */;    
     int maxX = qMax(_imw - srcw, 0);
     int maxY = qMax(_imh - srch, 0);
@@ -399,7 +390,7 @@ void ffmpegWidget::updateScalefactor() {
     if (xvheight < _h) XClearArea(dpy, w, 0, xvheight, _w, _h-xvheight, 0);    
 }       
  
-void ffmpegWidget::paintEvent(QPaintEvent * event) {
+void ffmpegWidget::paintEvent(QPaintEvent *) {
     if (_imw <= 0 || _imh <= 0) {
     	return;
     }      
@@ -599,18 +590,6 @@ void ffmpegWidget::setGy(int gy) {
         }
     }
 }
-
-// pixel width of gridlines from grid centre outwards
-void ffmpegWidget::setGs(int gs) {
-    gs = (gs < 2) ? 2 : (gs > _imw && _imw > 0) ? _imw : gs;
-    if (_gs!=gs) { 
-        _gs = gs;        
-        emit gsChanged(gs); 
-        if (!disableUpdates) {        
-            update();
-        }
-    }
-}            
 
 // set the grid colour, RGB will all be set to this, 0 <= gcol < 256
 void ffmpegWidget::setGcol() {
