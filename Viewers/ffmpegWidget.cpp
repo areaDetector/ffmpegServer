@@ -1,7 +1,5 @@
 //#define FALLBACK_TEST
 
-
-
 #include <QtDebug>
 #include <QToolTip>
 #include "ffmpegWidget.h"
@@ -431,9 +429,9 @@ void ffmpegWidget::xvSetup() {
 #ifndef FALLBACK_TEST    	
     		this->xv_format = vals->id;
     		this->ff_fmt = PIX_FMT_YUVJ420P;
-    		setAttribute(Qt::WA_PaintOnScreen);    		
     		// Widget is responsible for painting all its pixels with an opaque color
 		    setAttribute(Qt::WA_OpaquePaintEvent);
+    		setAttribute(Qt::WA_PaintOnScreen);    				    
     		return;
 #endif    		
     	}
