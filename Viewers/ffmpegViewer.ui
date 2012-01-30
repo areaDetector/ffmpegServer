@@ -302,8 +302,8 @@
     <signal>maxGyChanged(int)</signal>
     <signal>gridChanged(bool)</signal>
     <signal>fpsChanged(QString)</signal>
-    <signal>displayedWChanged(QString)</signal>
-    <signal>displayedHChanged(QString)</signal>
+    <signal>visWChanged(QString)</signal>
+    <signal>visHChanged(QString)</signal>
     <slot>setX(int)</slot>
     <slot>setY(int)</slot>
     <slot>setZoom(int)</slot>
@@ -497,7 +497,7 @@
   </connection>
   <connection>
    <sender>video</sender>
-   <signal>displayedWChanged(QString)</signal>
+   <signal>visWChanged(QString)</signal>
    <receiver>widthNumber</receiver>
    <slot>setText(QString)</slot>
    <hints>
@@ -513,7 +513,7 @@
   </connection>
   <connection>
    <sender>video</sender>
-   <signal>displayedHChanged(QString)</signal>
+   <signal>visHChanged(QString)</signal>
    <receiver>heightNumber</receiver>
    <slot>setText(QString)</slot>
    <hints>
