@@ -47,7 +47,7 @@ class FFThread : public QThread
     Q_OBJECT
 
 public:
-    FFThread (const QString &url, PixelFormat dest_format, QWidget* parent);
+    FFThread (const QString &url, PixelFormat dest_format, int maxW, int maxH, QWidget* parent);
     ~FFThread ();
     void run();
 	FFBuffer * findFreeBuffer();
@@ -70,7 +70,7 @@ private:
     PixelFormat dest_format;    
     struct SwsContext *ctx;
     FFBuffer *buffers[5];
-
+    int maxW, maxH;
 };
 
 class QDESIGNER_WIDGET_EXPORT ffmpegWidget : public QWidget
@@ -199,6 +199,7 @@ protected:
     int tickindex;
     int ticksum;
     int ticklist[MAXTICKS];
+    int maxW, maxH;
         
 private:
 	/* Private variables, read/write */

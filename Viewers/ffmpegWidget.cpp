@@ -30,11 +30,13 @@ FFBuffer::~FFBuffer() {
 /* thread that decodes frames from video stream and emits updateSignal when
  * each new frame is available
  */
-FFThread::FFThread (const QString &url, PixelFormat dest_format, QWidget* parent)
+FFThread::FFThread (const QString &url, PixelFormat dest_format, int maxW, int maxH, QWidget* parent)
     : QThread (parent)
 {
 	// This is the pixel format we are expected to output
 	this->dest_format = dest_format;
+	this->maxW = maxW;
+	this->maxH = maxH;
     // this is the url to read the stream from
     strcpy(this->url, url.toAscii().data());
     // set this to 1 to finish
@@ -220,6 +222,7 @@ void FFThread::run()
     FFBuffer            *out;        
     int                 frameFinished, len;
     bool                firstImage = true; 
+    PixelFormat pix_fmt;
 
     // Open video file
     if (av_open_input_file(&pFormatCtx, this->url, NULL, 0, NULL)!=0) {
@@ -291,13 +294,21 @@ void FFThread::run()
         raw->width = pCodecCtx->width;
         raw->pix_fmt = pCodecCtx->pix_fmt;
         
-        // Format the decoded frame as we've been asked                 
+    	// if we've got an image that's too big, force RGB
+    	if (this->dest_format == PIX_FMT_YUVJ420P && (raw->width > maxW || raw->height > maxH)) {
+	    	printf("Image too big, using QImage fallback mode\n");
+    		pix_fmt = PIX_FMT_RGB24;
+    	} else {
+	    	pix_fmt = this->dest_format;
+	    }
+    	    	
+        // Format the decoded frame as we've been asked       	               
         if (_fcol) {
     		// make it false colour
-    		out = this->falseFrame(raw, raw->width, raw->height, this->dest_format);  
+    		out = this->falseFrame(raw, raw->width, raw->height, pix_fmt);  
     	} else {
     		// pass out frame through sw_scale
-    		out = this->formatFrame(raw, raw->width, raw->height, this->dest_format, this->ctx);  
+    		out = this->formatFrame(raw, raw->width, raw->height, pix_fmt, this->ctx);  
     	}
     	
     	// Send the frame out
@@ -328,6 +339,8 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     this->xv_format = -1;
     this->xv_image = NULL;    
     this->dpy = NULL;
+    this->maxW = 0;
+    this->maxH = 0;
     /* Now setup QImage or xv whichever we have */
 	this->ff_fmt = PIX_FMT_RGB24;    
     this->xvSetup();  
@@ -383,7 +396,9 @@ ffmpegWidget::~ffmpegWidget() {
 // setup x or xvideo
 void ffmpegWidget::xvSetup() {
     XvAdaptorInfo * ainfo;
-    unsigned j, adaptors;    
+    XvEncodingInfo *encodings;    
+    unsigned int adaptors, nencode;    
+    unsigned int ver, rel, extmaj, extev, exterr;
     // get display number
     this->dpy = x11Info().display();
     // Grab the window id and setup a graphics context
@@ -391,10 +406,12 @@ void ffmpegWidget::xvSetup() {
     this->gc = XCreateGC(this->dpy, this->w, 0, 0);     
     // Now try and setup xv
     // return version and release of extension     
-    if (XvQueryExtension(this->dpy, &j, &j, &j, &j, &j) != Success) {
+    if (XvQueryExtension(this->dpy, &ver, &rel, &extmaj, &extev, &exterr) != Success) {
     	printf("XvQueryExtension failed, using QImage fallback mode\n");
     	return;
     }
+    //printf("Ver: %d, Rel: %d, ExtMajor: %d, ExtEvent: %d, ExtError: %d\n", ver, rel, extmaj, extev, exterr);
+    //Ver: 2, Rel: 2, ExtMajor: 140, ExtEvent: 75, ExtError: 150
     // return adaptor information for the screen 
     if (XvQueryAdaptors(this->dpy, QX11Info::appRootWindow(), 
     		&adaptors, &ainfo) != Success) {
@@ -420,6 +437,24 @@ void ffmpegWidget::xvSetup() {
     	printf("No xv ports free, using QImage fallback mode\n"); 
     	return;  
     }
+    // get max XV Image size
+    int gotEncodings = 0;
+    XvQueryEncodings(this->dpy, ainfo[0].base_id, &nencode, &encodings);
+    if (encodings && nencode && (ainfo[0].type & XvImageMask)) {
+        for(unsigned int n = 0; n < nencode; n++) {
+            if(!strcmp(encodings[n].name, "XV_IMAGE")) {
+            	this->maxW = encodings[n].width;
+            	this->maxH = encodings[n].height;     
+            	gotEncodings = 1;       	
+	            break;
+            }
+        }
+    }
+    // if we didn't find a list of encodings
+    if (!gotEncodings) {
+    	printf("No encodings information, using QImage fallback mode\n");         
+        return;
+	}        
     // only support I420 mode for now
     int num_formats = 0;
     XvImageFormatValues * vals = XvListImageFormats(this->dpy, 
@@ -552,12 +587,12 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
     if (this->widgetW != width() || this->widgetH != height()) {
     	updateScalefactor();
     }
-    if (this->xv_format >= 0) {
+    if (newbuf->pix_fmt == PIX_FMT_YUVJ420P) {
     	// xvideo supported
     	this->xv_image->data = (char *) newbuf->pFrame->data[0];
 	    /* Draw the image */
     	XvPutImage(this->dpy, this->xv_port, this->w, this->gc, this->xv_image,
-    		_x, _y, _visW, _visH, 0, 0, _scVisW, _scVisH);
+    		_x, _y, _visW, _visH, 0, 0, _scVisW, _scVisH);    	
    	} else {   	
 		// QImage fallback
     	QPainter painter(this);
@@ -670,7 +705,7 @@ void ffmpegWidget::setReset() {
     disableUpdates = true;    
     
     /* create the ffmpeg thread */
-    ff = new FFThread(_url, this->ff_fmt, this);    
+    ff = new FFThread(_url, this->ff_fmt, this->maxW, this->maxH, this);    
     QObject::connect( ff, SIGNAL(updateSignal(FFBuffer *, bool)), 
                       this, SLOT(updateImage(FFBuffer *, bool)) );
     QObject::connect( this, SIGNAL(aboutToQuit()),
