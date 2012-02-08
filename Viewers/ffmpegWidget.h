@@ -33,13 +33,13 @@ class FFBuffer
 {
 public:
     FFBuffer ();
-	~FFBuffer ();    
+    ~FFBuffer ();
     QMutex *mutex;
     unsigned char *mem;
     AVFrame *pFrame;
     PixelFormat pix_fmt;
     int width;
-    int height; 
+    int height;
 };
 
 class FFThread : public QThread
@@ -50,10 +50,10 @@ public:
     FFThread (const QString &url, PixelFormat dest_format, int maxW, int maxH, QWidget* parent);
     ~FFThread ();
     void run();
-	FFBuffer * findFreeBuffer();
-	FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt, struct SwsContext *ctx);
-	FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
-   
+    FFBuffer * findFreeBuffer();
+    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt, struct SwsContext *ctx);
+    FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
+
     int fcol() { return _fcol; }
 
 public slots:
@@ -65,9 +65,9 @@ signals:
 
 private:
     char url[MAXSTRING];
-    int stopping;    
+    int stopping;
     int _fcol;
-    PixelFormat dest_format;    
+    PixelFormat dest_format;
     struct SwsContext *ctx;
     FFBuffer *buffers[5];
     int maxW, maxH;
@@ -185,7 +185,7 @@ protected:
     Display * dpy;
     WId w;
     GC gc;
-	// other
+    // other
     double sf;
     FFBuffer *buf;
     QTime *lastFrameTime;
@@ -193,16 +193,16 @@ protected:
     int widgetW, widgetH;
     int clickx, clicky, oldx, oldy;
     FFThread *ff;
-    bool disableUpdates;  
-    PixelFormat ff_fmt;  
-	// fps calculation
+    bool disableUpdates;
+    PixelFormat ff_fmt;
+    // fps calculation
     int tickindex;
     int ticksum;
     int ticklist[MAXTICKS];
     int maxW, maxH;
-        
+
 private:
-	/* Private variables, read/write */
+    /* Private variables, read/write */
     int _x;       // x offset in image pixels
     int _y;       // y offset in image pixels
     int _zoom;    // zoom level

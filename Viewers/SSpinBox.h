@@ -11,7 +11,7 @@ public:
     SSpinBox(QWidget *parent = 0);
 
 public slots:
-    void setMaximumSlot(int max) {setMaximum(max);}	
+    void setMaximumSlot(int max) {setMaximum(max);}
 };
 
 #endif

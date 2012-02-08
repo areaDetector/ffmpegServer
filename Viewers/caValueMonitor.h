@@ -19,18 +19,18 @@ public slots:
     void setGx(int);
     void setGy(int);
     void setGcol(QColor);
-    void setGrid(bool);    
+    void setGrid(bool);
 
 signals:
-	void gxChanged(int);
-	void gyChanged(int);
-	void gcolChanged(QColor);
-	void gridChanged(bool);									
+    void gxChanged(int);
+    void gyChanged(int);
+    void gcolChanged(QColor);
+    void gridChanged(bool);
 
 private:
-	chid gxChid, gyChid, gcolChid, gridChid;
-	void *sendBuf;
-	QString prefix;
+    chid gxChid, gyChid, gcolChid, gridChid;
+    void *sendBuf;
+    QString prefix;
 };
 
 #endif
