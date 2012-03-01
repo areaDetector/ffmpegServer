@@ -2,6 +2,7 @@
 #define CAVALUEMONITOR_H
 
 #include <QThread>
+#include <QTimer>
 #include <QColor>
 #include <cadef.h>
 
@@ -20,6 +21,7 @@ public slots:
     void setGy(int);
     void setGcol(QColor);
     void setGrid(bool);
+    void doWrite();
 
 signals:
     void gxChanged(int);
@@ -29,8 +31,11 @@ signals:
 
 private:
     chid gxChid, gyChid, gcolChid, gridChid;
+    long gxLast, gyLast, gcolLast, gridLast;
+    long gxCurrent, gyCurrent, gcolCurrent, gridCurrent;
     void *sendBuf;
     QString prefix;
+    QTimer *timer;
 };
 
 #endif

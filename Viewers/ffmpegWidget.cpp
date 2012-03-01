@@ -27,6 +27,8 @@ FFBuffer::~FFBuffer() {
     free(this->mem);
 }
 
+static FFBuffer buffers[NBUFFERS];
+
 /* thread that decodes frames from video stream and emits updateSignal when
  * each new frame is available
  */
@@ -51,28 +53,20 @@ FFThread::FFThread (const QString &url, PixelFormat dest_format, int maxW, int m
         // Register all formats and codecs
         av_register_all();
     }
-    // Allocate video frames for decoding into
-    for (int i = 0; i < NBUFFERS; i++) {
-        this->buffers[i] = new FFBuffer();
-    }
     this->ctx = NULL;
     _fcol = 0;
 }
 
 // destroy widget
 FFThread::~FFThread() {
-    // free the buffers
-    for (int i = 0; i < NBUFFERS; i++) {
-        delete this->buffers[i];
-    }
 }
 
 // find a free FFBuffer
 FFBuffer * FFThread::findFreeBuffer() {
     for (int i = 0; i < NBUFFERS; i++) {
         // if we can lock it, we can use it!
-        if (this->buffers[i]->mutex->tryLock()) {
-            return this->buffers[i];
+        if (buffers[i].mutex->tryLock()) {
+            return &buffers[i];
         }
     }
     return NULL;
@@ -315,6 +309,7 @@ void FFThread::run()
         if (out == NULL) {
             printf("Couldn't get a free buffer, skipping frame\n");
         } else {
+//			printf("emit updateImage %p\n", out);
             emit updateSignal(out, firstImage);
             if (firstImage) firstImage = false;
         }
@@ -349,8 +344,8 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     _x = 0;             // x offset in image pixels
     _y = 0;             // y offset in image pixels
     _zoom = 30;         // zoom level
-    _gx = 100;          // grid x in image pixels
-    _gy = 100;          // grid y in image pixels
+    _gx = 0;            // grid x in image pixels
+    _gy = 0;            // grid y in image pixels
     _grid = false;      // grid on or off
     _gcol = Qt::white;  // grid colour
     _fcol = 0;          // false colour
@@ -477,6 +472,7 @@ void ffmpegWidget::xvSetup() {
 }
 
 void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
+//	printf("updateImage %p\n", newbuf);
     // calculate fps
     int elapsed = this->lastFrameTime->elapsed();
     this->lastFrameTime->start();
@@ -566,8 +562,8 @@ void ffmpegWidget::updateScalefactor() {
     if (this->xv_format >= 0) {
         // xvideo supported
         if (this->xv_image) XFree(this->xv_image);
-           this->xv_image = XvCreateImage(this->dpy, this->xv_port,
-               this->xv_format, 0, _imW, _imH);
+        this->xv_image = XvCreateImage(this->dpy, this->xv_port,
+            this->xv_format, 0, _imW, _imH);
         assert(this->xv_image);
         /* Clear area not filled by image */
         if (_scVisW < this->widgetW) {
@@ -625,7 +621,7 @@ void ffmpegWidget::ffQuit() {
 
 // update grid centre
 void ffmpegWidget::mouseDoubleClickEvent (QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && _grid) {
         disableUpdates = true;
         setGx((int) (_x + event->x()/this->sf + 0.5));
         setGy((int) (_y + event->y()/this->sf + 0.5));
@@ -646,8 +642,6 @@ void ffmpegWidget::mousePressEvent (QMouseEvent* event) {
      } else if (event->button() == Qt::RightButton) {
          setGrid(!_grid);
          event->accept();
-     } else if (event->button() == Qt::MidButton) {
-         QToolTip::showText(event->globalPos(), _url, this);
      }
 }
 
@@ -712,7 +706,7 @@ void ffmpegWidget::setReset() {
                       ff, SLOT(stopGracefully()) );
     QObject::connect( this, SIGNAL(fcolChanged(int)),
                       ff, SLOT(setFcol(int)) );
-    // allow GL updates, and start the image thread
+    // allow updates, and start the image thread
     disableUpdates = false;
     ff->setFcol(fcol);
     ff->start();

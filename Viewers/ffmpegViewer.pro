@@ -13,10 +13,10 @@ QMAKE_RPATHDIR += ../lib/linux-x86
 LIBS += -lavdevice -lavformat -lavcodec -lavutil -lbz2 -lswscale -lca
 
 # epics base stuff
-INCLUDEPATH += /dls_sw/epics/R3.14.11/base/include
-INCLUDEPATH += /dls_sw/epics/R3.14.11/base/include/os/Linux
-LIBPATH += /dls_sw/epics/R3.14.11/base/lib/linux-x86
-QMAKE_RPATHDIR += /dls_sw/epics/R3.14.11/base/lib/linux-x86
+INCLUDEPATH += $$(EPICS_BASE)/include
+INCLUDEPATH += $$(EPICS_BASE)/include/os/Linux
+LIBPATH += $$(EPICS_BASE)/lib/linux-x86
+QMAKE_RPATHDIR += $$(EPICS_BASE)/lib/linux-x86
 
 # other stuff
 TEMPLATE = app

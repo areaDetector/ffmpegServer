@@ -15,6 +15,18 @@ caValueMonitor::caValueMonitor(const QString &prefix, QWidget* parent)
 {
     this->prefix = QString(prefix);
     this->sendBuf = calloc(1, dbr_size_n(DBR_LONG, 1));
+    this->timer = new QTimer();
+    this->gxLast = -1;
+    this->gyLast = -1;
+    this->gcolLast = -1;
+    this->gridLast = -1;                            
+    this->gxCurrent = -1;
+    this->gyCurrent = -1;
+    this->gcolCurrent = -1;
+    this->gridCurrent = -1;        
+    QObject::connect( this->timer, SIGNAL(timeout()),
+                      this, SLOT(doWrite()) );   
+    this->timer->start(100);                         
 }
 
 caValueMonitor::~caValueMonitor() {
@@ -23,16 +35,32 @@ caValueMonitor::~caValueMonitor() {
 
 void caValueMonitor::start() {
     ca_context_create(ca_enable_preemptive_callback);
-    ca_create_channel((prefix + QString(":GX")).toAscii().data(), NULL, NULL, 0, &this->gxChid);
-    ca_create_channel((prefix + QString(":GY")).toAscii().data(), NULL, NULL, 0, &this->gyChid);
-    ca_create_channel((prefix + QString(":GCOL")).toAscii().data(), NULL, NULL, 0, &this->gcolChid);
-    ca_create_channel((prefix + QString(":GRID")).toAscii().data(), NULL, NULL, 0, &this->gridChid);
+    ca_create_channel((prefix + QString("GX")).toAscii().data(), NULL, NULL, 0, &this->gxChid);
+    ca_create_channel((prefix + QString("GY")).toAscii().data(), NULL, NULL, 0, &this->gyChid);
+    ca_create_channel((prefix + QString("GCOL")).toAscii().data(), NULL, NULL, 0, &this->gcolChid);
+    ca_create_channel((prefix + QString("GRID")).toAscii().data(), NULL, NULL, 0, &this->gridChid);
     ca_create_subscription(DBR_LONG, 1, this->gxChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gyChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gcolChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gridChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_pend_io(3);
 }
+
+void caValueMonitor::doWrite() {
+	if (this->gxLast != this->gxCurrent) {
+    	this->gxLast = this->gxCurrent;	
+        emit gxChanged(this->gxLast);
+    } else if (this->gyLast != this->gyCurrent) {
+    	this->gyLast = this->gyCurrent;	
+        emit gyChanged(this->gyLast);
+    } else if (this->gcolLast != this->gcolCurrent) {
+    	this->gcolLast = this->gcolCurrent;	
+        emit gcolChanged(QColor((QRgb) this->gcolLast));
+    } else if (this->gridLast != this->gridCurrent) {
+    	this->gridLast = this->gridCurrent;	
+        emit gridChanged((bool) this->gridLast);
+    }
+}	
 
 void caValueMonitor::eventCallback(struct event_handler_args args) {
     if(args.status != ECA_NORMAL) {
@@ -41,13 +69,13 @@ void caValueMonitor::eventCallback(struct event_handler_args args) {
     }
     unsigned int value = *(unsigned int *)args.dbr;
     if (args.chid == gxChid) {
-        emit gxChanged(value);
+    	this->gxCurrent = value;
     } else if (args.chid == this->gyChid) {
-        emit gyChanged(value);
+    	this->gyCurrent = value;
     } else if (args.chid == this->gridChid) {
-        emit gridChanged((bool) value);
+    	this->gridCurrent = value;
     } else if (args.chid == this->gcolChid) {
-        emit gcolChanged(QColor((QRgb) value));
+    	this->gcolCurrent = value;
     }
 }
 

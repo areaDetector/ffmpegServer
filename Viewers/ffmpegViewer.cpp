@@ -17,10 +17,11 @@ int main(int argc, char *argv[])
     Ui::ffmpegViewer ui;
     ui.setupUi(top);
     ui.video->setUrl(argv[1]);
+    top->setWindowTitle(QString("ffmpegViewer: %1").arg(argv[1]));
 
     /* Connect it to CA */
     if (argc == 3) {
-        caValueMonitor *mon = new caValueMonitor("GC1020C:MJPG", top);
+        caValueMonitor *mon = new caValueMonitor(argv[2], top);
         QObject::connect( mon, SIGNAL(gxChanged(int)),
                           ui.video, SLOT(setGx(int)) );
         QObject::connect( ui.video, SIGNAL(gxChanged(int)),
@@ -38,8 +39,13 @@ int main(int argc, char *argv[])
         QObject::connect( ui.video, SIGNAL(gcolChanged(QColor)),
                           mon, SLOT(setGcol(QColor)) );
         mon->start();
-    }
-
+    } else {
+		/* Set the grid */
+		ui.video->setGx(100);
+		ui.video->setGy(100);	
+	}
+    
+    
     /* Show it */
     top->show();
     return app.exec();

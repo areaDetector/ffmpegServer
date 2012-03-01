@@ -23,7 +23,7 @@ extern "C" {
 // max height of any input image
 #define MAXHEIGHT 3000
 // number of MAXWIDTH*MAXHEIGHT buffers to create
-#define NBUFFERS 5
+#define NBUFFERS 10
 // number of frames to calc fps from
 #define MAXTICKS 10
 // size of URL string
@@ -69,7 +69,6 @@ private:
     int _fcol;
     PixelFormat dest_format;
     struct SwsContext *ctx;
-    FFBuffer *buffers[5];
     int maxW, maxH;
 };
 
