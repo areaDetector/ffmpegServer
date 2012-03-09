@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>886</width>
-    <height>498</height>
+    <width>910</width>
+    <height>508</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
+   <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">
      <widget class="ffmpegWidget" name="video" native="true"/>
     </item>
@@ -46,7 +46,7 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout_3">
+    <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="resetLbl">
        <property name="text">
@@ -56,6 +56,12 @@
      </item>
      <item row="0" column="1">
       <widget class="QPushButton" name="resetBtn">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Reset</string>
        </property>
@@ -242,6 +248,23 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="gridsLbl">
+       <property name="text">
+        <string>Grid Spacing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="SSpinBox" name="gridsSpin">
+       <property name="minimum">
+        <number>5</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
@@ -274,6 +297,7 @@
     <signal>fpsChanged(QString)</signal>
     <signal>visWChanged(QString)</signal>
     <signal>visHChanged(QString)</signal>
+    <signal>gsChanged(int)</signal>
     <slot>setX(int)</slot>
     <slot>setY(int)</slot>
     <slot>setZoom(int)</slot>
@@ -638,6 +662,38 @@
     <hint type="destinationlabel">
      <x>305</x>
      <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>video</sender>
+   <signal>gsChanged(int)</signal>
+   <receiver>gridsSpin</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>314</x>
+     <y>253</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>838</x>
+     <y>485</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>gridsSpin</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>video</receiver>
+   <slot>setGs(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>838</x>
+     <y>485</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>314</x>
+     <y>253</y>
     </hint>
    </hints>
   </connection>

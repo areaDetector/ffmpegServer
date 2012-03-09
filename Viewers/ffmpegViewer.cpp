@@ -30,6 +30,10 @@ int main(int argc, char *argv[])
                           ui.video, SLOT(setGy(int)) );
         QObject::connect( ui.video, SIGNAL(gyChanged(int)),
                           mon, SLOT(setGy(int)) );
+        QObject::connect( mon, SIGNAL(gsChanged(int)),
+                          ui.video, SLOT(setGs(int)) );
+        QObject::connect( ui.video, SIGNAL(gsChanged(int)),
+                          mon, SLOT(setGs(int)) );                          
         QObject::connect( mon, SIGNAL(gridChanged(bool)),
                           ui.video, SLOT(setGrid(bool)) );
         QObject::connect( ui.video, SIGNAL(gridChanged(bool)),
@@ -43,6 +47,7 @@ int main(int argc, char *argv[])
 		/* Set the grid */
 		ui.video->setGx(100);
 		ui.video->setGy(100);	
+		ui.video->setGs(10);		
 	}
     
     

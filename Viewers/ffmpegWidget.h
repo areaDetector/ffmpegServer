@@ -80,6 +80,7 @@ class QDESIGNER_WIDGET_EXPORT ffmpegWidget : public QWidget
     Q_PROPERTY( int zoom READ zoom WRITE setZoom)    // zoom level
     Q_PROPERTY( int gx READ gx WRITE setGx)          // grid x in image pixels
     Q_PROPERTY( int gy READ gy WRITE setGy)          // grid y in image pixels
+    Q_PROPERTY( int gs READ gs WRITE setGs)          // grid spacing in image pixels    
     Q_PROPERTY( bool grid READ grid WRITE setGrid)   // grid on or off
     Q_PROPERTY( QColor gcol READ gcol WRITE setGcol) // grid colour
     Q_PROPERTY( int fcol READ fcol WRITE setFcol)    // false colour
@@ -97,6 +98,7 @@ public:
     int zoom() const        { return _zoom; }   // zoom level
     int gx() const          { return _gx; }     // grid x in image pixels
     int gy() const          { return _gy; }     // grid y in image pixels
+    int gs() const          { return _gs; }     // grid x in image pixels    
     bool grid() const       { return _grid; }   // grid on or off
     QColor gcol() const     { return _gcol; }   // grid colour
     int fcol() const        { return _fcol; }   // false colour
@@ -122,6 +124,7 @@ signals:
     void xChanged(int);                         // x offset in image pixels
     void yChanged(int);                         // y offset in image pixels
     void zoomChanged(int);                      // zoom level
+    void gsChanged(int);                        // grid spacing in image pixels    
     void gxChanged(int);                        // grid x in image pixels
     void gyChanged(int);                        // grid y in image pixels
     void gridChanged(bool);                     // grid on or off
@@ -157,6 +160,7 @@ public slots:
     void setZoom(int);                      // zoom level
     void setGx(int);                        // grid x in image pixels
     void setGy(int);                        // grid y in image pixels
+    void setGs(int);                        // grid spacing in image pixels    
     void setGrid(bool);                     // grid on or off
     void setGcol(QColor);                   // grid colour
     void setFcol(int);                      // false colour
@@ -185,7 +189,7 @@ protected:
     WId w;
     GC gc;
     // other
-    double sf;
+    double sfx, sfy;
     FFBuffer *buf;
     QTime *lastFrameTime;
     QTimer *timer;
@@ -207,6 +211,7 @@ private:
     int _zoom;    // zoom level
     int _gx;      // grid x in image pixels
     int _gy;      // grid y in image pixels
+    int _gs;      // grid spacing in image pixels    
     bool _grid;   // grid on or off
     QColor _gcol; // grid colour
     int _fcol;    // false colour

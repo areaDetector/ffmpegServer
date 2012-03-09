@@ -1,4 +1,4 @@
-//#define FALLBACK_TEST
+#define FALLBACK_TEST
 
 #include <QtDebug>
 #include <QToolTip>
@@ -346,6 +346,7 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     _zoom = 30;         // zoom level
     _gx = 0;            // grid x in image pixels
     _gy = 0;            // grid y in image pixels
+    _gs = 0;            // grid spacing in image pixels    
     _grid = false;      // grid on or off
     _gcol = Qt::white;  // grid colour
     _fcol = 0;          // false colour
@@ -366,7 +367,8 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     _scVisH = 0;  // Image height visible in viewport scaled pixels
     _fps = 0.0;   // Frames per second displayed
     // other
-    this->sf = 1.0;
+    this->sfx = 1.0;
+    this->sfy = 1.0;    
     this->buf = NULL;
     this->lastFrameTime = new QTime();
     this->ff = NULL;
@@ -526,23 +528,34 @@ void ffmpegWidget::updateScalefactor() {
     /* Work out which is the minimum ratio to scale by */
     double wratio = this->widgetW / (double) _imW;
     double hratio = this->widgetH / (double) _imH;
-    this->sf = pow(10, (double) (_zoom)/ 20) * qMin(wratio, hratio);
+    double sf = pow(10, (double) (_zoom)/ 20) * qMin(wratio, hratio);
     /* Now work out the scaled dimensions */
-    _scImW = (int) (_imW*this->sf + 0.5);
+    _scImW = (int) (_imW*sf + 0.5);
     emit scImWChanged(_scImW);
-    _scImH = (int) (_imH*this->sf + 0.5);
+    _scImH = (int) (_imH*sf + 0.5);    
     emit scImHChanged(_scImH);
     _scVisW = qMin(_scImW, this->widgetW);
     emit scVisWChanged(_scVisW);
     _scVisH = qMin(_scImH, this->widgetH);
-    emit scVisHChanged(_scVisH);
+    emit scVisHChanged(_scVisH);     
     /* Now work out how much of the original image is visible */
-    _visW = qMin((int) (_scVisW / this->sf + 0.5), _imW);
+    if (_scVisW < this->widgetW) {
+        _visW = _imW;
+    } else {
+        _visW = qMin((int) (this->widgetW / sf + 0.5), _imW);
+    }
     emit visWChanged(_visW);
     emit visWChanged(QString("%1").arg(_visW));
-    _visH = qMin((int) (_scVisH / this->sf + 0.5), _imH);
+    if (_scVisH < this->widgetH) {
+        _visH = _imH;
+    } else {
+        _visH = qMin((int) (this->widgetH / sf + 0.5), _imH);
+    }
     emit visHChanged(_visH);
     emit visHChanged(QString("%1").arg(_visH));
+    /* Now work out our real scale factors */
+    this->sfx = _scVisW / (double) _visW;
+    this->sfy = _scVisH / (double) _visH;      
     /* Now work out max x and y */;
     int maxX = qMax(_imW - _visW, 0);
     int maxY = qMax(_imH - _visH, 0);
@@ -588,21 +601,47 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
         this->xv_image->data = (char *) newbuf->pFrame->data[0];
         /* Draw the image */
         XvPutImage(this->dpy, this->xv_port, this->w, this->gc, this->xv_image,
-            _x, _y, _visW, _visH, 0, 0, _scVisW, _scVisH);
-       } else {
+            _x, _y, _visW, _visH, 0, 0, _scVisW+1, _scVisH+1);
+   } else {
         // QImage fallback
         QPainter painter(this);
         QImage image(newbuf->pFrame->data[0], newbuf->width, newbuf->height, QImage::Format_RGB888);
-        painter.drawImage(QPoint(0, 0), image.copy(QRect(_x, _y, _visW, _visH)).scaled(_scVisW, _scVisH, Qt::KeepAspectRatio));
+        painter.drawImage(QPoint(0, 0), image.copy(QRect(_x, _y, _visW, _visH)).scaled(_scVisW, _scVisH));
     }
     /* Draw the grid */
     if (_grid) {
         QPainter painter(this);
-        int scGx = (int) ((_gx-_x)*this->sf + 0.5);
-        int scGy = (int) ((_gy-_y)*this->sf + 0.5);
+        // note the 0.5 gives us the middle of the pixel
+        double scGx = (_gx-_x+0.5)*this->sfx;
+        double scGy = (_gy-_y+0.5)*this->sfy;
+        double scGsx = _gs*this->sfx;
+        double scGsy = _gs*this->sfy;        
+        if (scGsx > 0.1 && scGsy > 0.1) {
+            // Draw minor lines
+            QColor gscol = QColor(_gcol);
+            gscol.setAlpha(50);
+            painter.setPen(gscol);
+            // X lines to the left of crosshair
+            for (double scx = scGx - scGsx; scx > 0; scx -= scGsx) {
+                painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
+            }
+            // X lines to the right of crosshair
+            for (double scx = scGx + scGsx; scx < _scVisW; scx += scGsx) {
+                painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
+            }
+            // Y lines above the crosshair
+            for (double scy = scGy - scGsy; scy > 0; scy -= scGsy) {
+                painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
+            }
+            // Y lines below the crosshair
+            for (double scy = scGy - scGsy; scy < _scVisH; scy += scGsy) {
+                painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
+            }
+        }
+        // Draw crosshairs
         painter.setPen(_gcol);
-        painter.drawLine(scGx, 0, scGx, _scVisH);
-        painter.drawLine(0, scGy, _scVisW, scGy);
+        painter.drawLine((int)(scGx+0.5), 0, (int)(scGx+0.5), _scVisH);
+        painter.drawLine(0, (int)(scGy+0.5), _scVisW, (int)(scGy+0.5));
     }
 }
 
@@ -623,8 +662,8 @@ void ffmpegWidget::ffQuit() {
 void ffmpegWidget::mouseDoubleClickEvent (QMouseEvent* event) {
     if (event->button() == Qt::LeftButton && _grid) {
         disableUpdates = true;
-        setGx((int) (_x + event->x()/this->sf + 0.5));
-        setGy((int) (_y + event->y()/this->sf + 0.5));
+        setGx((int) (_x + event->x()/this->sfx));
+        setGy((int) (_y + event->y()/this->sfy));
         disableUpdates = false;
         event->accept();
         update();
@@ -650,8 +689,8 @@ void ffmpegWidget::mouseMoveEvent (QMouseEvent* event) {
     if (event->buttons() & Qt::LeftButton) {
         // disable automatic updates
         disableUpdates = true;
-        setX(oldx + (int)((clickx - event->x())/this->sf));
-        setY(oldy + (int)((clicky - event->y())/this->sf));
+        setX(oldx + (int)((clickx - event->x())/this->sfx));
+        setY(oldy + (int)((clicky - event->y())/this->sfy));
         disableUpdates = false;
         update();
         event->accept();
@@ -774,6 +813,18 @@ void ffmpegWidget::setGy(int gy) {
     if (_gy != gy) {
         _gy = gy;
         emit gyChanged(gy);
+        if (!disableUpdates) {
+            update();
+        }
+    }
+}
+
+// grid spacing in image pixels
+void ffmpegWidget::setGs(int gs) {
+    gs = (gs < 5) ? 5 : (gs > 100) ? 100 : gs;
+    if (_gs != gs) {
+        _gs = gs;
+        emit gsChanged(gs);
         if (!disableUpdates) {
             update();
         }

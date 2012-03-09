@@ -21,6 +21,7 @@ public slots:
     void setGy(int);
     void setGcol(QColor);
     void setGrid(bool);
+    void setGs(int);    
     void doWrite();
 
 signals:
@@ -28,11 +29,12 @@ signals:
     void gyChanged(int);
     void gcolChanged(QColor);
     void gridChanged(bool);
+    void gsChanged(int);
 
 private:
-    chid gxChid, gyChid, gcolChid, gridChid;
-    long gxLast, gyLast, gcolLast, gridLast;
-    long gxCurrent, gyCurrent, gcolCurrent, gridCurrent;
+    chid gxChid, gyChid, gcolChid, gridChid, gsChid;
+    long gxLast, gyLast, gcolLast, gridLast, gsLast;
+    long gxCurrent, gyCurrent, gcolCurrent, gridCurrent, gsCurrent;
     void *sendBuf;
     QString prefix;
     QTimer *timer;

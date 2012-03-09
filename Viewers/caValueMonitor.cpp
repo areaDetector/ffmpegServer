@@ -1,9 +1,6 @@
 #include "caValueMonitor.h"
 #include <QWidget>
-
-void connectCallbackC(struct connection_handler_args args) {
-    printf("Connected: %p, %ld\n", args.chid, args.op);
-}
+#include <stdio.h>
 
 void eventCallbackC(struct event_handler_args args) {
     caValueMonitor *ptr = (caValueMonitor *) args.usr;
@@ -20,10 +17,12 @@ caValueMonitor::caValueMonitor(const QString &prefix, QWidget* parent)
     this->gyLast = -1;
     this->gcolLast = -1;
     this->gridLast = -1;                            
+    this->gsLast = -1;    
     this->gxCurrent = -1;
     this->gyCurrent = -1;
     this->gcolCurrent = -1;
     this->gridCurrent = -1;        
+    this->gsCurrent = -1;    
     QObject::connect( this->timer, SIGNAL(timeout()),
                       this, SLOT(doWrite()) );   
     this->timer->start(100);                         
@@ -39,10 +38,12 @@ void caValueMonitor::start() {
     ca_create_channel((prefix + QString("GY")).toAscii().data(), NULL, NULL, 0, &this->gyChid);
     ca_create_channel((prefix + QString("GCOL")).toAscii().data(), NULL, NULL, 0, &this->gcolChid);
     ca_create_channel((prefix + QString("GRID")).toAscii().data(), NULL, NULL, 0, &this->gridChid);
+    ca_create_channel((prefix + QString("GS")).toAscii().data(), NULL, NULL, 0, &this->gsChid);    
     ca_create_subscription(DBR_LONG, 1, this->gxChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gyChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gcolChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
     ca_create_subscription(DBR_LONG, 1, this->gridChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);
+    ca_create_subscription(DBR_LONG, 1, this->gsChid, DBE_VALUE, eventCallbackC, (void*)this, NULL);    
     ca_pend_io(3);
 }
 
@@ -59,6 +60,9 @@ void caValueMonitor::doWrite() {
     } else if (this->gridLast != this->gridCurrent) {
     	this->gridLast = this->gridCurrent;	
         emit gridChanged((bool) this->gridLast);
+    } else if (this->gsLast != this->gsCurrent) {
+    	this->gsLast = this->gsCurrent;	
+        emit gsChanged(this->gsLast);
     }
 }	
 
@@ -68,7 +72,7 @@ void caValueMonitor::eventCallback(struct event_handler_args args) {
         return;
     }
     unsigned int value = *(unsigned int *)args.dbr;
-    if (args.chid == gxChid) {
+    if (args.chid == this->gxChid) {
     	this->gxCurrent = value;
     } else if (args.chid == this->gyChid) {
     	this->gyCurrent = value;
@@ -76,6 +80,8 @@ void caValueMonitor::eventCallback(struct event_handler_args args) {
     	this->gridCurrent = value;
     } else if (args.chid == this->gcolChid) {
     	this->gcolCurrent = value;
+    } else if (args.chid == this->gsChid) {
+    	this->gsCurrent = value;
     }
 }
 
@@ -103,3 +109,8 @@ void caValueMonitor::setGrid(bool grid) {
     ca_pend_io(3);
 }
 
+void caValueMonitor::setGs(int gs) {
+    *(long*)this->sendBuf = gs;
+    ca_array_put(DBR_LONG, 1, this->gsChid, sendBuf);
+    ca_pend_io(3);
+}
