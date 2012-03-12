@@ -1,5 +1,3 @@
-#define FALLBACK_TEST
-
 #include <QtDebug>
 #include <QToolTip>
 #include "ffmpegWidget.h"
@@ -307,7 +305,7 @@ void FFThread::run()
 
         // Send the frame out
         if (out == NULL) {
-            printf("Couldn't get a free buffer, skipping frame\n");
+            //printf("Couldn't get a free buffer, skipping frame\n");
         } else {
 //			printf("emit updateImage %p\n", out);
             emit updateSignal(out, firstImage);
@@ -338,7 +336,7 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     this->maxH = 0;
     /* Now setup QImage or xv whichever we have */
     this->ff_fmt = PIX_FMT_RGB24;
-    this->xvSetup();
+    if (!fallback) this->xvSetup();
     /* setup some defaults, we'll overwrite them with sensible numbers later */
     /* Private variables, read/write */
     _x = 0;             // x offset in image pixels
@@ -477,6 +475,11 @@ void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
 //	printf("updateImage %p\n", newbuf);
     // calculate fps
     int elapsed = this->lastFrameTime->elapsed();
+    if (!firstImage && this->xv_format < 0 && elapsed < 200) {
+        this->limited = QString(" (limited)");
+        newbuf->mutex->unlock();
+        return;
+    }
     this->lastFrameTime->start();
     this->ticksum -= this->ticklist[tickindex];             /* subtract value falling off */
     this->ticksum += elapsed;                               /* add new value */
@@ -484,7 +487,8 @@ void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
     if (++this->tickindex == MAXTICKS) this->tickindex=0;   /* inc buffer index */
     _fps = 1000.0  * MAXTICKS / this->ticksum;
     emit fpsChanged(_fps);
-    emit fpsChanged(QString("%1").arg(_fps, 0, 'f', 1));
+    emit fpsChanged(QString("%1%2").arg(_fps, 0, 'f', 1).arg(this->limited));
+    this->limited = QString("");
 
     // store the buffer
     FFBuffer *oldbuf = this->buf;
@@ -513,6 +517,76 @@ void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
         this->updateScalefactor();
         this->disableUpdates = false;
     }
+
+	// draw grid straight on image if xvideo
+    if (_grid && this->xv_format >= 0 && _gs > 0) {
+    	unsigned char Y = 0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue();
+        unsigned char U = -0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128;
+        unsigned char V = 0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128;
+        // X minor to the left of the crosshair
+        /*
+        for (int gsx = _gx; gsx > 0; gsx -= _gs) {
+        	for (int gsy = 0; gsy < _imH; gsy += 1) {
+        		unsigned char *yFrame = newbuf->pFrame->data[0] + _imW * gsy + gsx;
+        		unsigned char *uFrame = newbuf->pFrame->data[0] + _imW * _imH + gsy * _imW/4 + gsx/2;
+        		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4 + gsy * _imW/4 + gsx/2;            		
+        		*yFrame = *yFrame * 3/4 + Y/4;
+        		*uFrame = *uFrame * 3/4 + U/4;
+        		*vFrame = *vFrame * 3/4 + V/4;            		            		
+        	}
+        }*/
+   		unsigned char *yFrame = newbuf->pFrame->data[0];        
+   		unsigned char *uFrame = newbuf->pFrame->data[0] + _imW * _imH;
+   		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4;   		
+        // X Lines   		
+   		// Y data
+    	for (int gsy = 0; gsy < _imH; gsy += 1) {
+    		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
+    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    		}
+    		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
+    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    		}
+			yFrame[gsy * _imW + _gx] = Y;    		
+    	} 	    	
+   		// UV data
+    	for (int gsy = 0; gsy < _imH; gsy += 2) {
+    		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
+    			uFrame[gsy * _imW/4 + gsx/2] = uFrame[gsy * _imW/4 + gsx/2] * 4/5 + U/5;
+    			vFrame[gsy * _imW/4 + gsx/2] = vFrame[gsy * _imW/4 + gsx/2] * 4/5 + V/5;    			
+    		}
+    		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
+    			uFrame[gsy * _imW/4 + gsx/2] = uFrame[gsy * _imW/4 + gsx/2] * 4/5 + U/5;
+    			vFrame[gsy * _imW/4 + gsx/2] = vFrame[gsy * _imW/4 + gsx/2] * 4/5 + V/5;    			
+    		}
+			uFrame[gsy * _imW/4 + _gx/2] = uFrame[gsy * _imW/4 + _gx/2]/2 + U/2;
+			vFrame[gsy * _imW/4 + _gx/2] = vFrame[gsy * _imW/4 + _gx/2]/2 + V/2;    					    		
+    	}    
+        // Y Lines    	
+   		// Y data
+    	for (int gsx = 0; gsx < _imW; gsx += 1) {
+    		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
+    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    		}
+    		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
+    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    		}
+			yFrame[_gy * _imW + gsx] = Y;    		
+    	} 	    	
+   		// UV data
+    	for (int gsx = 0; gsx < _imW; gsx += 2) {
+    		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
+    			uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + U/5;
+    			vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + V/5;    			
+    		}
+    		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
+    			uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + U/5;
+    			vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + V/5;    			
+    		}
+			uFrame[((int)(_gy/2)) * _imW/2 + gsx/2] = uFrame[((int)(_gy/2)) * _imW/2 + gsx/2]/2 + U/2;
+			vFrame[((int)(_gy/2)) * _imW/2 + gsx/2] = vFrame[((int)(_gy/2)) * _imW/2 + gsx/2]/2 + V/2;    					    		
+    	}     		
+    }	
 
     // repaint the screen
     update();
@@ -601,47 +675,47 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
         this->xv_image->data = (char *) newbuf->pFrame->data[0];
         /* Draw the image */
         XvPutImage(this->dpy, this->xv_port, this->w, this->gc, this->xv_image,
-            _x, _y, _visW, _visH, 0, 0, _scVisW+1, _scVisH+1);
+            _x, _y, _visW, _visH, 0, 0, _scVisW, _scVisH);
    } else {
         // QImage fallback
         QPainter painter(this);
         QImage image(newbuf->pFrame->data[0], newbuf->width, newbuf->height, QImage::Format_RGB888);
         painter.drawImage(QPoint(0, 0), image.copy(QRect(_x, _y, _visW, _visH)).scaled(_scVisW, _scVisH));
-    }
-    /* Draw the grid */
-    if (_grid) {
-        QPainter painter(this);
-        // note the 0.5 gives us the middle of the pixel
-        double scGx = (_gx-_x+0.5)*this->sfx;
-        double scGy = (_gy-_y+0.5)*this->sfy;
-        double scGsx = _gs*this->sfx;
-        double scGsy = _gs*this->sfy;        
-        if (scGsx > 0.1 && scGsy > 0.1) {
-            // Draw minor lines
-            QColor gscol = QColor(_gcol);
-            gscol.setAlpha(50);
-            painter.setPen(gscol);
-            // X lines to the left of crosshair
-            for (double scx = scGx - scGsx; scx > 0; scx -= scGsx) {
-                painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
+        /* Draw the grid */
+        if (_grid) {
+            QPainter painter(this);
+            // note the 0.5 gives us the middle of the pixel
+            double scGx = (_gx-_x+0.5)*this->sfx;
+            double scGy = (_gy-_y+0.5)*this->sfy;
+            double scGsx = _gs*this->sfx;
+            double scGsy = _gs*this->sfy;        
+            if (scGsx > 0.1 && scGsy > 0.1) {
+                // Draw minor lines
+                QColor gscol = QColor(_gcol);
+                gscol.setAlpha(25);
+                painter.setPen(gscol);
+                // X lines to the left of crosshair
+                for (double scx = scGx - scGsx; scx > 0; scx -= scGsx) {
+                    painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
+                }
+                // X lines to the right of crosshair
+                for (double scx = scGx + scGsx; scx < _scVisW; scx += scGsx) {
+                    painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
+                }
+                // Y lines above the crosshair
+                for (double scy = scGy - scGsy; scy > 0; scy -= scGsy) {
+                    painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
+                }
+                // Y lines below the crosshair
+                for (double scy = scGy - scGsy; scy < _scVisH; scy += scGsy) {
+                    painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
+                }
             }
-            // X lines to the right of crosshair
-            for (double scx = scGx + scGsx; scx < _scVisW; scx += scGsx) {
-                painter.drawLine((int)(scx+0.5), 0, (int)(scx+0.5), _scVisH);
-            }
-            // Y lines above the crosshair
-            for (double scy = scGy - scGsy; scy > 0; scy -= scGsy) {
-                painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
-            }
-            // Y lines below the crosshair
-            for (double scy = scGy - scGsy; scy < _scVisH; scy += scGsy) {
-                painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
-            }
+            // Draw crosshairs
+            painter.setPen(_gcol);
+            painter.drawLine((int)(scGx+0.5), 0, (int)(scGx+0.5), _scVisH);
+            painter.drawLine(0, (int)(scGy+0.5), _scVisW, (int)(scGy+0.5));
         }
-        // Draw crosshairs
-        painter.setPen(_gcol);
-        painter.drawLine((int)(scGx+0.5), 0, (int)(scGx+0.5), _scVisH);
-        painter.drawLine(0, (int)(scGy+0.5), _scVisW, (int)(scGy+0.5));
     }
 }
 
@@ -761,6 +835,8 @@ void ffmpegWidget::calcFps() {
 // x offset in image pixels
 void ffmpegWidget::setX(int x) {
     x = x < 0 ? 0 : (x > _maxX) ? _maxX : x;
+    // xvideo only accepts multiple of 2 offsets    
+    if (this->xv_format >= 0) x = x - x % 2;    
     if (_x != x) {
         _x = x;
         emit xChanged(x);
@@ -773,6 +849,8 @@ void ffmpegWidget::setX(int x) {
 // y offset in image pixels
 void ffmpegWidget::setY(int y) {
     y = y < 0 ? 0 : (y > _maxY) ? _maxY : y;
+    // xvideo only accepts multiple of 2 offsets
+    if (this->xv_format >= 0) y = y - y % 2;        
     if (_y != y) {
         _y = y;
         emit yChanged(y);
@@ -821,7 +899,7 @@ void ffmpegWidget::setGy(int gy) {
 
 // grid spacing in image pixels
 void ffmpegWidget::setGs(int gs) {
-    gs = (gs < 5) ? 5 : (gs > 100) ? 100 : gs;
+    gs = (gs < 5) ? 5 : (gs > 2000) ? 2000 : gs;
     if (_gs != gs) {
         _gs = gs;
         emit gsChanged(gs);

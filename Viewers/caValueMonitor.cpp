@@ -56,7 +56,7 @@ void caValueMonitor::doWrite() {
         emit gyChanged(this->gyLast);
     } else if (this->gcolLast != this->gcolCurrent) {
     	this->gcolLast = this->gcolCurrent;	
-        emit gcolChanged(QColor((QRgb) this->gcolLast));
+        emit gcolChanged(QColor((QRgb) (0xFF000000 + this->gcolLast)));
     } else if (this->gridLast != this->gridCurrent) {
     	this->gridLast = this->gridCurrent;	
         emit gridChanged((bool) this->gridLast);
@@ -98,7 +98,7 @@ void caValueMonitor::setGy(int gy) {
 }
 
 void caValueMonitor::setGcol(QColor gcol) {
-    *(long*)this->sendBuf = gcol.rgb();
+    *(long*)this->sendBuf = gcol.rgb() - 0xFF000000;
     ca_array_put(DBR_LONG, 1, this->gcolChid, sendBuf);
     ca_pend_io(3);
 }

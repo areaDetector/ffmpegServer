@@ -261,7 +261,7 @@
         <number>5</number>
        </property>
        <property name="maximum">
-        <number>100</number>
+        <number>2000</number>
        </property>
       </widget>
      </item>
@@ -459,7 +459,7 @@
   </connection>
   <connection>
    <sender>video</sender>
-   <signal>maxGyChanged(int)</signal>
+   <signal>maxYChanged(int)</signal>
    <receiver>yoffSpin</receiver>
    <slot>setMaximumSlot(int)</slot>
    <hints>

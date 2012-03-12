@@ -11,6 +11,9 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xvlib.h>
 
+/* global switch for fallback mode */
+static int fallback=0;
+
 /* ffmpeg includes */
 extern "C" {
 #include "libavformat/avformat.h"
@@ -203,6 +206,7 @@ protected:
     int ticksum;
     int ticklist[MAXTICKS];
     int maxW, maxH;
+    QString limited;
 
 private:
     /* Private variables, read/write */
