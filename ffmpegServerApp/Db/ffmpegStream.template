@@ -177,26 +177,41 @@ record(waveform, "$(P)$(R)MJPG_URL_RBV")
 }
 
 #% autosave 2
+#% archiver 10 Monitor
 record(longout, "$(P)$(R)GX") {
     field(VAL, "100")
     field(PINI, "1")
 }
 
 #% autosave 2
+#% archiver 10 Monitor
 record(longout, "$(P)$(R)GY") {
     field(VAL, "100")
     field(PINI, "1")
 }
 
 #% autosave 2
-record(longout, "$(P)$(R)GRID") {
+#% archiver 10 Monitor
+record(bo, "$(P)$(R)GRID") {
     field(VAL, "0")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
     field(PINI, "1")
 }
 
 #% autosave 2
+#% archiver 10 Monitor
 # default white
 record(longout, "$(P)$(R)GCOL") {
-    field(VAL, "0xFFFFFFFF")
+    field(VAL, "0xFFFFFF")
+    field(PINI, "1")
+}
+
+#% autosave 2
+#% archiver 10 Monitor
+record(longout, "$(P)$(R)GS") {
+    field(VAL, "200")
+    field(DRVL, "5")    
+    field(DRVH, "2000")
     field(PINI, "1")
 }

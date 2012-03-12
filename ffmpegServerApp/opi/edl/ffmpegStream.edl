@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 130
-y 61
+x 179
+y 51
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -46,9 +46,24 @@ major 4
 minor 0
 release 0
 x 5
+y 640
+w 380
+h 85
+lineColor index 14
+fill
+fillColor index 3
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 5
 y 550
 w 380
-h 205
+h 70
 lineColor index 14
 fill
 fillColor index 3
@@ -77,7 +92,7 @@ minor 1
 release 0
 x 5
 y 390
-w 45
+w 48
 h 14
 font "arial-medium-r-12.0"
 fgColor index 14
@@ -97,13 +112,13 @@ minor 1
 release 0
 x 5
 y 540
-w 79
+w 117
 h 14
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
 value {
-  "  Commands  "
+  "  View single JPEG  "
 }
 autoSize
 border
@@ -289,7 +304,7 @@ release 0
 x 15
 y 560
 w 360
-h 40
+h 30
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
@@ -346,16 +361,16 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 15
-y 635
-w 360
-h 40
+x 260
+y 650
+w 115
+h 30
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 font "arial-bold-r-12.0"
-buttonLabel "Firefox Stream (slow)"
+buttonLabel "Firefox (slow)"
 numCmds 1
 command {
   0 "firefox `caget -t -S $(P)$(R)MJPG_URL_RBV`"
@@ -369,15 +384,15 @@ major 4
 minor 2
 release 0
 x 15
-y 680
-w 360
-h 40
+y 650
+w 115
+h 30
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 font "arial-bold-r-12.0"
-buttonLabel "Qt Viewer Stream (fast)"
+buttonLabel "    Qt Viewer (fast)"
 numCmds 1
 command {
   0 "unset http_proxy; ffmpegViewer `caget -t -S $(P)$(R)MJPG_URL_RBV` $(P)$(R)"
@@ -416,7 +431,7 @@ major 4
 minor 5
 release 0
 x 15
-y 605
+y 595
 w 360
 h 20
 controlPv "$(P)$(R)JPG_URL_RBV"
@@ -437,7 +452,7 @@ major 4
 minor 5
 release 0
 x 15
-y 725
+y 700
 w 360
 h 20
 controlPv "$(P)$(R)MJPG_URL_RBV"
@@ -542,5 +557,329 @@ fgAlarm
 bgColor index 3
 fill
 font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 630
+w 128
+h 14
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 5
+value {
+  "  View streaming video"
+}
+autoSize
+border
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 135
+y 650
+w 120
+h 30
+fgColor index 43
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "arial-bold-r-12.0"
+buttonLabel "    Qt Viewer (fallback)"
+numCmds 1
+command {
+  0 "unset http_proxy; ffmpegViewer -f `caget -t -S $(P)$(R)MJPG_URL_RBV` $(P)$(R)"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 680
+w 115
+h 20
+font "arial-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Default"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 135
+y 680
+w 115
+h 20
+font "arial-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "PCs without xvideo"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 260
+y 680
+w 115
+h 20
+font "arial-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "PCs without Qt"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 5
+y 745
+w 380
+h 55
+lineColor index 14
+fill
+fillColor index 3
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 735
+w 75
+h 14
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 5
+value {
+  "  Client Grid  "
+}
+autoSize
+border
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 90
+y 750
+w 65
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "X Position"
+}
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 750
+w 55
+h 20
+controlPv "$(P)$(R)GX"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 90
+y 775
+w 65
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Y Position"
+}
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 775
+w 55
+h 20
+controlPv "$(P)$(R)GY"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 220
+y 750
+w 80
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Spacing"
+}
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 300
+y 750
+w 80
+h 20
+controlPv "$(P)$(R)GS"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 300
+y 775
+w 80
+h 20
+controlPv "$(P)$(R)GCOL"
+displayMode "hex"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 220
+y 775
+w 80
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Colour RGB"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 10
+y 750
+w 75
+h 20
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Show Grid"
+}
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 770
+w 70
+h 20
+fgColor index 25
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(P)$(R)GRID"
+font "arial-bold-r-12.0"
 endObjectProperties
 
