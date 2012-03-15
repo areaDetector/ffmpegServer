@@ -8,6 +8,9 @@
 #include <QImage>
 #include <QPainter>
 
+/* global switch for fallback mode */
+int fallback = 0;
+
 /* set this when the ffmpeg lib is initialised */
 static int ffinit=0;
 
@@ -71,12 +74,12 @@ FFBuffer * FFThread::findFreeBuffer() {
 }
 
 // take a buffer and swscale it to the requested dimensions
-FFBuffer * FFThread::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt, struct SwsContext *ctx) {
+FFBuffer * FFThread::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
     FFBuffer *dest = this->findFreeBuffer();
     // make sure we got a buffer
     if (dest == NULL) {
         // get rid of the original
-           src->mutex->unlock();
+        src->mutex->unlock();
         return NULL;
     }
     if (pix_fmt == PIX_FMT_YUVJ420P) {
@@ -90,18 +93,18 @@ FFBuffer * FFThread::formatFrame(FFBuffer *src, int width, int height, PixelForm
     dest->pix_fmt = pix_fmt;
     // see if we have a suitable cached context
     // note that we use the original values of width and height
-    ctx = sws_getCachedContext(ctx,
+    this->ctx = sws_getCachedContext(this->ctx,
         src->width, src->height, src->pix_fmt,
         width, height, pix_fmt,
         SWS_BICUBIC, NULL, NULL, NULL);
-    // Assign appropriate parts of buffer->mem to planes in buffer->pFrame
+    // Assign appropriate parts of buffer->mem to planes in buffer->pFrame    
     avpicture_fill((AVPicture *) dest->pFrame, dest->mem,
         dest->pix_fmt, dest->width, dest->height);
     // do the software scale
-    sws_scale(ctx, src->pFrame->data, src->pFrame->linesize, 0,
+    sws_scale(this->ctx, src->pFrame->data, src->pFrame->linesize, 0,
         src->height, dest->pFrame->data, dest->pFrame->linesize);
     // get rid of the original
-       src->mutex->unlock();
+    src->mutex->unlock();
     return dest;
 }
 
@@ -123,7 +126,7 @@ FFBuffer * FFThread::falseFrame(FFBuffer *src, int width, int height, PixelForma
             yuv = src;
             break;
         default:
-            yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P, this->ctx);
+            yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P);
             src->mutex->unlock();
     }
     /* Now we have our YUV frame, generate YUV data */
@@ -131,7 +134,7 @@ FFBuffer * FFThread::falseFrame(FFBuffer *src, int width, int height, PixelForma
     // make sure we got a buffer
     if (dest == NULL) {
         // get rid of the original
-           src->mutex->unlock();
+        yuv->mutex->unlock();
         return NULL;
     }
     dest->pix_fmt = pix_fmt;
@@ -199,7 +202,7 @@ FFBuffer * FFThread::falseFrame(FFBuffer *src, int width, int height, PixelForma
 
     }
     // get rid of the original
-    src->mutex->unlock();
+    yuv->mutex->unlock();
     return dest;
 }
 
@@ -211,7 +214,7 @@ void FFThread::run()
     AVCodecContext      *pCodecCtx;
     AVCodec             *pCodec;
     AVPacket            packet;
-    FFBuffer            *out;
+    FFBuffer            *out = NULL;
     int                 frameFinished, len;
     bool                firstImage = true;
     PixelFormat pix_fmt;
@@ -294,20 +297,20 @@ void FFThread::run()
             pix_fmt = this->dest_format;
         }
 
-        // Format the decoded frame as we've been asked
+        // Format the decoded frame as we've been asked        
         if (_fcol) {
             // make it false colour
             out = this->falseFrame(raw, raw->width, raw->height, pix_fmt);
         } else {
             // pass out frame through sw_scale
-            out = this->formatFrame(raw, raw->width, raw->height, pix_fmt, this->ctx);
+            out = this->formatFrame(raw, raw->width, raw->height, pix_fmt);
         }
 
         // Send the frame out
         if (out == NULL) {
-            //printf("Couldn't get a free buffer, skipping frame\n");
+            printf("Couldn't get a free buffer, skipping frame\n");
         } else {
-//			printf("emit updateImage %p\n", out);
+			//printf("emit updateImage %p\n", out);			
             emit updateSignal(out, firstImage);
             if (firstImage) firstImage = false;
         }
@@ -336,7 +339,7 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     this->maxH = 0;
     /* Now setup QImage or xv whichever we have */
     this->ff_fmt = PIX_FMT_RGB24;
-    if (!fallback) this->xvSetup();
+    if (fallback == 0) this->xvSetup();
     /* setup some defaults, we'll overwrite them with sensible numbers later */
     /* Private variables, read/write */
     _x = 0;             // x offset in image pixels
@@ -456,14 +459,12 @@ void ffmpegWidget::xvSetup() {
         this->xv_port, &num_formats);
     for (int i=0; i<num_formats; i++) {
         if (strcmp(vals->guid, "I420") == 0) {
-#ifndef FALLBACK_TEST
             this->xv_format = vals->id;
             this->ff_fmt = PIX_FMT_YUVJ420P;
             // Widget is responsible for painting all its pixels with an opaque color
             setAttribute(Qt::WA_OpaquePaintEvent);
             setAttribute(Qt::WA_PaintOnScreen);
             return;
-#endif
         }
         vals++;
     }
@@ -472,6 +473,7 @@ void ffmpegWidget::xvSetup() {
 }
 
 void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
+newbuf->mutex->unlock();
 //	printf("updateImage %p\n", newbuf);
     // calculate fps
     int elapsed = this->lastFrameTime->elapsed();
@@ -518,73 +520,70 @@ void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
         this->disableUpdates = false;
     }
 
+#define overlayYPixel     			i = gsy * _imW + gsx; \
+    			yFrame[i] = (yFrame[i] * 9 + Y)/10
+#define overlayUVPixel     			i = gsy * _imW/4 + gsx/2; \
+    			uFrame[i] = (uFrame[i] * 9 + U)/10; \
+    			vFrame[i] = (vFrame[i] * 9 + V)/10   
+
 	// draw grid straight on image if xvideo
     if (_grid && this->xv_format >= 0 && _gs > 0) {
-    	unsigned char Y = 0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue();
-        unsigned char U = -0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128;
-        unsigned char V = 0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128;
-        // X minor to the left of the crosshair
-        /*
-        for (int gsx = _gx; gsx > 0; gsx -= _gs) {
-        	for (int gsy = 0; gsy < _imH; gsy += 1) {
-        		unsigned char *yFrame = newbuf->pFrame->data[0] + _imW * gsy + gsx;
-        		unsigned char *uFrame = newbuf->pFrame->data[0] + _imW * _imH + gsy * _imW/4 + gsx/2;
-        		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4 + gsy * _imW/4 + gsx/2;            		
-        		*yFrame = *yFrame * 3/4 + Y/4;
-        		*uFrame = *uFrame * 3/4 + U/4;
-        		*vFrame = *vFrame * 3/4 + V/4;            		            		
-        	}
-        }*/
+    	unsigned char Y = (unsigned char) (0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue());
+        unsigned char U = (unsigned char) (-0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128);
+        unsigned char V = (unsigned char) (0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128);
    		unsigned char *yFrame = newbuf->pFrame->data[0];        
    		unsigned char *uFrame = newbuf->pFrame->data[0] + _imW * _imH;
-   		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4;   		
+   		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4; 
+   		int i;  		
         // X Lines   		
-   		// Y data
+   		// Intensity data
     	for (int gsy = 0; gsy < _imH; gsy += 1) {
+    		// X Minors
     		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
-    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    			overlayYPixel;
     		}
     		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
-    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    			overlayYPixel;
     		}
+    		// X Major
 			yFrame[gsy * _imW + _gx] = Y;    		
     	} 	    	
    		// UV data
     	for (int gsy = 0; gsy < _imH; gsy += 2) {
+    		// X Minors
     		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
-    			uFrame[gsy * _imW/4 + gsx/2] = uFrame[gsy * _imW/4 + gsx/2] * 4/5 + U/5;
-    			vFrame[gsy * _imW/4 + gsx/2] = vFrame[gsy * _imW/4 + gsx/2] * 4/5 + V/5;    			
+    			overlayUVPixel;
     		}
     		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
-    			uFrame[gsy * _imW/4 + gsx/2] = uFrame[gsy * _imW/4 + gsx/2] * 4/5 + U/5;
-    			vFrame[gsy * _imW/4 + gsx/2] = vFrame[gsy * _imW/4 + gsx/2] * 4/5 + V/5;    			
+    			overlayUVPixel;
     		}
-			uFrame[gsy * _imW/4 + _gx/2] = uFrame[gsy * _imW/4 + _gx/2]/2 + U/2;
-			vFrame[gsy * _imW/4 + _gx/2] = vFrame[gsy * _imW/4 + _gx/2]/2 + V/2;    					    		
+    		// X Major
+  			i = gsy * _imW/4 + _gx/2;    		
+			uFrame[i] = (uFrame[i] + U)/2;
+			vFrame[i] = (vFrame[i] + V)/2;    					    		
     	}    
         // Y Lines    	
-   		// Y data
+   		// Intensity data
     	for (int gsx = 0; gsx < _imW; gsx += 1) {
     		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
-    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    			overlayYPixel;
     		}
     		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
-    			yFrame[gsy * _imW + gsx] = yFrame[gsy * _imW + gsx] * 4/5 + Y/5;
+    			overlayYPixel;
     		}
 			yFrame[_gy * _imW + gsx] = Y;    		
     	} 	    	
    		// UV data
     	for (int gsx = 0; gsx < _imW; gsx += 2) {
     		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
-    			uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + U/5;
-    			vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + V/5;    			
+    			overlayUVPixel;
     		}
     		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
-    			uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = uFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + U/5;
-    			vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] = vFrame[((int)(gsy/2)) * _imW/2 + gsx/2] * 4/5 + V/5;    			
+    			overlayUVPixel;
     		}
-			uFrame[((int)(_gy/2)) * _imW/2 + gsx/2] = uFrame[((int)(_gy/2)) * _imW/2 + gsx/2]/2 + U/2;
-			vFrame[((int)(_gy/2)) * _imW/2 + gsx/2] = vFrame[((int)(_gy/2)) * _imW/2 + gsx/2]/2 + V/2;    					    		
+    		i = ((int)(_gy/2)) * _imW/2 + gsx/2;
+			uFrame[i] = (uFrame[i] + U)/2;
+			vFrame[i] = (vFrame[i] + V)/2;    					    		
     	}     		
     }	
 
@@ -752,9 +751,6 @@ void ffmpegWidget::mousePressEvent (QMouseEvent* event) {
          clicky = event->y();
          oldy = _y;
          event->accept();
-     } else if (event->button() == Qt::RightButton) {
-         setGrid(!_grid);
-         event->accept();
      }
 }
 
@@ -899,7 +895,7 @@ void ffmpegWidget::setGy(int gy) {
 
 // grid spacing in image pixels
 void ffmpegWidget::setGs(int gs) {
-    gs = (gs < 5) ? 5 : (gs > 2000) ? 2000 : gs;
+    gs = (gs < 10) ? 10 : (gs > 2000) ? 2000 : gs;
     if (_gs != gs) {
         _gs = gs;
         emit gsChanged(gs);

@@ -12,7 +12,7 @@
 #include <X11/extensions/Xvlib.h>
 
 /* global switch for fallback mode */
-static int fallback=0;
+extern int fallback;
 
 /* ffmpeg includes */
 extern "C" {
@@ -25,7 +25,7 @@ extern "C" {
 #define MAXWIDTH 4000
 // max height of any input image
 #define MAXHEIGHT 3000
-// number of MAXWIDTH*MAXHEIGHT buffers to create
+// number of MAXWIDTH*MAXHEIGHT*3 buffers to create
 #define NBUFFERS 10
 // number of frames to calc fps from
 #define MAXTICKS 10
@@ -54,7 +54,7 @@ public:
     ~FFThread ();
     void run();
     FFBuffer * findFreeBuffer();
-    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt, struct SwsContext *ctx);
+    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
     FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
 
     int fcol() { return _fcol; }
