@@ -3,7 +3,7 @@ include $(TOP)/configure/CONFIG
 
 # config options for linux builds
 CONFIGOPTIONS += --prefix=$(shell cd $(TOP)/vendor && pwd)/ffmpeg-$(T_A)
-CONFIGOPTIONS += --disable-indev=v4l --disable-bzlib --disable-zlib --enable-shared --disable-static
+CONFIGOPTIONS += --enable-shared --disable-static --enable-debug --disable-stripping
 CONFIGOPTIONS += --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver
 CONFIGOPTIONS += --disable-indevs --disable-outdevs
 
