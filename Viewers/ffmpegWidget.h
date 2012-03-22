@@ -37,12 +37,16 @@ class FFBuffer
 public:
     FFBuffer ();
     ~FFBuffer ();
+	void reserve();
+	void release();
+	bool grabFree();
     QMutex *mutex;
     unsigned char *mem;
     AVFrame *pFrame;
     PixelFormat pix_fmt;
     int width;
     int height;
+    int refs;
 };
 
 class FFThread : public QThread
@@ -50,29 +54,19 @@ class FFThread : public QThread
     Q_OBJECT
 
 public:
-    FFThread (const QString &url, PixelFormat dest_format, int maxW, int maxH, QWidget* parent);
+    FFThread (const QString &url, QWidget* parent);
     ~FFThread ();
     void run();
-    FFBuffer * findFreeBuffer();
-    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
-    FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
-
-    int fcol() { return _fcol; }
 
 public slots:
     void stopGracefully() { stopping = 1; }
-    void setFcol(int fcol) { _fcol = fcol; }
 
 signals:
-    void updateSignal(FFBuffer * buf, bool firstImage);
+    void updateSignal(FFBuffer * buf);
 
 private:
     char url[MAXSTRING];
     int stopping;
-    int _fcol;
-    PixelFormat dest_format;
-    struct SwsContext *ctx;
-    int maxW, maxH;
 };
 
 class QDESIGNER_WIDGET_EXPORT ffmpegWidget : public QWidget
@@ -173,15 +167,18 @@ public slots:
     void setGcol();
     void setReset();
     void calcFps();
-    void updateImage(FFBuffer *buf, bool firstImage);
+    void updateImage(FFBuffer *buf);
 
 protected:
+    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
+    FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
     void paintEvent(QPaintEvent *);
     void mousePressEvent (QMouseEvent* event);
     void mouseMoveEvent (QMouseEvent* event);
     void mouseDoubleClickEvent (QMouseEvent* event);
     void wheelEvent( QWheelEvent* );
     void updateScalefactor();
+	void makeFullFrame();
     void ffQuit();
     // xv stuff
     void xvSetup();
@@ -193,7 +190,8 @@ protected:
     GC gc;
     // other
     double sfx, sfy;
-    FFBuffer *buf;
+    FFBuffer *rawbuf;
+    FFBuffer *fullbuf;
     QTime *lastFrameTime;
     QTimer *timer;
     int widgetW, widgetH;
@@ -207,6 +205,7 @@ protected:
     int ticklist[MAXTICKS];
     int maxW, maxH;
     QString limited;
+    struct SwsContext *ctx;    
 
 private:
     /* Private variables, read/write */

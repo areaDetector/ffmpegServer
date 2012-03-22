@@ -17,8 +17,11 @@ static int ffinit=0;
 /* need this to protect certain ffmpeg functions */
 static QMutex *ffmutex;
 
+
+// An FFBuffer contains an AVFrame, a mutex for access and some data
 FFBuffer::FFBuffer() {
     this->mutex = new QMutex();
+    this->refs = 0;
     this->pFrame = avcodec_alloc_frame();
     this->mem = (unsigned char *) calloc(MAXWIDTH*MAXHEIGHT*3, sizeof(unsigned char));
 }
@@ -28,18 +31,59 @@ FFBuffer::~FFBuffer() {
     free(this->mem);
 }
 
+bool FFBuffer::grabFree() {
+    if (this->mutex->tryLock()) {
+        if (this->refs == 0) {
+            this->refs += 1;
+            this->mutex->unlock();    
+            return true;
+        } else {
+            this->mutex->unlock();    
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+void FFBuffer::reserve() {
+    this->mutex->lock();    
+    this->refs += 1;
+    this->mutex->unlock();    
+}
+
+void FFBuffer::release() {
+    this->mutex->lock();
+    this->refs -= 1;
+    this->mutex->unlock();    
+}
+
+// List of FFBuffers to use for data storage
 static FFBuffer buffers[NBUFFERS];
+
+// find a free FFBuffer
+FFBuffer * findFreeBuffer() {
+    for (int i = 0; i < NBUFFERS; i++) {
+        // if we can lock it and it has a 0 refcount, we can use it!
+        if (buffers[i].mutex->tryLock()) {
+            if (buffers[i].refs == 0) {
+                buffers[i].refs += 1;
+                buffers[i].mutex->unlock();    
+                return &buffers[i];
+            } else {
+                buffers[i].mutex->unlock();    
+            }
+        }
+    }
+    return NULL;
+}
 
 /* thread that decodes frames from video stream and emits updateSignal when
  * each new frame is available
  */
-FFThread::FFThread (const QString &url, PixelFormat dest_format, int maxW, int maxH, QWidget* parent)
+FFThread::FFThread (const QString &url, QWidget* parent)
     : QThread (parent)
 {
-    // This is the pixel format we are expected to output
-    this->dest_format = dest_format;
-    this->maxW = maxW;
-    this->maxH = maxH;
     // this is the url to read the stream from
     strcpy(this->url, url.toAscii().data());
     // set this to 1 to finish
@@ -54,156 +98,10 @@ FFThread::FFThread (const QString &url, PixelFormat dest_format, int maxW, int m
         // Register all formats and codecs
         av_register_all();
     }
-    this->ctx = NULL;
-    _fcol = 0;
 }
 
 // destroy widget
 FFThread::~FFThread() {
-}
-
-// find a free FFBuffer
-FFBuffer * FFThread::findFreeBuffer() {
-    for (int i = 0; i < NBUFFERS; i++) {
-        // if we can lock it, we can use it!
-        if (buffers[i].mutex->tryLock()) {
-            return &buffers[i];
-        }
-    }
-    return NULL;
-}
-
-// take a buffer and swscale it to the requested dimensions
-FFBuffer * FFThread::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
-    FFBuffer *dest = this->findFreeBuffer();
-    // make sure we got a buffer
-    if (dest == NULL) {
-        // get rid of the original
-        src->mutex->unlock();
-        return NULL;
-    }
-    if (pix_fmt == PIX_FMT_YUVJ420P) {
-        // fill in multiples of 8 that xvideo can cope with
-        dest->width = width - width % 8;
-        dest->height = height - height % 8;
-    } else {
-           dest->width = width;
-        dest->height = height;
-    }
-    dest->pix_fmt = pix_fmt;
-    // see if we have a suitable cached context
-    // note that we use the original values of width and height
-    this->ctx = sws_getCachedContext(this->ctx,
-        src->width, src->height, src->pix_fmt,
-        width, height, pix_fmt,
-        SWS_BICUBIC, NULL, NULL, NULL);
-    // Assign appropriate parts of buffer->mem to planes in buffer->pFrame    
-    avpicture_fill((AVPicture *) dest->pFrame, dest->mem,
-        dest->pix_fmt, dest->width, dest->height);
-    // do the software scale
-    sws_scale(this->ctx, src->pFrame->data, src->pFrame->linesize, 0,
-        src->height, dest->pFrame->data, dest->pFrame->linesize);
-    // get rid of the original
-    src->mutex->unlock();
-    return dest;
-}
-
-// take a buffer and swscale it to the requested dimensions
-FFBuffer * FFThread::falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
-    FFBuffer *yuv = NULL;
-    switch (src->pix_fmt) {
-        case PIX_FMT_YUV420P:   //< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
-        case PIX_FMT_YUV411P:   //< planar YUV 4:1:1, 12bpp, (1 Cr & Cb sample per 4x1 Y samples)
-        case PIX_FMT_YUVJ420P:  //< planar YUV 4:2:0, 12bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV420P and setting color_range
-        case PIX_FMT_NV12:      //< planar YUV 4:2:0, 12bpp, 1 plane for Y and 1 plane for the UV components, which are interleaved (first byte U and the following byte V)
-        case PIX_FMT_NV21:      //< as above, but U and V bytes are swapped
-        case PIX_FMT_YUV422P:   //< planar YUV 4:2:2, 16bpp, (1 Cr & Cb sample per 2x1 Y samples)
-        case PIX_FMT_YUVJ422P:  //< planar YUV 4:2:2, 16bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV422P and setting color_range
-        case PIX_FMT_YUV440P:   //< planar YUV 4:4:0 (1 Cr & Cb sample per 1x2 Y samples)
-        case PIX_FMT_YUVJ440P:  //< planar YUV 4:4:0 full scale (JPEG), deprecated in favor of PIX_FMT_YUV440P and setting color_range
-        case PIX_FMT_YUV444P:   //< planar YUV 4:4:4, 24bpp, (1 Cr & Cb sample per 1x1 Y samples)
-        case PIX_FMT_YUVJ444P:  //< planar YUV 4:4:4, 24bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV444P and setting color_range
-            yuv = src;
-            break;
-        default:
-            yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P);
-            src->mutex->unlock();
-    }
-    /* Now we have our YUV frame, generate YUV data */
-    FFBuffer *dest = this->findFreeBuffer();
-    // make sure we got a buffer
-    if (dest == NULL) {
-        // get rid of the original
-        yuv->mutex->unlock();
-        return NULL;
-    }
-    dest->pix_fmt = pix_fmt;
-    unsigned char *yuvdata = (unsigned char *) yuv->pFrame->data[0];
-    unsigned char *destdata = (unsigned char *) dest->pFrame->data[0];
-    if (pix_fmt == PIX_FMT_YUVJ420P) {
-        // fill in multiples of 8 that xvideo can cope with
-        dest->width = width - width % 8;
-        dest->height = height - height % 8;
-        const unsigned char * colorMapY, * colorMapU, * colorMapV;
-        switch(_fcol) {
-            case 2:
-                colorMapY = IronColorY;
-                colorMapU = IronColorU;
-                colorMapV = IronColorV;
-                break;
-            default:
-                colorMapY = RainbowColorY;
-                colorMapU = RainbowColorU;
-                colorMapV = RainbowColorV;
-                break;
-        }
-        // Y planar data
-        for (int h=0; h<dest->height; h++) {
-            unsigned int line_start = yuv->pFrame->linesize[0] * h;
-            for (int w=0; w<dest->width; w++) {
-                *destdata++ = colorMapY[yuvdata[line_start + w]];
-            }
-        }
-        // UV planar data
-        for (int h=0; h<dest->height; h+=2) {
-            unsigned int line_start = yuv->pFrame->linesize[0] * h;
-            for (int w=0; w<dest->width; w+=2) {
-                unsigned char y = yuvdata[line_start + w];
-                destdata[h*dest->width/4 + w/2] = colorMapU[y];
-                destdata[dest->height*dest->width/4 + h*dest->width/4 + w/2] = colorMapV[y];
-            }
-        }
-    } else {
-        // fill in RGB data
-           dest->width = width;
-        dest->height = height;
-        const unsigned char * colorMapR, * colorMapG, * colorMapB;
-        switch(this->_fcol) {
-            case 2:
-                colorMapR = IronColorR;
-                colorMapG = IronColorG;
-                colorMapB = IronColorB;
-                break;
-            default:
-                colorMapR = RainbowColorR;
-                colorMapG = RainbowColorG;
-                colorMapB = RainbowColorB;
-                break;
-        }
-        // RGB packed data
-        for (int h=0; h<dest->height; h++) {
-            unsigned int line_start = yuv->pFrame->linesize[0] * h;
-            for (int w=0; w<dest->width; w++) {
-                *destdata++ = colorMapR[yuvdata[line_start + w]];
-                *destdata++ = colorMapG[yuvdata[line_start + w]];
-                *destdata++ = colorMapB[yuvdata[line_start + w]];
-            }
-        }
-
-    }
-    // get rid of the original
-    yuv->mutex->unlock();
-    return dest;
 }
 
 // run the FFThread
@@ -214,10 +112,7 @@ void FFThread::run()
     AVCodecContext      *pCodecCtx;
     AVCodec             *pCodec;
     AVPacket            packet;
-    FFBuffer            *out = NULL;
     int                 frameFinished, len;
-    bool                firstImage = true;
-    PixelFormat pix_fmt;
 
     // Open video file
     if (av_open_input_file(&pFormatCtx, this->url, NULL, 0, NULL)!=0) {
@@ -268,12 +163,20 @@ void FFThread::run()
         }
 
         // grab a buffer to decode into
-        FFBuffer *raw = this->findFreeBuffer();
+        FFBuffer *raw = findFreeBuffer();        
         if (raw == NULL) {
             printf("Couldn't get a free buffer, skipping packet\n");
             av_free_packet(&packet);
             continue;
         }
+        
+        // Tell the codec to use this bit of memory
+        pCodecCtx->internal_buffer = raw->mem;
+                
+        // Fill in the details
+        raw->height = pCodecCtx->height;
+        raw->width = pCodecCtx->width;
+        raw->pix_fmt = pCodecCtx->pix_fmt;         
 
         // Decode video frame
         len = avcodec_decode_video2(pCodecCtx, raw->pFrame, &frameFinished,
@@ -281,41 +184,14 @@ void FFThread::run()
         if (!frameFinished) {
             printf("Frame not finished. Shouldn't see this...\n");
             av_free_packet(&packet);
-            raw->mutex->unlock();
             continue;
         }
-        // Fill it in
-        raw->height = pCodecCtx->height;
-        raw->width = pCodecCtx->width;
-        raw->pix_fmt = pCodecCtx->pix_fmt;
-
-        // if we've got an image that's too big, force RGB
-        if (this->dest_format == PIX_FMT_YUVJ420P && (raw->width > maxW || raw->height > maxH)) {
-            printf("Image too big, using QImage fallback mode\n");
-            pix_fmt = PIX_FMT_RGB24;
-        } else {
-            pix_fmt = this->dest_format;
-        }
-
-        // Format the decoded frame as we've been asked        
-        if (_fcol) {
-            // make it false colour
-            out = this->falseFrame(raw, raw->width, raw->height, pix_fmt);
-        } else {
-            // pass out frame through sw_scale
-            out = this->formatFrame(raw, raw->width, raw->height, pix_fmt);
-        }
-
-        // Send the frame out
-        if (out == NULL) {
-            printf("Couldn't get a free buffer, skipping frame\n");
-        } else {
-			//printf("emit updateImage %p\n", out);			
-            emit updateSignal(out, firstImage);
-            if (firstImage) firstImage = false;
-        }
-
-        // Free the packet
+        
+        // Set the internal buffer back to null so that we don't accidentally free it
+        pCodecCtx->internal_buffer = NULL;
+        
+        // Emit and free
+        emit updateSignal(raw);
         av_free_packet(&packet);
     }
     // tidy up
@@ -370,11 +246,13 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     // other
     this->sfx = 1.0;
     this->sfy = 1.0;    
-    this->buf = NULL;
+    this->rawbuf = NULL;
+    this->fullbuf = NULL;
     this->lastFrameTime = new QTime();
     this->ff = NULL;
     this->widgetW = 0;
     this->widgetH = 0;
+    this->ctx = NULL;    
     // fps calculation
     this->tickindex = 0;
     this->ticksum = 0;
@@ -472,14 +350,139 @@ void ffmpegWidget::xvSetup() {
     return;
 }
 
-void ffmpegWidget::updateImage(FFBuffer *newbuf, bool firstImage) {
-newbuf->mutex->unlock();
-//	printf("updateImage %p\n", newbuf);
+// take a buffer and swscale it to the requested dimensions
+FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
+    FFBuffer *dest = findFreeBuffer();
+    // make sure we got a buffer
+    if (dest == NULL) return NULL;
+    if (pix_fmt == PIX_FMT_YUVJ420P) {
+        // fill in multiples of 8 that xvideo can cope with
+        dest->width = width - width % 8;
+        dest->height = height - height % 8;
+    } else {
+        dest->width = width;
+        dest->height = height;
+    }
+    dest->pix_fmt = pix_fmt;
+    // see if we have a suitable cached context
+    // note that we use the original values of width and height
+    this->ctx = sws_getCachedContext(this->ctx,
+        src->width, src->height, src->pix_fmt,
+        width, height, pix_fmt,
+        SWS_BICUBIC, NULL, NULL, NULL);
+    // Assign appropriate parts of buffer->mem to planes in buffer->pFrame    
+    avpicture_fill((AVPicture *) dest->pFrame, dest->mem,
+        dest->pix_fmt, dest->width, dest->height);
+    // do the software scale
+    sws_scale(this->ctx, src->pFrame->data, src->pFrame->linesize, 0,
+        src->height, dest->pFrame->data, dest->pFrame->linesize);
+    return dest;
+}
+
+// take a buffer and swscale it to the requested dimensions
+FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
+    FFBuffer *yuv = NULL;
+    switch (src->pix_fmt) {
+        case PIX_FMT_YUV420P:   //< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
+        case PIX_FMT_YUV411P:   //< planar YUV 4:1:1, 12bpp, (1 Cr & Cb sample per 4x1 Y samples)
+        case PIX_FMT_YUVJ420P:  //< planar YUV 4:2:0, 12bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV420P and setting color_range
+        case PIX_FMT_NV12:      //< planar YUV 4:2:0, 12bpp, 1 plane for Y and 1 plane for the UV components, which are interleaved (first byte U and the following byte V)
+        case PIX_FMT_NV21:      //< as above, but U and V bytes are swapped
+        case PIX_FMT_YUV422P:   //< planar YUV 4:2:2, 16bpp, (1 Cr & Cb sample per 2x1 Y samples)
+        case PIX_FMT_YUVJ422P:  //< planar YUV 4:2:2, 16bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV422P and setting color_range
+        case PIX_FMT_YUV440P:   //< planar YUV 4:4:0 (1 Cr & Cb sample per 1x2 Y samples)
+        case PIX_FMT_YUVJ440P:  //< planar YUV 4:4:0 full scale (JPEG), deprecated in favor of PIX_FMT_YUV440P and setting color_range
+        case PIX_FMT_YUV444P:   //< planar YUV 4:4:4, 24bpp, (1 Cr & Cb sample per 1x1 Y samples)
+        case PIX_FMT_YUVJ444P:  //< planar YUV 4:4:4, 24bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV444P and setting color_range
+            yuv = src;
+            break;
+        default:
+            yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P);
+    }
+    /* Now we have our YUV frame, generate YUV data */
+    FFBuffer *dest = findFreeBuffer();
+    // make sure we got a buffer
+    if (dest == NULL) {
+        // get rid of the original
+        if (yuv != src) yuv->release();
+        return NULL;
+    }
+    dest->pix_fmt = pix_fmt;
+    unsigned char *yuvdata = (unsigned char *) yuv->pFrame->data[0];
+    unsigned char *destdata = (unsigned char *) dest->pFrame->data[0];
+    if (pix_fmt == PIX_FMT_YUVJ420P) {
+        // fill in multiples of 8 that xvideo can cope with
+        dest->width = width - width % 8;
+        dest->height = height - height % 8;
+        const unsigned char * colorMapY, * colorMapU, * colorMapV;
+        switch(_fcol) {
+            case 2:
+                colorMapY = IronColorY;
+                colorMapU = IronColorU;
+                colorMapV = IronColorV;
+                break;
+            default:
+                colorMapY = RainbowColorY;
+                colorMapU = RainbowColorU;
+                colorMapV = RainbowColorV;
+                break;
+        }
+        // Y planar data
+        for (int h=0; h<dest->height; h++) {
+            unsigned int line_start = yuv->pFrame->linesize[0] * h;
+            for (int w=0; w<dest->width; w++) {
+                *destdata++ = colorMapY[yuvdata[line_start + w]];
+            }
+        }
+        // UV planar data
+        for (int h=0; h<dest->height; h+=2) {
+            unsigned int line_start = yuv->pFrame->linesize[0] * h;
+            for (int w=0; w<dest->width; w+=2) {
+                unsigned char y = yuvdata[line_start + w];
+                destdata[h*dest->width/4 + w/2] = colorMapU[y];
+                destdata[dest->height*dest->width/4 + h*dest->width/4 + w/2] = colorMapV[y];
+            }
+        }
+    } else {
+        // fill in RGB data
+        dest->width = width;
+        dest->height = height;
+        const unsigned char * colorMapR, * colorMapG, * colorMapB;
+        switch(this->_fcol) {
+            case 2:
+                colorMapR = IronColorR;
+                colorMapG = IronColorG;
+                colorMapB = IronColorB;
+                break;
+            default:
+                colorMapR = RainbowColorR;
+                colorMapG = RainbowColorG;
+                colorMapB = RainbowColorB;
+                break;
+        }
+        // RGB packed data
+        for (int h=0; h<dest->height; h++) {
+            unsigned int line_start = yuv->pFrame->linesize[0] * h;
+            for (int w=0; w<dest->width; w++) {
+                *destdata++ = colorMapR[yuvdata[line_start + w]];
+                *destdata++ = colorMapG[yuvdata[line_start + w]];
+                *destdata++ = colorMapB[yuvdata[line_start + w]];
+            }
+        }
+
+    }
+    // get rid of the original
+    if (yuv != src) yuv->release();
+    return dest;
+}
+
+void ffmpegWidget::updateImage(FFBuffer *newbuf) {
     // calculate fps
     int elapsed = this->lastFrameTime->elapsed();
-    if (!firstImage && this->xv_format < 0 && elapsed < 200) {
+    // limit framerate in fallback mode
+    if (this->rawbuf && this->xv_format < 0 && elapsed < 100) {
         this->limited = QString(" (limited)");
-        newbuf->mutex->unlock();
+        newbuf->release();
         return;
     }
     this->lastFrameTime->start();
@@ -493,20 +496,18 @@ newbuf->mutex->unlock();
     this->limited = QString("");
 
     // store the buffer
-    FFBuffer *oldbuf = this->buf;
-    this->buf = newbuf;
+    if (this->rawbuf) this->rawbuf->release();    
+    this->rawbuf = newbuf;
+    
+    // make the frame the right format
+    makeFullFrame();            
 
-    // if this is the first image, or width and height changes then make sure we zoom onto it
-    if (firstImage || _imW != newbuf->width || _imH != newbuf->height) {
-        _imW = newbuf->width;
+    // if width and height changes then make sure we zoom onto it
+    if (this->fullbuf && (_imW != this->fullbuf->width || _imH != this->fullbuf->height)) {
+        _imW = this->fullbuf->width;
         emit imWChanged(_imW);
-        _imH = newbuf->height;
+        _imH = this->fullbuf->height;
         emit imHChanged(_imH);
-        if (_imW <= 0 || _imH <= 0) {
-            // free old buffer
-            if (oldbuf) oldbuf->mutex->unlock();
-            return;
-        }
         /* Zoom so it fills the viewport */
         disableUpdates = true;
         setZoom(0);
@@ -518,80 +519,10 @@ newbuf->mutex->unlock();
         /* Update scale factors */
         this->updateScalefactor();
         this->disableUpdates = false;
-    }
-
-#define overlayYPixel     			i = gsy * _imW + gsx; \
-    			yFrame[i] = (yFrame[i] * 9 + Y)/10
-#define overlayUVPixel     			i = gsy * _imW/4 + gsx/2; \
-    			uFrame[i] = (uFrame[i] * 9 + U)/10; \
-    			vFrame[i] = (vFrame[i] * 9 + V)/10   
-
-	// draw grid straight on image if xvideo
-    if (_grid && this->xv_format >= 0 && _gs > 0) {
-    	unsigned char Y = (unsigned char) (0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue());
-        unsigned char U = (unsigned char) (-0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128);
-        unsigned char V = (unsigned char) (0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128);
-   		unsigned char *yFrame = newbuf->pFrame->data[0];        
-   		unsigned char *uFrame = newbuf->pFrame->data[0] + _imW * _imH;
-   		unsigned char *vFrame = newbuf->pFrame->data[0] + _imW * _imH * 5 / 4; 
-   		int i;  		
-        // X Lines   		
-   		// Intensity data
-    	for (int gsy = 0; gsy < _imH; gsy += 1) {
-    		// X Minors
-    		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
-    			overlayYPixel;
-    		}
-    		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
-    			overlayYPixel;
-    		}
-    		// X Major
-			yFrame[gsy * _imW + _gx] = Y;    		
-    	} 	    	
-   		// UV data
-    	for (int gsy = 0; gsy < _imH; gsy += 2) {
-    		// X Minors
-    		for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
-    			overlayUVPixel;
-    		}
-    		for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
-    			overlayUVPixel;
-    		}
-    		// X Major
-  			i = gsy * _imW/4 + _gx/2;    		
-			uFrame[i] = (uFrame[i] + U)/2;
-			vFrame[i] = (vFrame[i] + V)/2;    					    		
-    	}    
-        // Y Lines    	
-   		// Intensity data
-    	for (int gsx = 0; gsx < _imW; gsx += 1) {
-    		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
-    			overlayYPixel;
-    		}
-    		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
-    			overlayYPixel;
-    		}
-			yFrame[_gy * _imW + gsx] = Y;    		
-    	} 	    	
-   		// UV data
-    	for (int gsx = 0; gsx < _imW; gsx += 2) {
-    		for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
-    			overlayUVPixel;
-    		}
-    		for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
-    			overlayUVPixel;
-    		}
-    		i = ((int)(_gy/2)) * _imW/2 + gsx/2;
-			uFrame[i] = (uFrame[i] + U)/2;
-			vFrame[i] = (vFrame[i] + V)/2;    					    		
-    	}     		
-    }	
-
+    } 
+    
     // repaint the screen
     update();
-
-    // free old buffer
-    if (oldbuf) oldbuf->mutex->unlock();
 }
 
 void ffmpegWidget::updateScalefactor() {
@@ -661,24 +592,134 @@ void ffmpegWidget::updateScalefactor() {
     }
 }
 
-void ffmpegWidget::paintEvent(QPaintEvent *) {
-    FFBuffer *newbuf = this->buf;
-    if (_imW <= 0 || _imH <= 0 || newbuf == NULL) {
+void ffmpegWidget::makeFullFrame() {
+    PixelFormat pix_fmt;    
+
+    // make sure we have a raw buffer    
+    if (this->rawbuf == NULL || this->rawbuf->width <= 0 || this->rawbuf->height <= 0) {
         return;
     }
+
+    // if we have a raw buffer then decompress it
+    this->rawbuf->reserve();
+
+    // if we've got an image that's too big, force RGB
+    if (this->ff_fmt == PIX_FMT_YUVJ420P && (this->rawbuf->width > maxW || this->rawbuf->height > maxH)) {
+        printf("Image too big, using QImage fallback mode\n");
+        pix_fmt = PIX_FMT_RGB24;
+    } else {
+        pix_fmt = this->ff_fmt;
+    }
+
+    // release any full frame we might have
+    if (this->fullbuf) this->fullbuf->release();
+
+    // Format the decoded frame as we've been asked        
+    if (_fcol) {
+        // make it false colour
+        this->fullbuf = this->falseFrame(this->rawbuf, this->rawbuf->width, this->rawbuf->height, pix_fmt);
+    } else {
+        // pass out frame through sw_scale
+        this->fullbuf = this->formatFrame(this->rawbuf, this->rawbuf->width, this->rawbuf->height, pix_fmt);
+    }
+    this->rawbuf->release();  
+
+    // Check we got a buffer
+    if (this->fullbuf == NULL) {
+        printf("Couldn't get a free buffer, skipping frame\n");
+        return;
+    }    
+      
+    // draw the grid if asked to
+#define overlayYPixel                 i = gsy * _imW + gsx; \
+                yFrame[i] = (yFrame[i] * 4 + Y)/5
+#define overlayUVPixel                 i = gsy * _imW/4 + gsx/2; \
+                uFrame[i] = (uFrame[i] * 4 + U)/5; \
+                vFrame[i] = (vFrame[i] * 4 + V)/5   
+
+    // draw grid straight on image if xvideo
+    if (_grid && this->xv_format >= 0 && _gs > 0) {
+        unsigned char Y = (unsigned char) (0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue());
+        unsigned char U = (unsigned char) (-0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128);
+        unsigned char V = (unsigned char) (0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128);
+           unsigned char *yFrame = this->fullbuf->pFrame->data[0];        
+           unsigned char *uFrame = this->fullbuf->pFrame->data[0] + _imW * _imH;
+           unsigned char *vFrame = this->fullbuf->pFrame->data[0] + _imW * _imH * 5 / 4; 
+           int i;          
+        // X Lines           
+           // Intensity data
+        for (int gsy = 0; gsy < _imH; gsy += 1) {
+            // X Minors
+            for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
+                overlayYPixel;
+            }
+            for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
+                overlayYPixel;
+            }
+            // X Major
+            yFrame[gsy * _imW + _gx] = Y;            
+        }             
+           // UV data
+        for (int gsy = 0; gsy < _imH; gsy += 2) {
+            // X Minors
+            for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
+                overlayUVPixel;
+            }
+            for (int gsx = _gx + _gs; gsx < _imW; gsx += _gs) {
+                overlayUVPixel;
+            }
+            // X Major
+              i = gsy * _imW/4 + _gx/2;            
+            uFrame[i] = (uFrame[i] + U)/2;
+            vFrame[i] = (vFrame[i] + V)/2;                                    
+        }    
+        // Y Lines        
+           // Intensity data
+        for (int gsx = 0; gsx < _imW; gsx += 1) {
+            for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
+                overlayYPixel;
+            }
+            for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
+                overlayYPixel;
+            }
+            yFrame[_gy * _imW + gsx] = Y;            
+        }             
+           // UV data
+        for (int gsx = 0; gsx < _imW; gsx += 2) {
+            for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
+                overlayUVPixel;
+            }
+            for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
+                overlayUVPixel;
+            }
+            i = ((int)(_gy/2)) * _imW/2 + gsx/2;
+            uFrame[i] = (uFrame[i] + U)/2;
+            vFrame[i] = (vFrame[i] + V)/2;                                    
+        }             
+    }    
+}
+
+void ffmpegWidget::paintEvent(QPaintEvent *) {
+    // check we have a full buffer
+    if (this->fullbuf == NULL || this->fullbuf->width <= 0 || this->fullbuf->height <= 0) {
+        return;
+    }
+    // If scale factors have changed
     if (this->widgetW != width() || this->widgetH != height()) {
         updateScalefactor();
     }
-    if (newbuf->pix_fmt == PIX_FMT_YUVJ420P) {
+    FFBuffer * cachedFull = this->fullbuf;
+    cachedFull->reserve();    
+    if (cachedFull->pix_fmt == PIX_FMT_YUVJ420P) {
         // xvideo supported
-        this->xv_image->data = (char *) newbuf->pFrame->data[0];
+        this->xv_image->data = (char *) cachedFull->pFrame->data[0];
         /* Draw the image */
         XvPutImage(this->dpy, this->xv_port, this->w, this->gc, this->xv_image,
             _x, _y, _visW, _visH, 0, 0, _scVisW, _scVisH);
    } else {
         // QImage fallback
         QPainter painter(this);
-        QImage image(newbuf->pFrame->data[0], newbuf->width, newbuf->height, QImage::Format_RGB888);
+        QImage image(cachedFull->pFrame->data[0], cachedFull->width, cachedFull->height, QImage::Format_RGB888);
         painter.drawImage(QPoint(0, 0), image.copy(QRect(_x, _y, _visW, _visH)).scaled(_scVisW, _scVisH));
         /* Draw the grid */
         if (_grid) {
@@ -691,7 +732,7 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
             if (scGsx > 0.1 && scGsy > 0.1) {
                 // Draw minor lines
                 QColor gscol = QColor(_gcol);
-                gscol.setAlpha(25);
+                gscol.setAlpha(35);
                 painter.setPen(gscol);
                 // X lines to the left of crosshair
                 for (double scx = scGx - scGsx; scx > 0; scx -= scGsx) {
@@ -716,6 +757,7 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
             painter.drawLine(0, (int)(scGy+0.5), _scVisW, (int)(scGy+0.5));
         }
     }
+    cachedFull->release();
 }
 
 void ffmpegWidget::ffQuit() {
@@ -736,10 +778,9 @@ void ffmpegWidget::mouseDoubleClickEvent (QMouseEvent* event) {
     if (event->button() == Qt::LeftButton && _grid) {
         disableUpdates = true;
         setGx((int) (_x + event->x()/this->sfx));
+        disableUpdates = false;        
         setGy((int) (_y + event->y()/this->sfy));
-        disableUpdates = false;
         event->accept();
-        update();
     }
 }
 
@@ -760,9 +801,8 @@ void ffmpegWidget::mouseMoveEvent (QMouseEvent* event) {
         // disable automatic updates
         disableUpdates = true;
         setX(oldx + (int)((clickx - event->x())/this->sfx));
+        disableUpdates = false;        
         setY(oldy + (int)((clicky - event->y())/this->sfy));
-        disableUpdates = false;
-        update();
         event->accept();
     }
 }
@@ -783,9 +823,8 @@ void ffmpegWidget::wheelEvent(QWheelEvent * event) {
     }
     // now work out where it is when zoom has changed
     setX(_x + (int) (0.5 + fx * (old_visW - _visW)));
+    disableUpdates = false;    
     setY(_y + (int) (0.5 + fy * (old_visH - _visH)));
-    disableUpdates = false;
-    update();
     event->accept();
 }
 
@@ -797,10 +836,8 @@ void ffmpegWidget::setGcol() {
 // start or reset ffmpeg
 void ffmpegWidget::setReset() {
     // must have a url
-    int fcol = 0;
     if (_url=="") return;
     if ((ff!=NULL)&&(ff->isRunning())) {
-        fcol = ff->fcol();
         ffQuit();
     }
 
@@ -808,16 +845,15 @@ void ffmpegWidget::setReset() {
     disableUpdates = true;
 
     /* create the ffmpeg thread */
-    ff = new FFThread(_url, this->ff_fmt, this->maxW, this->maxH, this);
-    QObject::connect( ff, SIGNAL(updateSignal(FFBuffer *, bool)),
-                      this, SLOT(updateImage(FFBuffer *, bool)) );
+    ff = new FFThread(_url, this);
+    
+    QObject::connect( ff, SIGNAL(updateSignal(FFBuffer *)),
+                      this, SLOT(updateImage(FFBuffer *)) );
     QObject::connect( this, SIGNAL(aboutToQuit()),
                       ff, SLOT(stopGracefully()) );
-    QObject::connect( this, SIGNAL(fcolChanged(int)),
-                      ff, SLOT(setFcol(int)) );
     // allow updates, and start the image thread
+    setZoom(0);    
     disableUpdates = false;
-    ff->setFcol(fcol);
     ff->start();
 }
 
@@ -876,6 +912,8 @@ void ffmpegWidget::setGx(int gx) {
         _gx = gx;
         emit gxChanged(gx);
         if (!disableUpdates) {
+            // Grid changed, so redraw it on current image
+            if (this->xv_format >= 0) makeFullFrame();
             update();
         }
     }
@@ -888,6 +926,8 @@ void ffmpegWidget::setGy(int gy) {
         _gy = gy;
         emit gyChanged(gy);
         if (!disableUpdates) {
+            // Grid changed, so redraw it on current image
+            if (this->xv_format >= 0) makeFullFrame();
             update();
         }
     }
@@ -900,6 +940,8 @@ void ffmpegWidget::setGs(int gs) {
         _gs = gs;
         emit gsChanged(gs);
         if (!disableUpdates) {
+            // Grid changed, so redraw it on current image
+            if (this->xv_format >= 0) makeFullFrame();        
             update();
         }
     }
@@ -911,6 +953,8 @@ void ffmpegWidget::setGrid(bool grid) {
         _grid = grid;
         emit gridChanged(grid);
         if (!disableUpdates) {
+            // Grid changed, so redraw it on current image
+            if (this->xv_format >= 0) makeFullFrame();        
             update();
         }
     }
@@ -922,6 +966,8 @@ void ffmpegWidget::setGcol(QColor gcol) {
         _gcol = gcol;
         emit gcolChanged(_gcol);
         if (!disableUpdates) {
+            // Grid changed, so redraw it on current image
+            if (this->xv_format >= 0) makeFullFrame();
             update();
         }
     }
@@ -932,6 +978,10 @@ void ffmpegWidget::setFcol(int fcol) {
     if (_fcol != fcol) {
         _fcol = fcol;
         emit fcolChanged(_fcol);
+        if (!disableUpdates) {
+            makeFullFrame();
+            update();
+        }        
     }
 }
 
@@ -944,5 +994,4 @@ void ffmpegWidget::setUrl(QString url) {
         setReset();
     }
 }
-
 
