@@ -16,11 +16,11 @@ static const char *driverName2 = "ffmpegFile";
   */
   
 /**************************************************************/
+
 asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode, NDArray *pArray)
 {
     static const char *functionName = "openFile";
-    int codi;
-	this->sheight = 0;
+    this->sheight = 0;
 	this->swidth = 0;
 
     /* We don't support reading yet */
@@ -29,18 +29,37 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     /* We don't support opening an existing file for appending yet */
     if (openMode & NDFileModeAppend) return(asynError);
 
-    /* auto detect the output format from the name. default is
-       mpeg. */
-    fmt = av_guess_format(NULL, fileName, NULL);
-    if (!fmt) {
-        printf("Could not deduce output format from file extension: using MPEG.\n");
-        fmt = av_guess_format("mpeg", NULL, NULL);
+    /* See if we are writing an image type */
+    enum CodecID codecID = av_guess_image2_codec(fileName);
+    if (codecID != CODEC_ID_NONE) {
+    	// We are looking at a single image type
+    	this->supportsMultipleArrays = 0;
+    	fmt = av_guess_format("image2", fileName, NULL);
+    	codec = avcodec_find_encoder(codecID);
+    	if (codec) {
+    		fmt->video_codec = codecID;
+    	}
+    } else {
+    	// This is a multiple image type
+    	this->supportsMultipleArrays = 1;
+    	fmt = av_guess_format(NULL, fileName, NULL);
+        /* auto detect the output format from the name. default is
+           mpeg. */
+        if (!fmt) {
+            printf("Could not deduce output format from file extension: using MPEG.\n");
+            fmt = av_guess_format("avi", NULL, NULL);
+        }
     }
     if (!fmt) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
             "%s:%s Could not find suitable output format for '%s'\n",
             driverName2, functionName, fileName);
         return(asynError);
+    }
+
+    /* We want to use msmpeg4v2 instead of mpeg4 for avi files*/
+    if (av_match_ext(fileName, "avi") && fmt->video_codec == CODEC_ID_MPEG4) {
+    	fmt->video_codec = CODEC_ID_MSMPEG4V2;
     }
 
     /* allocate the output media context */
@@ -71,25 +90,7 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
             return(asynError);
         }
         avcodec_get_context_defaults2(video_st->codec, AVMEDIA_TYPE_VIDEO);
-          
-        /* find the video encoder */
-        getIntegerParam(0, NDFileFormat, &codi);
-        switch (codi) {
-        	case 0:
-                codec = avcodec_find_encoder(fmt->video_codec);        	
-        	    break;
-        	case 1:
-        	    codec = avcodec_find_encoder_by_name("msmpeg4v2");
-        	    break;
-        	case 2:
-        	    codec = avcodec_find_encoder_by_name("mpeg");
-        	    break;  	        	    
-        	default:
-                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-                    "%s:%s Invalid codec selection\n",
-                    driverName2, functionName);   
-            return(asynError);                    	
-	    }
+        codec = avcodec_find_encoder(fmt->video_codec);
 	    if (!codec) {
 	        printf("Codec cannot be found, trying msmpeg4v2\n");
 	        codec = avcodec_find_encoder_by_name("msmpeg4v2"); 
@@ -148,19 +149,8 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
     }
 
     av_dump_format(oc, 0, fileName, 1);
-
     /* now that all the parameters are set, we can open the audio and
        video codecs and allocate the necessary encode buffers */
-
-    /* find the video encoder */
-    codec = avcodec_find_encoder(c->codec_id);
-    if (!codec) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s codec not found\n",
-            driverName2, functionName);
-        return(asynError);
-    }
-
     /* open the codec */
     if (avcodec_open(c, codec) < 0) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
@@ -171,31 +161,53 @@ asynStatus ffmpegFile::openFile(const char *fileName, NDFileOpenMode_t openMode,
 	outSize = c->width * c->height * 6;   
 
     /* alloc array for output and compression */
+    if (scArray) {
+    	scArray->release();
+    	scArray = NULL;
+    }
+    if (outArray) {
+    	outArray->release();
+    	outArray = NULL;
+    }
     scArray = this->pNDArrayPool->alloc(1, &outSize, NDInt8, 0, NULL);
-    outArray = this->pNDArrayPool->alloc(1, &outSize, NDInt8, 0, NULL);    
+    outArray = this->pNDArrayPool->alloc(1, &outSize, NDInt8, 0, NULL);
+    if (scArray == NULL || outArray == NULL) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s error allocating arrays\n",
+            driverName2, functionName);
+        if (scArray) {
+        	scArray->release();
+        	scArray = NULL;
+        }
+        if (outArray) {
+        	outArray->release();
+        	outArray = NULL;
+        }
+        return(asynError);
+    }
 
     /* alloc in and scaled pictures */
     inPicture = avcodec_alloc_frame();
     scPicture = avcodec_alloc_frame();
 	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);       
-
-    /* open the output file, if needed */
+	/* open the output file, if needed */
     if (!(fmt->flags & AVFMT_NOFILE)) {    
         if (avio_open(&oc->pb, fileName, AVIO_FLAG_WRITE) < 0) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
                 "%s:%s error opening file %s\n",
                 driverName2, functionName, fileName);
             scArray->release();
+            scArray = NULL;
             outArray->release();
+            outArray = NULL;
             return(asynError);
         }
     }
 
     /* write the stream header, if any */
-    if (av_write_header(oc) < 0) 
-        printf("Could not write header for output file (incorrect codec parameters ?)");    
+    if (av_write_header(oc) < 0)
+        printf("Could not write header for output file (incorrect codec parameters ?)");
 	needStop = 1;
-    
     return(asynSuccess);
 }
 
@@ -310,9 +322,14 @@ asynStatus ffmpegFile::closeFile()
 
     /* free the stream */
     av_free(oc);
-        
-    scArray->release();
-    outArray->release();
+    if (scArray) {
+    	scArray->release();
+    	scArray = NULL;
+    }
+    if (outArray) {
+    	outArray->release();
+    	outArray = NULL;
+    }
 
     av_free(inPicture);
     av_free(scPicture);  
@@ -341,11 +358,12 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
     /* Invoke the base class constructor.
      * We allocate 2 NDArrays of unlimited size in the NDArray pool.
      * This driver can block (because writing a file can be slow), and it is not multi-device.  
-     * Set autoconnect to 1.  priority and stacksize can be 0, which will use defaults. */
+     * Set autoconnect to 1.  priority can be 0, which will use defaults. 
+     * We require a minimum stacksize of 128k for windows-x64 */
     : NDPluginFile(portName, queueSize, blockingCallbacks,
                    NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_FILE_PARAMS,
                    2, -1, asynGenericPointerMask, asynGenericPointerMask, 
-                   ASYN_CANBLOCK, 1, priority, stackSize)
+                   ASYN_CANBLOCK, 1, priority, stackSize < 128000 ? 128000 : stackSize)
 {
     //const char *functionName = "ffmpegFile";
 
@@ -356,7 +374,7 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
 
     /* Set the plugin type string */    
     setStringParam(NDPluginDriverPluginType, "ffmpegFile");
-    this->supportsMultipleArrays = 1;
+    this->supportsMultipleArrays = 0;
     
     /* Initialise the ffmpeg library */
     ffmpegInitialise();

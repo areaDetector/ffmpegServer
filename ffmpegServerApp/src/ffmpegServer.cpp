@@ -546,12 +546,14 @@ See ffmpegStream.template for more details of usage.
 ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCallbacks,
                            const char *NDArrayPort, int NDArrayAddr, int maxBuffers, int maxMemory,
                            int priority, int stackSize)
-    /* Invoke the base class constructor */
+    /* Invoke the base class constructor
+     * Set autoconnect to 1.  priority can be 0, which will use defaults. 
+     * We require a minimum stacksize of 128k for windows-x64 */    
     : NDPluginDriver(portName, queueSize, blockingCallbacks,
                    NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_SERVER_PARAMS, maxBuffers, maxMemory,
                    asynGenericPointerMask,
                    asynGenericPointerMask,
-                   0, 1, priority, stackSize)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
+                   0, 1, priority, stackSize < 128000 ? 128000 : stackSize)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
 {
     char host[64] = "";
     char url[256] = "";

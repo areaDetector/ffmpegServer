@@ -124,15 +124,19 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
         return(asynError);
     }
 
-	/* setup the swscale ctx */    
+	/* setup the swscale ctx */   
 	*pCtx = sws_getCachedContext(*pCtx, width, height, pix_fmt,
                                   c->width, c->height, c->pix_fmt,
                                   SWS_BICUBIC, NULL, NULL, NULL);   
-
+                                  
+    if (*pCtx == NULL) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+            "%s: sws_getCachedContext failed\n", functionName);
+        return(asynError);
+    }
     /* scale the picture so we can pass it to the encoder */
     sws_scale(*pCtx, inPicture->data, inPicture->linesize, 0,
 		      height, scPicture->data, scPicture->linesize);
-	
 	return(asynSuccess);
 }
 	
