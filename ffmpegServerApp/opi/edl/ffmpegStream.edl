@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 179
-y 51
+x 1277
+y 209
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -46,9 +46,9 @@ major 4
 minor 0
 release 0
 x 5
-y 640
+y 635
 w 380
-h 85
+h 80
 lineColor index 14
 fill
 fillColor index 3
@@ -63,7 +63,7 @@ release 0
 x 5
 y 550
 w 380
-h 70
+h 65
 lineColor index 14
 fill
 fillColor index 3
@@ -92,8 +92,8 @@ minor 1
 release 0
 x 5
 y 390
-w 48
-h 14
+w 45
+h 15
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -112,8 +112,8 @@ minor 1
 release 0
 x 5
 y 540
-w 117
-h 14
+w 113
+h 15
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -304,7 +304,7 @@ release 0
 x 15
 y 560
 w 360
-h 30
+h 25
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
@@ -361,10 +361,10 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 260
-y 650
-w 115
-h 30
+x 275
+y 645
+w 100
+h 25
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
@@ -384,15 +384,15 @@ major 4
 minor 2
 release 0
 x 15
-y 650
+y 645
 w 115
-h 30
+h 25
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 font "arial-bold-r-12.0"
-buttonLabel "    Qt Viewer (fast)"
+buttonLabel "Qt Viewer (fast)"
 numCmds 1
 command {
   0 "unset http_proxy; ffmpegViewer `caget -t -S $(P)$(R)MJPG_URL_RBV` $(P)$(R)"
@@ -431,7 +431,7 @@ major 4
 minor 5
 release 0
 x 15
-y 595
+y 590
 w 360
 h 20
 controlPv "$(P)$(R)JPG_URL_RBV"
@@ -452,7 +452,7 @@ major 4
 minor 5
 release 0
 x 15
-y 700
+y 690
 w 360
 h 20
 controlPv "$(P)$(R)MJPG_URL_RBV"
@@ -566,9 +566,9 @@ major 4
 minor 1
 release 0
 x 5
-y 630
-w 128
-h 14
+y 625
+w 127
+h 15
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -586,15 +586,15 @@ major 4
 minor 2
 release 0
 x 135
-y 650
-w 120
-h 30
+y 645
+w 135
+h 25
 fgColor index 43
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 font "arial-bold-r-12.0"
-buttonLabel "    Qt Viewer (fallback)"
+buttonLabel "Qt Viewer (fallback)"
 numCmds 1
 command {
   0 "unset http_proxy; ffmpegViewer -f `caget -t -S $(P)$(R)MJPG_URL_RBV` $(P)$(R)"
@@ -608,7 +608,7 @@ major 4
 minor 1
 release 0
 x 15
-y 680
+y 670
 w 115
 h 20
 font "arial-bold-r-12.0"
@@ -628,8 +628,8 @@ major 4
 minor 1
 release 0
 x 135
-y 680
-w 115
+y 670
+w 135
 h 20
 font "arial-bold-r-12.0"
 fontAlign "center"
@@ -647,9 +647,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 260
-y 680
-w 115
+x 275
+y 670
+w 100
 h 20
 font "arial-bold-r-12.0"
 fontAlign "center"
@@ -668,7 +668,7 @@ major 4
 minor 0
 release 0
 x 5
-y 745
+y 735
 w 380
 h 55
 lineColor index 14
@@ -683,9 +683,9 @@ major 4
 minor 1
 release 0
 x 5
-y 735
-w 75
-h 14
+y 725
+w 72
+h 15
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -703,7 +703,7 @@ major 4
 minor 1
 release 0
 x 90
-y 750
+y 740
 w 65
 h 20
 font "arial-bold-r-12.0"
@@ -722,7 +722,7 @@ major 10
 minor 0
 release 0
 x 155
-y 750
+y 740
 w 55
 h 20
 controlPv "$(P)$(R)GX"
@@ -740,7 +740,7 @@ major 4
 minor 1
 release 0
 x 90
-y 775
+y 765
 w 65
 h 20
 font "arial-bold-r-12.0"
@@ -759,7 +759,7 @@ major 10
 minor 0
 release 0
 x 155
-y 775
+y 765
 w 55
 h 20
 controlPv "$(P)$(R)GY"
@@ -777,7 +777,7 @@ major 4
 minor 1
 release 0
 x 220
-y 750
+y 740
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -796,7 +796,7 @@ major 10
 minor 0
 release 0
 x 300
-y 750
+y 740
 w 80
 h 20
 controlPv "$(P)$(R)GS"
@@ -814,7 +814,7 @@ major 10
 minor 0
 release 0
 x 300
-y 775
+y 765
 w 80
 h 20
 controlPv "$(P)$(R)GCOL"
@@ -833,7 +833,7 @@ major 4
 minor 1
 release 0
 x 220
-y 775
+y 765
 w 80
 h 20
 font "arial-bold-r-12.0"
@@ -852,7 +852,7 @@ major 4
 minor 1
 release 0
 x 10
-y 750
+y 740
 w 75
 h 20
 font "arial-bold-r-12.0"
@@ -871,7 +871,7 @@ major 4
 minor 0
 release 0
 x 10
-y 770
+y 760
 w 70
 h 20
 fgColor index 25
@@ -881,5 +881,27 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(P)$(R)GRID"
 font "arial-bold-r-12.0"
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 5
+y 795
+w 380
+h 20
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "arial-bold-r-12.0"
+buttonLabel "HTML Doc"
+numCmds 1
+command {
+  0 "firefox file://$(which ffmpegFile.edl | sed \"s|data/ffmpegFile.edl|documentation/doxygen/ffmpegStream_8template.html|\") &"
+}
 endObjectProperties
 

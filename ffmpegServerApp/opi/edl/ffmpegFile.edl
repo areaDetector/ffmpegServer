@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 178
-y 204
+x 872
+y 185
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -48,7 +48,7 @@ release 0
 x 5
 y 680
 w 380
-h 110
+h 135
 lineColor index 14
 fill
 fillColor index 3
@@ -62,8 +62,8 @@ minor 1
 release 0
 x 5
 y 670
-w 100
-h 14
+w 102
+h 15
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -80,7 +80,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 150
+x 155
 y 690
 w 90
 h 20
@@ -99,10 +99,10 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 55
-y 685
-w 89
-h 30
+x 60
+y 690
+w 90
+h 20
 controlPv "$(P)$(R)BITRATE"
 fgColor index 25
 fgAlarm
@@ -136,9 +136,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 255
+x 260
 y 690
-w 35
+w 30
 h 20
 font "arial-bold-r-12.0"
 fgColor index 14
@@ -175,9 +175,9 @@ major 10
 minor 0
 release 0
 x 295
-y 685
+y 690
 w 40
-h 30
+h 20
 controlPv "$(P)$(R)FPS"
 fgColor index 25
 fgAlarm
@@ -242,8 +242,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 95
-y 725
+x 100
+y 715
 w 40
 h 20
 controlPv "$(P)$(R)WIDTH_RBV"
@@ -261,10 +261,10 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 50
-y 720
+x 55
+y 715
 w 40
-h 30
+h 20
 controlPv "$(P)$(R)WIDTH"
 fgColor index 25
 fgAlarm
@@ -280,8 +280,8 @@ major 4
 minor 1
 release 0
 x 10
-y 725
-w 35
+y 715
+w 40
 h 20
 font "arial-bold-r-12.0"
 fgColor index 14
@@ -299,8 +299,8 @@ major 4
 minor 1
 release 0
 x 150
-y 725
-w 35
+y 715
+w 45
 h 20
 font "arial-bold-r-12.0"
 fgColor index 14
@@ -317,10 +317,10 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 720
+x 200
+y 715
 w 40
-h 30
+h 20
 controlPv "$(P)$(R)HEIGHT"
 fgColor index 25
 fgAlarm
@@ -335,8 +335,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 235
-y 725
+x 245
+y 715
 w 40
 h 20
 controlPv "$(P)$(R)HEIGHT_RBV"
@@ -346,5 +346,51 @@ bgColor index 10
 fill
 font "arial-bold-r-12.0"
 fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 10
+y 735
+w 301
+h 75
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Set #Capture=1 for single image, -1 to capture forever"
+  "For video: File Format must end with .avi"
+  "Single images: Use .jpg for lossy compression, "
+  "               .png for lossless compression, "
+  "               .bmp for uncompressed"
+}
+autoSize
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 235
+y 785
+w 145
+h 25
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "arial-bold-r-12.0"
+buttonLabel "HTML Doc"
+numCmds 1
+command {
+  0 "firefox file://$(which ffmpegFile.edl | sed \"s|data/ffmpegFile.edl|documentation/doxygen/ffmpegFile_8template.html|\") &"
+}
 endObjectProperties
 
