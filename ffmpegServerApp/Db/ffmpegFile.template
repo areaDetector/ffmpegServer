@@ -27,10 +27,6 @@ record(mbbo, "$(P)$(R)FileFormat")
 {
     field(ZRST, "Auto")
     field(ZRVL, "0")
-    field(ONST, "msmpeg4v2")
-    field(ONVL, "1")
-    field(TWST, "mpeg4")
-    field(TWVL, "2")    
 }
 
 # # File data format from driver
@@ -39,10 +35,21 @@ record(mbbi, "$(P)$(R)FileFormat_RBV")
 {
     field(ZRST, "Auto")
     field(ZRVL, "0")
-    field(ONST, "MSMPEGV2")
-    field(ONVL, "1")
-    field(TWST, "H264")
-    field(TWVL, "2") 
+}
+
+record(bo, "$(P)$(R)AutoSave")
+{
+    field(VAL,  "0")
+}
+
+record(mbbo, "$(P)$(R)FileWriteMode")
+{
+    field(VAL, "2")
+}
+
+record(longout, "$(P)$(R)NumCapture")
+{
+    field(VAL,  "-1")
 }
 
 # # FFMPEG Bitrate
@@ -88,7 +95,7 @@ record(ao, "$(P)$(R)WIDTH") {
   field(PINI, "YES")  
 }
 
-# # FFMPEG Bitrate from driver
+# # FFMPEG Width from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, WIDTH_RBV, Readback for WIDTH
 record(ai, "$(P)$(R)WIDTH_RBV") {
   field(SCAN, "I/O Intr")
@@ -96,7 +103,7 @@ record(ai, "$(P)$(R)WIDTH_RBV") {
   field(INP, "@asyn($(PORT) 0)FFMPEG_WIDTH")
 }
 
-# # FFMPEG Width
+# # FFMPEG Height
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, HEIGHT, Set HEIGHT
 record(ao, "$(P)$(R)HEIGHT") {
   field(DTYP, "asynInt32")
@@ -105,7 +112,7 @@ record(ao, "$(P)$(R)HEIGHT") {
   field(PINI, "YES")  
 }
 
-# # FFMPEG Bitrate from driver
+# # FFMPEG Height from driver
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, HEIGHT_RBV, Readback for HEIGHT
 record(ai, "$(P)$(R)HEIGHT_RBV") {
   field(SCAN, "I/O Intr")

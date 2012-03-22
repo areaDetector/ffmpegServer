@@ -211,7 +211,7 @@ record(longout, "$(P)$(R)GCOL") {
 #% archiver 10 Monitor
 record(longout, "$(P)$(R)GS") {
     field(VAL, "200")
-    field(DRVL, "5")    
+    field(DRVL, "10")    
     field(DRVH, "2000")
     field(PINI, "1")
 }
