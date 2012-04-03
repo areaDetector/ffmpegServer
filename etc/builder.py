@@ -1,7 +1,7 @@
-from iocbuilder import Device, AutoSubstitution, Architecture
+from iocbuilder import Device, AutoSubstitution, Architecture, Xml
 from iocbuilder.arginfo import *
 
-from iocbuilder.modules.areaDetector import AreaDetector, _NDPluginBase, _NDFile, _NDFileBase
+from iocbuilder.modules.areaDetector import AreaDetector, _NDPluginBase, _NDFile, _NDFileBase, _ADBase
 
 class FFmpegServer(Device):
     '''Library dependencies for ffmpeg'''
@@ -64,3 +64,15 @@ class ffmpegFile(_NDFileBase):
     # NOTE: _NDFileBase comes 2nd so we overwrite NDARRAY_PORT argInfo
     ArgInfo = _SpecificTemplate.ArgInfo + _NDFileBase.ArgInfo 
     
+class diagnosticPlugins(Xml):
+    """This plugin instantiates a standard set of plugins for diagnostic camera:
+areaDetector.ROI $(PORTNAME).ROI for taking a region of interest
+areaDetector.NDProcess $(PORTNAME).PROC for doing recursive average / clipping the image
+areaDetector.NDStats $(PORTNAME).STAT for calculating centroid / profile of the image
+areaDetector.NDStdArrays $(PORTNAME).ARR for publishing an EPIC array of video
+areaDetector.NDFileHDF5 $(PORTNAME).HDF5 for writing static images
+ffmpegServer.ffmpegFile $(PORTNAME).FIMG for writing compressed images and video
+areaDetector.NDOverlay $(PORTNAME).OVER for drawing the centroid cross on the image
+ffmpegServer.ffmpegStream $(PORTNAME).MJPG for streaming compressed video"""
+    TemplateFile = 'diagnosticPlugins.xml'  
+diagnosticPlugins.ArgInfo.descriptions["CAM"] = Ident("aravisCamera or firewireDCAM object to connect to", _ADBase)  
