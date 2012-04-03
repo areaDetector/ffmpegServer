@@ -17,7 +17,6 @@ static int ffinit=0;
 /* need this to protect certain ffmpeg functions */
 static QMutex *ffmutex;
 
-
 // An FFBuffer contains an AVFrame, a mutex for access and some data
 FFBuffer::FFBuffer() {
     this->mutex = new QMutex();
@@ -58,20 +57,23 @@ void FFBuffer::release() {
     this->mutex->unlock();    
 }
 
-// List of FFBuffers to use for data storage
-static FFBuffer buffers[NBUFFERS];
+// List of FFBuffers to use for raw frames
+static FFBuffer rawbuffers[NBUFFERS];
+
+// List of FFBuffers to use for uncompressed frames
+static FFBuffer outbuffers[NBUFFERS];
 
 // find a free FFBuffer
-FFBuffer * findFreeBuffer() {
+FFBuffer * findFreeBuffer(FFBuffer* source) {
     for (int i = 0; i < NBUFFERS; i++) {
         // if we can lock it and it has a 0 refcount, we can use it!
-        if (buffers[i].mutex->tryLock()) {
-            if (buffers[i].refs == 0) {
-                buffers[i].refs += 1;
-                buffers[i].mutex->unlock();    
-                return &buffers[i];
+        if (source[i].mutex->tryLock()) {
+            if (source[i].refs == 0) {
+                source[i].refs += 1;
+                source[i].mutex->unlock();    
+                return &source[i];
             } else {
-                buffers[i].mutex->unlock();    
+                source[i].mutex->unlock();    
             }
         }
     }
@@ -163,7 +165,7 @@ void FFThread::run()
         }
 
         // grab a buffer to decode into
-        FFBuffer *raw = findFreeBuffer();        
+        FFBuffer *raw = findFreeBuffer(rawbuffers);        
         if (raw == NULL) {
             printf("Couldn't get a free buffer, skipping packet\n");
             av_free_packet(&packet);
@@ -172,11 +174,6 @@ void FFThread::run()
         
         // Tell the codec to use this bit of memory
         pCodecCtx->internal_buffer = raw->mem;
-                
-        // Fill in the details
-        raw->height = pCodecCtx->height;
-        raw->width = pCodecCtx->width;
-        raw->pix_fmt = pCodecCtx->pix_fmt;         
 
         // Decode video frame
         len = avcodec_decode_video2(pCodecCtx, raw->pFrame, &frameFinished,
@@ -190,6 +187,11 @@ void FFThread::run()
         // Set the internal buffer back to null so that we don't accidentally free it
         pCodecCtx->internal_buffer = NULL;
         
+        // Fill in the output buffer
+        raw->pix_fmt = pCodecCtx->pix_fmt;         
+        raw->height = pCodecCtx->height;
+        raw->width = pCodecCtx->width;                
+
         // Emit and free
         emit updateSignal(raw);
         av_free_packet(&packet);
@@ -304,6 +306,7 @@ void ffmpegWidget::xvSetup() {
     for(int p = 0; p < (int) ainfo[0].num_ports; p++) {
         if(XvGrabPort(this->dpy, ainfo[0].base_id + p, CurrentTime) == Success) {
             this->xv_port = ainfo[0].base_id + p;
+            printf("Port: %d\n", this->xv_port);
             gotPort = 1;
             break;
         }
@@ -352,7 +355,7 @@ void ffmpegWidget::xvSetup() {
 
 // take a buffer and swscale it to the requested dimensions
 FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
-    FFBuffer *dest = findFreeBuffer();
+    FFBuffer *dest = findFreeBuffer(outbuffers);
     // make sure we got a buffer
     if (dest == NULL) return NULL;
     if (pix_fmt == PIX_FMT_YUVJ420P) {
@@ -400,7 +403,7 @@ FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelF
             yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P);
     }
     /* Now we have our YUV frame, generate YUV data */
-    FFBuffer *dest = findFreeBuffer();
+    FFBuffer *dest = findFreeBuffer(outbuffers);
     // make sure we got a buffer
     if (dest == NULL) {
         // get rid of the original
@@ -994,4 +997,3 @@ void ffmpegWidget::setUrl(QString url) {
         setReset();
     }
 }
-
