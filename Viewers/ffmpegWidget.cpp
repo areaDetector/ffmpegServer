@@ -306,7 +306,6 @@ void ffmpegWidget::xvSetup() {
     for(int p = 0; p < (int) ainfo[0].num_ports; p++) {
         if(XvGrabPort(this->dpy, ainfo[0].base_id + p, CurrentTime) == Success) {
             this->xv_port = ainfo[0].base_id + p;
-            printf("Port: %d\n", this->xv_port);
             gotPort = 1;
             break;
         }
@@ -354,24 +353,19 @@ void ffmpegWidget::xvSetup() {
 }
 
 // take a buffer and swscale it to the requested dimensions
-FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
+FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, PixelFormat pix_fmt) {
     FFBuffer *dest = findFreeBuffer(outbuffers);
     // make sure we got a buffer
     if (dest == NULL) return NULL;
-    if (pix_fmt == PIX_FMT_YUVJ420P) {
-        // fill in multiples of 8 that xvideo can cope with
-        dest->width = width - width % 8;
-        dest->height = height - height % 8;
-    } else {
-        dest->width = width;
-        dest->height = height;
-    }
+    // fill in multiples of 8 that we can cope with
+    dest->width = src->width - src->width % 8;
+	dest->height = src->height - src->height % 2;
     dest->pix_fmt = pix_fmt;
     // see if we have a suitable cached context
     // note that we use the original values of width and height
     this->ctx = sws_getCachedContext(this->ctx,
-        src->width, src->height, src->pix_fmt,
-        width, height, pix_fmt,
+        dest->width, dest->height, src->pix_fmt,
+        dest->width, dest->height, dest->pix_fmt,
         SWS_BICUBIC, NULL, NULL, NULL);
     // Assign appropriate parts of buffer->mem to planes in buffer->pFrame    
     avpicture_fill((AVPicture *) dest->pFrame, dest->mem,
@@ -383,7 +377,7 @@ FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, int width, int height, Pixel
 }
 
 // take a buffer and swscale it to the requested dimensions
-FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt) {
+FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, PixelFormat pix_fmt) {
     FFBuffer *yuv = NULL;
     switch (src->pix_fmt) {
         case PIX_FMT_YUV420P:   //< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
@@ -400,7 +394,7 @@ FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelF
             yuv = src;
             break;
         default:
-            yuv = formatFrame(src, width, height, PIX_FMT_YUVJ420P);
+            yuv = formatFrame(src, PIX_FMT_YUVJ420P);
     }
     /* Now we have our YUV frame, generate YUV data */
     FFBuffer *dest = findFreeBuffer(outbuffers);
@@ -410,13 +404,13 @@ FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelF
         if (yuv != src) yuv->release();
         return NULL;
     }
+    // fill in multiples of 8 that we can cope with
+    dest->width = src->width - src->width % 8;
+	dest->height = src->height - src->height % 2;
     dest->pix_fmt = pix_fmt;
     unsigned char *yuvdata = (unsigned char *) yuv->pFrame->data[0];
     unsigned char *destdata = (unsigned char *) dest->pFrame->data[0];
     if (pix_fmt == PIX_FMT_YUVJ420P) {
-        // fill in multiples of 8 that xvideo can cope with
-        dest->width = width - width % 8;
-        dest->height = height - height % 8;
         const unsigned char * colorMapY, * colorMapU, * colorMapV;
         switch(_fcol) {
             case 2:
@@ -448,8 +442,6 @@ FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, int width, int height, PixelF
         }
     } else {
         // fill in RGB data
-        dest->width = width;
-        dest->height = height;
         const unsigned char * colorMapR, * colorMapG, * colorMapB;
         switch(this->_fcol) {
             case 2:
@@ -620,10 +612,10 @@ void ffmpegWidget::makeFullFrame() {
     // Format the decoded frame as we've been asked        
     if (_fcol) {
         // make it false colour
-        this->fullbuf = this->falseFrame(this->rawbuf, this->rawbuf->width, this->rawbuf->height, pix_fmt);
+        this->fullbuf = this->falseFrame(this->rawbuf, pix_fmt);
     } else {
         // pass out frame through sw_scale
-        this->fullbuf = this->formatFrame(this->rawbuf, this->rawbuf->width, this->rawbuf->height, pix_fmt);
+        this->fullbuf = this->formatFrame(this->rawbuf, pix_fmt);
     }
     this->rawbuf->release();  
 

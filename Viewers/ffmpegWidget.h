@@ -170,8 +170,8 @@ public slots:
     void updateImage(FFBuffer *buf);
 
 protected:
-    FFBuffer * formatFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
-    FFBuffer * falseFrame(FFBuffer *src, int width, int height, PixelFormat pix_fmt);
+    FFBuffer * formatFrame(FFBuffer *src, PixelFormat pix_fmt);
+    FFBuffer * falseFrame(FFBuffer *src, PixelFormat pix_fmt);
     void paintEvent(QPaintEvent *);
     void mousePressEvent (QMouseEvent* event);
     void mouseMoveEvent (QMouseEvent* event);
