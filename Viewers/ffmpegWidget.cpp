@@ -215,6 +215,7 @@ ffmpegWidget::ffmpegWidget (QWidget* parent)
     this->dpy = NULL;
     this->maxW = 0;
     this->maxH = 0;
+    this->setMinimumSize(64,48);
     /* Now setup QImage or xv whichever we have */
     this->ff_fmt = PIX_FMT_RGB24;
     if (fallback == 0) this->xvSetup();
@@ -359,7 +360,7 @@ FFBuffer * ffmpegWidget::formatFrame(FFBuffer *src, PixelFormat pix_fmt) {
     if (dest == NULL) return NULL;
     // fill in multiples of 8 that we can cope with
     dest->width = src->width - src->width % 8;
-	dest->height = src->height - src->height % 2;
+    dest->height = src->height - src->height % 2;
     dest->pix_fmt = pix_fmt;
     // see if we have a suitable cached context
     // note that we use the original values of width and height
@@ -406,7 +407,7 @@ FFBuffer * ffmpegWidget::falseFrame(FFBuffer *src, PixelFormat pix_fmt) {
     }
     // fill in multiples of 8 that we can cope with
     dest->width = src->width - src->width % 8;
-	dest->height = src->height - src->height % 2;
+    dest->height = src->height - src->height % 2;
     dest->pix_fmt = pix_fmt;
     unsigned char *yuvdata = (unsigned char *) yuv->pFrame->data[0];
     unsigned char *destdata = (unsigned char *) dest->pFrame->data[0];
@@ -637,12 +638,14 @@ void ffmpegWidget::makeFullFrame() {
         unsigned char Y = (unsigned char) (0.299 * _gcol.red() + 0.587 * _gcol.green() + 0.114 * _gcol.blue());
         unsigned char U = (unsigned char) (-0.169 * _gcol.red() - 0.331 * _gcol.green() + 0.499 * _gcol.blue() + 128);
         unsigned char V = (unsigned char) (0.499 * _gcol.red() - 0.418 * _gcol.green() - 0.0813 * _gcol.blue() + 128);
-           unsigned char *yFrame = this->fullbuf->pFrame->data[0];        
-           unsigned char *uFrame = this->fullbuf->pFrame->data[0] + _imW * _imH;
-           unsigned char *vFrame = this->fullbuf->pFrame->data[0] + _imW * _imH * 5 / 4; 
-           int i;          
+        unsigned char *yFrame = this->fullbuf->pFrame->data[0];        
+        unsigned char *uFrame = this->fullbuf->pFrame->data[0] + _imW * _imH;
+        unsigned char *vFrame = this->fullbuf->pFrame->data[0] + _imW * _imH * 5 / 4; 
+        int i;                  
+        int gridw = 1;
+        if (this->sfx > 0) gridw = qMax((int) (0.5 + 1 / this->sfx), 1);
         // X Lines           
-           // Intensity data
+        // Intensity data
         for (int gsy = 0; gsy < _imH; gsy += 1) {
             // X Minors
             for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
@@ -652,9 +655,11 @@ void ffmpegWidget::makeFullFrame() {
                 overlayYPixel;
             }
             // X Major
-            yFrame[gsy * _imW + _gx] = Y;            
+            for (int gsx = (int) (_gx + 0.5 - gridw/2.0); gsx < _gx - 0.1 + gridw/2.0; gsx++) {
+                yFrame[gsy * _imW + gsx] = Y;            
+            }
         }             
-           // UV data
+        // UV data
         for (int gsy = 0; gsy < _imH; gsy += 2) {
             // X Minors
             for (int gsx = _gx - _gs; gsx > 0; gsx -= _gs) {
@@ -664,12 +669,12 @@ void ffmpegWidget::makeFullFrame() {
                 overlayUVPixel;
             }
             // X Major
-              i = gsy * _imW/4 + _gx/2;            
+            i = gsy * _imW/4 + _gx/2;            
             uFrame[i] = (uFrame[i] + U)/2;
             vFrame[i] = (vFrame[i] + V)/2;                                    
         }    
         // Y Lines        
-           // Intensity data
+        // Intensity data
         for (int gsx = 0; gsx < _imW; gsx += 1) {
             for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
                 overlayYPixel;
@@ -677,9 +682,11 @@ void ffmpegWidget::makeFullFrame() {
             for (int gsy = _gy + _gs; gsy < _imH; gsy += _gs) {
                 overlayYPixel;
             }
-            yFrame[_gy * _imW + gsx] = Y;            
+            for (int gsy = (int) (_gy + 0.5 - gridw/2.0); gsy < _gy - 0.1 + gridw/2.0; gsy++) {
+                yFrame[gsy * _imW + gsx] = Y;            
+            }                    
         }             
-           // UV data
+        // UV data
         for (int gsx = 0; gsx < _imW; gsx += 2) {
             for (int gsy = _gy - _gs; gsy > 0; gsy -= _gs) {
                 overlayUVPixel;
@@ -989,3 +996,4 @@ void ffmpegWidget::setUrl(QString url) {
         setReset();
     }
 }
+

@@ -1,28 +1,15 @@
 <?xml version="1.0" ?>
 <components arch="linux-x86">
-	<areaDetector.NDROI ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(CAM)" P="$(P)" PORT="$(PORTPREFIX).ROI" R=":ROI:" TIMEOUT="1"/>
-	<areaDetector.NDProcess ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).ROI" P="$(P)" PORT="$(PORTPREFIX).PROC" R=":PROC:" TIMEOUT="1"/>
-	<areaDetector.NDStats ADDR="0" Enabled="1" HIST_SIZE="$(HIST_SIZE=256)" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).STAT" R=":STAT:" TIMEOUT="1" XSIZE="$(XSIZE=1024)" YSIZE="$(YSIZE=768)"/>
-	<areaDetector.NDStdArrays ADDR="0" FTVL="UCHAR" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" NELEMENTS="$(NELEMENTS=786432)" P="$(P)" PORT="$(PORTPREFIX).ARR" R=":ARR:" TIMEOUT="1" TYPE="Int8"/>
-	<areaDetector.NDFileHDF5 ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).HDF5" R=":HDF5:" TIMEOUT="1"/>
-	<ffmpegServer.ffmpegFile ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).FIMG" R=":FIMG:" TIMEOUT="1"/>
-	<areaDetector.NDOverlay ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).OVER" R=":OVER:" TIMEOUT="1"/>
-	<ffmpegServer.ffmpegStream ADDR="0" HTTP_PORT="8090" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).OVER" P="$(P)" PORT="$(PORTPREFIX).MJPG" R=":MJPG:" TIMEOUT="1"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):FIMG:FilePath&quot;, &quot;/tmp&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):FIMG:FileName&quot;, &quot;testvideo&quot;" post_init="True"/>
+	<areaDetector.NDROI ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(CAM)" P="$(P)" PORT="$(PORTPREFIX).ROI" QUEUE="$(PLUGINQUEUE=16)" R=":ROI:" TIMEOUT="1"/>
+	<areaDetector.NDProcess ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).ROI" P="$(P)" PORT="$(PORTPREFIX).PROC" QUEUE="$(PLUGINQUEUE=16)" R=":PROC:" TIMEOUT="1"/>
+	<areaDetector.NDStats ADDR="0" Enabled="1" HIST_SIZE="$(HIST_SIZE=256)" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).STAT" QUEUE="$(PLUGINQUEUE=16)" R=":STAT:" TIMEOUT="1" XSIZE="$(XSIZE=1024)" YSIZE="$(YSIZE=768)"/>
+	<areaDetector.NDStdArrays ADDR="0" FTVL="UCHAR" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" NELEMENTS="$(NELEMENTS=786432)" P="$(P)" PORT="$(PORTPREFIX).ARR" QUEUE="$(DISPLAYQUEUE=2)" R=":ARR:" TIMEOUT="1" TYPE="Int8"/>
+	<areaDetector.NDFileHDF5 ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).HDF5" QUEUE="$(PLUGINQUEUE=16)" R=":HDF5:" TIMEOUT="1"/>
+	<ffmpegServer.ffmpegFile ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).FIMG" QUEUE="$(PLUGINQUEUE=16)" R=":FIMG:" TIMEOUT="1"/>
+	<areaDetector.NDOverlay ADDR="0" Enabled="1" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).PROC" P="$(P)" PORT="$(PORTPREFIX).OVER" QUEUE="$(PLUGINQUEUE=16)" R=":OVER:" TIMEOUT="1"/>
+	<ffmpegServer.ffmpegStream ADDR="0" HTTP_PORT="$(HTTP_PORT=8080)" NDARRAY_ADDR="0" NDARRAY_PORT="$(PORTPREFIX).OVER" P="$(P)" PORT="$(PORTPREFIX).MJPG" QUEUE="$(DISPLAYQUEUE=2)" R=":MJPG:" TIMEOUT="1"/>
 	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):FIMG:FileTemplate&quot;, &quot;%s/%s_%d.avi&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:FilePath&quot;, &quot;/tmp&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:FileName&quot;, &quot;testdata&quot;" post_init="True"/>
 	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:FileTemplate&quot;, &quot;%s/%s_%d.h5&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:AutoSave&quot;, &quot;No&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:EnableCallbacks&quot;, &quot;Enable&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):HDF5:FileWriteMode&quot;, &quot;Stream&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):STAT:ComputeProfiles&quot;, &quot;Yes&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):STAT:ComputeStatistics&quot;, &quot;No&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):STAT:ComputeCentroid&quot;, &quot;$(ComputeCentroid=No)&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):STAT:CentroidThreshold&quot;, &quot;50&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):OVER:1:Green&quot;, &quot;255&quot;" post_init="True"/>
-	<EPICS_BASE.StartupCommand command="dbpf &quot;$(P):OVER:1:Shape&quot;, &quot;Cross&quot;" post_init="True"/>
 	<!--Sync STAT cursor position with grid position-->
 	<records.longout OUT="$(P):STAT:CursorX PP" record="$(P):MJPG:GX"/>
 	<records.longout OUT="$(P):STAT:CursorY PP" record="$(P):MJPG:GY"/>
@@ -33,6 +20,14 @@
 	<records.longout DRVL="4" VAL="100000" record="$(P):ROI:SizeX"/>
 	<records.longout DRVL="4" VAL="100000" record="$(P):ROI:SizeY"/>
 	<records.longout DRVL="0" VAL="100000" record="$(P):ROI:SizeZ"/>
-	<records.longout VAL="5" record="$(P):PROC:NumFilter"/>	
+	<records.longout VAL="5" record="$(P):PROC:NumFilter"/>
+	<records.longout VAL="255" record="$(P):OVER:1:Green"/>
+	<records.ao VAL="$(CentroidThreshold=50)" record="$(P):STAT:CentroidThreshold"/>
 	<records.bo DOL="$(P):STAT:ComputeCentroid_RBV CP" OMSL="closed_loop" record="$(P):OVER:1:Use"/>
+	<records.bo VAL="0" record="$(P):HDF5:AutoSave"/>
+	<records.bo VAL="$(ComputeProfiles=1)" record="$(P):STAT:ComputeProfiles"/>
+	<records.bo VAL="$(ComputeStatistics=0)" record="$(P):STAT:ComputeStatistics"/>
+	<records.bo VAL="$(ComputeCentroid=0)" record="$(P):STAT:ComputeCentroid"/>
+	<records.mbbo VAL="2" record="$(P):HDF5:FileWriteMode"/>
+	<records.mbbo VAL="0" record="$(P):OVER:1:Shape"/>
 </components>
