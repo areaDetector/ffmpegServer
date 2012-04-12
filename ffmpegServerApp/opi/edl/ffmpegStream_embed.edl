@@ -226,7 +226,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Viewer"
 numCmds 1
 command {
-  0 "unset http_proxy; ffmpegViewer `caget -t -S $(P):MJPG:MJPG_URL_RBV` $(P):MJPG"
+  0 "unset http_proxy; ffmpegViewer `caget -t -S $(P):MJPG:MJPG_URL_RBV` $(P):MJPG:"
 }
 endObjectProperties
 
