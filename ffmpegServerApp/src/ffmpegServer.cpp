@@ -19,6 +19,7 @@ int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
 /** win32 implementation of pthread_cond_wait */
 int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
   pthread_mutex_unlock(external_mutex);
+  /** This is wrong, we could miss a wakeup call here... */
   WaitForSingleObject (cv->semaphore, INFINITE);
   pthread_mutex_lock(external_mutex);
   return 0;
