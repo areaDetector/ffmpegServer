@@ -294,7 +294,7 @@ asynStatus ffmpegFile::readFile(NDArray **pArray)
 asynStatus ffmpegFile::closeFile()
 {
 	if (needStop == 0) {
-	    return asynSuccess;		
+	    return asynError;		
 	}
 	needStop = 0;
 
