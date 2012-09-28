@@ -16,6 +16,10 @@ int main(int argc, char *argv[])
         if (app.arguments().at(i) == "-f") {
             // fallback mode
             fallback = 1;
+        } else if (app.arguments().at(i) == "-h") {
+            // asked for help
+            printf(usage, argv[0]);
+            return 1;              
         } else if (url.isNull()) {
             // first positional arg is mjpg_url
             url = app.arguments().at(i);

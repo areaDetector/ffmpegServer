@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>webcam4</class>
+ <widget class="QWidget" name="webcam4">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>1024</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="ffmpegWidget" name="topleft" native="true"/>
+   </item>
+   <item row="0" column="1">
+    <widget class="ffmpegWidget" name="topright" native="true"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="leftlabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>64</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Left Label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="rightlabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>64</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Right Label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="ffmpegWidget" name="bottomleft" native="true"/>
+   </item>
+   <item row="2" column="1">
+    <widget class="ffmpegWidget" name="bottomright" native="true"/>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ffmpegWidget</class>
+   <extends>QWidget</extends>
+   <header>ffmpegWidget.h</header>
+   <container>1</container>
+   <slots>
+    <signal>xChanged(int)</signal>
+    <signal>yChanged(int)</signal>
+    <signal>maxXChanged(int)</signal>
+    <signal>maxYChanged(int)</signal>
+    <signal>zoomChanged(int)</signal>
+    <signal>gxChanged(int)</signal>
+    <signal>gyChanged(int)</signal>
+    <signal>maxGxChanged(int)</signal>
+    <signal>maxGyChanged(int)</signal>
+    <signal>gridChanged(bool)</signal>
+    <signal>fpsChanged(QString)</signal>
+    <signal>visWChanged(QString)</signal>
+    <signal>visHChanged(QString)</signal>
+    <signal>gsChanged(int)</signal>
+    <slot>setX(int)</slot>
+    <slot>setY(int)</slot>
+    <slot>setZoom(int)</slot>
+    <slot>setGx(int)</slot>
+    <slot>setGy(int)</slot>
+    <slot>setGs(int)</slot>
+    <slot>setGcol()</slot>
+    <slot>setGrid(bool)</slot>
+    <slot>setReset()</slot>
+    <slot>setFcol(int)</slot>
+   </slots>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
