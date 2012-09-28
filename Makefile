@@ -28,5 +28,5 @@ DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
 
 include $(TOP)/configure/RULES_TOP
 
-$(TOP)/Viewers/Makefile: $(TOP)/Viewers/ffmpegViewer.pro
-	/dls_sw/prod/tools/RHEL5/bin/qmake -o $@ $<	
+$(TOP)/Viewers/Makefile: $(TOP)/Viewers/Viewers.pro
+	/dls_sw/prod/tools/RHEL5/bin/qmake -o Makefile $<	
