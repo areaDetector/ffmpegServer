@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 742
-y 413
+x 543
+y 346
 w 190
 h 110
 font "arial-bold-r-12.0"
@@ -48,7 +48,7 @@ release 0
 x 0
 y 0
 w 79
-h 14
+h 13
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 7
@@ -226,7 +226,7 @@ font "arial-bold-r-12.0"
 buttonLabel "Viewer"
 numCmds 1
 command {
-  0 "unset http_proxy; ffmpegViewer `caget -t -S $(P):MJPG:MJPG_URL_RBV` $(P):MJPG:"
+  0 "unset http_proxy; ffmpegViewer $([ \"$(lspci | grep 'VGA.*Matrox.*M91XX.*')\" != \"\" ] && echo -f) `caget -t -S $(P):MJPG:MJPG_URL_RBV` $(P):MJPG:"
 }
 endObjectProperties
 
