@@ -4,6 +4,10 @@ CONFIG += qt
 HEADERS += colorMaps.h ffmpegWidget.h 
 SOURCES += ffmpegWidget.cpp
 QMAKE_CLEAN += libffmpegWidget.a
+header_files.files = ffmpegWidget.h 
+header_files.path = ../../include
+target.path = ../../lib/linux-x86
+INSTALLS += target header_files
 
 # ffmpeg stuff
 INCLUDEPATH += ../../vendor/ffmpeg-linux-x86/include

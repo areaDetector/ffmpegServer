@@ -18,6 +18,7 @@ WORK=/dls_sw/work/R3.14.11/support
 
 ASYN=$(SUPPORT)/asyn/4-19
 AREADETECTOR=$(SUPPORT)/areaDetector/1-8beta6-dls2
+#AREADETECTOR=$(WORK)/areaDetector
 NULLHTTPD=$(SUPPORT)/nullhttpd/0-5-1dls4
 
 # EPICS_BASE usually appears last so other apps can override stuff:
