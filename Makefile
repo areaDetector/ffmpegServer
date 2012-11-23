@@ -20,6 +20,7 @@ ifeq ($(EPICS_HOST_ARCH), linux-x86)
 
     # This builds the QT viewer
     DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard Viewers))
+    clean: $(TOP)/Viewers/Makefile
     install: $(TOP)/Viewers/Makefile
 endif
 
