@@ -181,6 +181,7 @@ void FFThread::run()
         if (!frameFinished) {
             printf("Frame not finished. Shouldn't see this...\n");
             av_free_packet(&packet);
+            raw->release();
             continue;
         }
         
