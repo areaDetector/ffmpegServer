@@ -750,7 +750,7 @@ void ffmpegWidget::paintEvent(QPaintEvent *) {
                     painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
                 }
                 // Y lines below the crosshair
-                for (double scy = scGy - scGsy; scy < _scVisH; scy += scGsy) {
+                for (double scy = scGy + scGsy; scy < _scVisH; scy += scGsy) {
                     painter.drawLine(0, (int)(scy+0.5), _scVisW, (int)(scy+0.5));
                 }
             }
