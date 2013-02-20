@@ -9,19 +9,19 @@
 # module defined in the RELEASE file is rebuilt.
 
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
-SUPPORT=/dls_sw/prod/R3.14.12.1/support
-WORK=/dls_sw/work/R3.14.12.1/support
+SUPPORT=/dls_sw/prod/R3.14.11/support
+WORK=/dls_sw/work/R3.14.11/support
 
 # If you don't want to install into $(TOP) then
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
 ASYN=         $(SUPPORT)/asyn/4-19
-AREADETECTOR= $(SUPPORT)/areaDetector/1-8beta6-dls2
+AREADETECTOR= $(SUPPORT)/areaDetector/1-8beta6-dls3
 NULLHTTPD=    $(SUPPORT)/nullhttpd/0-5-1dls4
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/dls_sw/epics/R3.14.12.1/base
+EPICS_BASE=/dls_sw/epics/R3.14.11/base
 
 #Capfast users may need the following definitions
 #CAPFAST_TEMPLATES=
