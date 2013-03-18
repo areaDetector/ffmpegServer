@@ -348,7 +348,7 @@ void ffmpegStream::send_stream(int sid) {
 } 
 
 /** Internal function to alloc a correctly sized processed array */
-void ffmpegStream::allocScArray(int size) {
+void ffmpegStream::allocScArray(size_t size) {
     if (this->scArray) {
         if (this->scArray->dims[0].size >= size) {
             /* the processed array is already big enough */
@@ -376,7 +376,8 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* we're going to get these with getIntegerParam */
     int quality, clients, false_col, always_on, maxw, maxh;
     /* we're going to get these from the dims of the image */
-    int width, height, size;
+    int width, height;
+    size_t size;
     /* for printing errors */
     const char *functionName = "processCallbacks";
     /* for getting the colour mode */

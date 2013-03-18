@@ -42,7 +42,8 @@ private:
     NDArray *scArray;
     NDArray *outArray;
     struct SwsContext *ctx;      
-    int outSize, needStop;      
+    size_t outSize;
+    int needStop;      
     int sheight, swidth;
     PixelFormat spix_fmt;
     AVOutputFormat *fmt;

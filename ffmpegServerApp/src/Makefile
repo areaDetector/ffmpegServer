@@ -15,7 +15,7 @@ DBD += ffmpegServer.dbd
 
 # ffmpeg must be built to c99 standard
 USR_CFLAGS_Linux += -std=c99
-USR_CXXFLAGS += -U_GNU_SOURCE
+#USR_CXXFLAGS += -U_GNU_SOURCE
 
 # Include the srcs from nullhttpd
 SRC_DIRS += $(NULLHTTPD)/src
