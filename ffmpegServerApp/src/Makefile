@@ -15,7 +15,14 @@ DBD += ffmpegServer.dbd
 
 # ffmpeg must be built to c99 standard
 USR_CFLAGS_Linux += -std=c99
-#USR_CXXFLAGS += -U_GNU_SOURCE
+
+# For RHEL5 we need to undef _GNU_SOURCE
+ifeq (R3.14.11, $(findstring R3.14.11, $(EPICS_BASE)))
+USR_CXXFLAGS += -U_GNU_SOURCE
+else ifeq (R3.14.12.1, $(findstring R3.14.12.1, $(EPICS_BASE)))
+USR_CXXFLAGS += -U_GNU_SOURCE
+endif
+
 
 # Include the srcs from nullhttpd
 SRC_DIRS += $(NULLHTTPD)/src
