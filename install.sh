@@ -5,13 +5,13 @@ export http_proxy=wwwcache.rl.ac.uk:8080
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
-VERSION="ffmpeg-0.8"
+VERSION="ffmpeg-1.1.3"
 SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.bz2"
 WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
 WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
 WIN64SHARED="http://ffmpeg.zeranoe.com/builds/win64/shared/${VERSION}-win64-shared.7z"
 WIN64SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win64/dev/${VERSION}-win64-dev.7z"
-YASM="http://www.tortall.net/projects/yasm/releases/yasm-1.1.0.tar.gz"
+YASM="http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz"
 
 # First check whether the user has 7zr, needed for the windows build
 which 7zr > /dev/null

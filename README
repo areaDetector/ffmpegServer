@@ -1,6 +1,6 @@
 # When doing a vendor update:
 * make clean uninstall
-* svn rm vendor/ffmpeg vendor/ffmpeg-mingw32-shared vendor/yasm
+* svn rm vendor/ffmpeg vendor/ffmpeg-win* vendor/yasm
 * svn commit -m "ffmpegServer: remove vendor dirs in preparation for vendor update"
 * change version in install.sh and uncomment http_proxy
 * run install.sh
