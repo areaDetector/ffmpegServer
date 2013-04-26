@@ -20,7 +20,9 @@ int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
 int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
   pthread_mutex_unlock(external_mutex);
   /** This is wrong, we could miss a wakeup call here... */
-  WaitForSingleObject (cv->semaphore, INFINITE);
+  /** Note: this a wait with timeout, on windows we will get a jpeg every second
+    * even if there isn't a new one. This avoids GDA timeouts... */
+  WaitForSingleObject (cv->semaphore, 1000);
   pthread_mutex_lock(external_mutex);
   return 0;
 }
