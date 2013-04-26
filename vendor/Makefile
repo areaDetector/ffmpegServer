@@ -8,12 +8,13 @@ CONFIGOPTIONS += --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-f
 CONFIGOPTIONS += --disable-indevs --disable-outdevs
 
 # install libs
-FFMPEG_LINUX_LIBS += libavcodec.so libavcodec.so.53 libavcodec.so.53.7.0 
-FFMPEG_LINUX_LIBS += libavdevice.so libavdevice.so.53 libavdevice.so.53.1.1
-FFMPEG_LINUX_LIBS += libavfilter.so libavfilter.so.2 libavfilter.so.2.23.0
-FFMPEG_LINUX_LIBS += libavformat.so libavformat.so.53 libavformat.so.53.4.0
-FFMPEG_LINUX_LIBS += libavutil.so libavutil.so.51 libavutil.so.51.9.1
-FFMPEG_LINUX_LIBS += libswscale.so libswscale.so.2 libswscale.so.2.0.0
+FFMPEG_LINUX_LIBS += libavcodec.so libavcodec.so.54 libavcodec.so.54.86.100 
+FFMPEG_LINUX_LIBS += libavdevice.so libavdevice.so.54 libavdevice.so.54.3.102
+FFMPEG_LINUX_LIBS += libavfilter.so libavfilter.so.3 libavfilter.so.3.32.100
+FFMPEG_LINUX_LIBS += libavformat.so libavformat.so.54 libavformat.so.54.59.106
+FFMPEG_LINUX_LIBS += libavutil.so libavutil.so.52 libavutil.so.52.13.100
+FFMPEG_LINUX_LIBS += libswresample.so libswresample.so.0 libswresample.so.0.17.102
+FFMPEG_LINUX_LIBS += libswscale.so libswscale.so.2 libswscale.so.2.1.103
 
 ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
 	BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-win32-shared/bin/*.*)

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # DLS specific http proxy
-export http_proxy=wwwcache.rl.ac.uk:8080
+#export http_proxy=wwwcache.rl.ac.uk:8080
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
 VERSION="ffmpeg-1.1.3"
-SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.bz2"
+SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.xz"
 WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
 WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
 WIN64SHARED="http://ffmpeg.zeranoe.com/builds/win64/shared/${VERSION}-win64-shared.7z"
@@ -34,7 +34,7 @@ done
 
 # untar the source
 echo "Untarring source..."
-tar xjf "${HERE}/vendor/$(basename $SOURCE)" -C "${HERE}/vendor"
+tar Jxvf "${HERE}/vendor/$(basename $SOURCE)" -C "${HERE}/vendor"
 
 # unzip the 7z archives
 7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHARED)"
@@ -60,6 +60,6 @@ mv "${HERE}/vendor/${VERSION}-win64-shared" "${HERE}/vendor/ffmpeg-win64-shared"
 mv ${HERE}/vendor/yasm* "${HERE}/vendor/yasm"
 
 # patch mjpg parser
-patch -d "${HERE}" -p0 < "${HERE}/vendor/mjpg.patch"
+#patch -d "${HERE}" -p0 < "${HERE}/vendor/mjpg.patch"
 
 echo "You can now type make to build this module"

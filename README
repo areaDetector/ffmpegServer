@@ -5,7 +5,7 @@
 * change version in install.sh and uncomment http_proxy
 * run install.sh
 * comment out http_proxy in install.sh
-* svn add vendor/ffmpeg vendor/ffmpeg-mingw32-shared vendor/yasm
+* svn add vendor/ffmpeg vendor/ffmpeg-win* vendor/yasm
 * make -C vendor
 * correct vendor/Makefile version numbers
 * make
