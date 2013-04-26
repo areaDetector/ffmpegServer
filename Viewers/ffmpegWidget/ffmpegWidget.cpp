@@ -109,7 +109,7 @@ FFThread::~FFThread() {
 // run the FFThread
 void FFThread::run()
 {
-    AVFormatContext     *pFormatCtx;
+    AVFormatContext     *pFormatCtx=NULL;
     int                 videoStream;
     AVCodecContext      *pCodecCtx;
     AVCodec             *pCodec;
@@ -117,7 +117,7 @@ void FFThread::run()
     int                 frameFinished, len;
 
     // Open video file
-    if (av_open_input_file(&pFormatCtx, this->url, NULL, 0, NULL)!=0) {
+    if (avformat_open_input(&pFormatCtx, this->url, NULL, NULL)!=0) {
         printf("Opening input '%s' failed\n", this->url);
         return;
     }
@@ -147,7 +147,7 @@ void FFThread::run()
 
     // Open codec
     ffmutex->lock();
-    if(avcodec_open(pCodecCtx, pCodec)<0) {
+    if(avcodec_open2(pCodecCtx, pCodec, NULL)<0) {
         printf("Could not open codec for '%s'\n", this->url);
         return;
     }
@@ -173,7 +173,7 @@ void FFThread::run()
         }
         
         // Tell the codec to use this bit of memory
-        pCodecCtx->internal_buffer = raw->mem;
+        //pCodecCtx->internal->buffer->data = raw->mem;
 
         // Decode video frame
         len = avcodec_decode_video2(pCodecCtx, raw->pFrame, &frameFinished,
@@ -186,7 +186,7 @@ void FFThread::run()
         }
         
         // Set the internal buffer back to null so that we don't accidentally free it
-        pCodecCtx->internal_buffer = NULL;
+        //pCodecCtx->internal->buffer->data = NULL;
         
         // Fill in the output buffer
         raw->pix_fmt = pCodecCtx->pix_fmt;         
@@ -200,9 +200,8 @@ void FFThread::run()
     // tidy up
     ffmutex->lock();
     avcodec_close(pCodecCtx);
-    av_close_input_file(pFormatCtx);
+    avformat_close_input(&pFormatCtx);
     pCodecCtx = NULL;
-    pFormatCtx = NULL;
     ffmutex->unlock();
 }
 

@@ -36,6 +36,7 @@ protected:
 private:
     FILE *outFile;
     AVCodec *codec;
+    enum AVCodecID codec_id;
     AVCodecContext *c;
     AVFrame *inPicture;
     AVFrame *scPicture;    

@@ -8,9 +8,6 @@ void ffmpegInitialise() {
 	/* check if we're already intialised */
 	if (ffmpegInitialised) return;
 	
-    /* must be called before using avcodec lib */
-    avcodec_init();
-
     /* register all the codecs */
     avcodec_register_all();
 

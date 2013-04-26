@@ -444,12 +444,14 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
             avcodec_close(c);
             av_free(c);
         }
-        c = avcodec_alloc_context();
+        c = avcodec_alloc_context3(codec);
         /* Make sure that we don't try and create an image smaller than FF_MIN_BUFFER_SIZE */
         if (width * height < FF_MIN_BUFFER_SIZE) {
         	double sf = sqrt(1.0 * FF_MIN_BUFFER_SIZE / width / height);
         	height = (int) (height * sf + 1);
+        	if (height % 4) height = height +16 - (height % 16);        	
         	width = (int) (width * sf + 1);        	
+        	if (width % 4) width = width +16 - (width % 16);
 		}        	
         c->width = width;
         c->height = height;
@@ -466,7 +468,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
                 c->pix_fmt = codec->pix_fmts[0];
         }           
         /* open it */
-        if (avcodec_open(c, codec) < 0) {
+        if (avcodec_open2(c, codec, NULL) < 0) {
             c = NULL;
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
                 "%s:%s: could not open codec\n",
@@ -504,8 +506,22 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     
     /* Convert it to a jpeg */        
     this->jpeg = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
-    this->jpeg->dims[0].size = avcodec_encode_video(c, (uint8_t*)this->jpeg->pData, c->width * c->height, scPicture);    
-//    printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
+
+    AVPacket pkt;
+    int got_output;
+    av_init_packet(&pkt);
+    pkt.data = (uint8_t*)this->jpeg->pData;    // packet data will be allocated by the encoder
+    pkt.size = c->width * c->height;
+
+    if (avcodec_encode_video2(c, &pkt, scPicture, &got_output)) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: Encoding jpeg failed\n",
+            driverName, functionName);
+    }
+
+    this->jpeg->dims[0].size = pkt.size;
+
+    //printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
     
     /* signal fresh_frame to output plugin and unlock mutex */
     for (int i=0; i<config.server_maxconn; i++) {
