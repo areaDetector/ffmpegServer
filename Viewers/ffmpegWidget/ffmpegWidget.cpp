@@ -788,23 +788,35 @@ void ffmpegWidget::mouseDoubleClickEvent (QMouseEvent* event) {
 
 // store the co-ordinates of the original mouse click and the old x and y
 void ffmpegWidget::mousePressEvent (QMouseEvent* event) {
-     if (event->button() == Qt::LeftButton) {
+     if (event->button() & Qt::LeftButton || event->button() &  Qt::RightButton) {
          clickx = event->x();
          oldx = _x;
+         oldgx = _gx;
          clicky = event->y();
          oldy = _y;
+         oldgy = _gy;
          event->accept();
      }
 }
 
-// drag the screen round so the pixel "grabbed" stays under the cursor
+
 void ffmpegWidget::mouseMoveEvent (QMouseEvent* event) {
-    if (event->buttons() & Qt::LeftButton) {
+	// drag the screen around so the pixel "grabbed" stays under the cursor
+	if (event->buttons() & Qt::LeftButton) {
         // disable automatic updates
         disableUpdates = true;
         setX(oldx + (int)((clickx - event->x())/this->sfx));
         disableUpdates = false;        
         setY(oldy + (int)((clicky - event->y())/this->sfy));
+        event->accept();
+    }
+	// drag the grid around so the pixel "grabbed" stays under the cursor
+    else if (event->buttons() & Qt::RightButton) {
+        // disable automatic updates
+        disableUpdates = true;
+        setGx(oldgx - (int)((clickx - event->x())/this->sfx));
+        disableUpdates = false;
+        setGy(oldgy - (int)((clicky - event->y())/this->sfy));
         event->accept();
     }
 }

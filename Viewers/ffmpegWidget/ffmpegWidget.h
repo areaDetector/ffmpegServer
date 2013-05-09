@@ -195,7 +195,7 @@ protected:
     QTime *lastFrameTime;
     QTimer *timer;
     int widgetW, widgetH;
-    int clickx, clicky, oldx, oldy;
+    int clickx, clicky, oldx, oldy, oldgx, oldgy;
     FFThread *ff;
     bool disableUpdates;
     PixelFormat ff_fmt;
