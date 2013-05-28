@@ -59,7 +59,7 @@ mv "${HERE}/vendor/${VERSION}-win64-dev" "${HERE}/vendor/ffmpeg-win64-dev"
 mv "${HERE}/vendor/${VERSION}-win64-shared" "${HERE}/vendor/ffmpeg-win64-shared"
 mv ${HERE}/vendor/yasm* "${HERE}/vendor/yasm"
 
-# patch mjpg parser
-#patch -d "${HERE}" -p0 < "${HERE}/vendor/mjpg.patch"
+# patch win32 #defines for VC2003 compiler
+patch -d "${HERE}" -p0 < "${HERE}/vendor/vc2003.patch"
 
 echo "You can now type make to build this module"
