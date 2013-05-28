@@ -54,7 +54,7 @@ void dorequest(int sid) {
     ext = strrchr(conn[sid].dat->in_RequestURI+1, '.');
 
     if (ext != NULL) {
-        len = ext - conn[sid].dat->in_RequestURI - 1;
+        len = (int) (ext - conn[sid].dat->in_RequestURI - 1);
         portName = (char *)calloc(sizeof(char), 256);
         strncpy(portName, conn[sid].dat->in_RequestURI+1, len);
         ext++;
@@ -251,7 +251,7 @@ void ffmpegStream::send_snapshot(int sid, int index) {
         return;
     }
     /* Send the right header for a jpeg */
-    size = pArray->dims[0].size;    
+    size = (int) pArray->dims[0].size;    
     conn[sid].dat->out_ContentLength=size;
     send_fileheader(sid, 0, 200, "OK", "1", "image/jpeg", size, now);
     /* Send the jpeg itself */
@@ -281,7 +281,7 @@ int ffmpegStream::send_frame(int sid, NDArray *pArray) {
         flushbuffer(sid);
         /* Send the jpeg */
 //        gettimeofday(&start, NULL);         
-        ret = send(conn[sid].socket, (const char *) pArray->pData, pArray->dims[0].size, 0);                  
+        ret = send(conn[sid].socket, (const char *) pArray->pData, (int) pArray->dims[0].size, 0);                  
 //        gettimeofday(&end, NULL);         
         /* Send a boundary */
         prints("\r\n--BOUNDARY\r\n");
@@ -417,14 +417,14 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     pAttribute = pArray->pAttributeList->find("ColorMode");
     if (pAttribute) pAttribute->getValue(NDAttrInt32, &colorMode);
     if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
-        width  = pArray->dims[0].size;
-        height = pArray->dims[1].size;
+        width  = (int) pArray->dims[0].size;
+        height = (int) pArray->dims[1].size;
     } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
-        width  = pArray->dims[1].size;
-        height = pArray->dims[2].size;
+        width  = (int) pArray->dims[1].size;
+        height = (int) pArray->dims[2].size;
     } else {
-        width  = pArray->dims[0].size;
-        height = pArray->dims[1].size;
+        width  = (int) pArray->dims[0].size;
+        height = (int) pArray->dims[1].size;
     }
 
     /* If we exceed the maximum size */

@@ -52,7 +52,7 @@ private:
     AVStream *video_st;
     double video_pts;   
 };
-#define NUM_FFMPEG_FILE_PARAMS (&LAST_FFMPEG_FILE_PARAM - &FIRST_FFMPEG_FILE_PARAM + 1)   
+#define NUM_FFMPEG_FILE_PARAMS (int)(&LAST_FFMPEG_FILE_PARAM - &FIRST_FFMPEG_FILE_PARAM + 1)   
 
 #endif
 /**

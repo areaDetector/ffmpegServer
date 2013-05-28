@@ -76,7 +76,7 @@ private:
     NDArray* wait_for_jpeg(int sid);    
     void allocScArray(size_t size);
 };
-#define NUM_FFMPEG_SERVER_PARAMS (&LAST_FFMPEG_SERVER_PARAM - &FIRST_FFMPEG_SERVER_PARAM + 1)                             
+#define NUM_FFMPEG_SERVER_PARAMS (int)(&LAST_FFMPEG_SERVER_PARAM - &FIRST_FFMPEG_SERVER_PARAM + 1)                             
                              
 /* These are global to the http server */
 static ffmpegStream **streams;

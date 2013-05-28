@@ -21,6 +21,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 {
     int ret;
 	static const char *functionName = "openFile";
+	char errbuf[AV_ERROR_MAX_STRING_SIZE];
     this->sheight = 0;
 	this->swidth = 0;
 
@@ -152,7 +153,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 	if (ret < 0) {
 		asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
 		            "%s:%s Could not open video codec: %s\n",
-		            driverName2, functionName, av_err2str(ret));
+		            driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 		return(asynError);
 	}
 
@@ -164,7 +165,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 	if (ret < 0) {
 		asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
 							"%s:%s Could not open '%s': %s\n",
-							driverName2, functionName, filename, av_err2str(ret));
+							driverName2, functionName, filename, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 		return(asynError);
 	}
 
@@ -173,7 +174,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     if (ret < 0) {
 		asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
 				"%s:%s Error occurred when opening output file %s: %s\n",
-							driverName2, functionName, filename, av_err2str(ret));
+							driverName2, functionName, filename, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 		return(asynError);
     }
 
@@ -225,6 +226,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
 
     static const char *functionName = "writeFile";
 	int ret;
+	char errbuf[AV_ERROR_MAX_STRING_SIZE];
 
     if (!needStop) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
@@ -251,7 +253,7 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
 
     ret = avcodec_encode_video2(c, &pkt, this->scPicture, &got_output);
     if (ret < 0) {
-        fprintf(stderr, "Error encoding video frame: %s\n", av_err2str(ret));
+        fprintf(stderr, "Error encoding video frame: %s\n", av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
         exit(1);
     }
 

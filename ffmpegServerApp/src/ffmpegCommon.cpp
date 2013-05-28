@@ -58,8 +58,8 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
 
     /* We do some special treatment based on colorMode */
     if ((pArray->ndims == 2) && (colorMode == NDColorModeMono)) {
-        width  = pArray->dims[0].size;
-        height = pArray->dims[1].size;
+        width  = (int) pArray->dims[0].size;
+        height = (int) pArray->dims[1].size;
         if (Int16) {
             pix_fmt = PIX_FMT_GRAY16;
         } else if (width != c->width || height != c->height) {
@@ -105,8 +105,8 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
         inPicture->data[0] = (uint8_t*) pArray->pData;
         inPicture->linesize[0] = width * (Int16 + 1);
     } else if ((pArray->ndims == 3) && (pArray->dims[0].size == 3) && (colorMode == NDColorModeRGB1)) {
-        width  = pArray->dims[1].size;
-        height = pArray->dims[2].size;
+        width  = (int) pArray->dims[1].size;
+        height = (int) pArray->dims[2].size;
         if (Int16) {
             pix_fmt = PIX_FMT_RGB48;
         } else {
