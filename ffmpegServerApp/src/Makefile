@@ -23,7 +23,6 @@ else ifeq (R3.14.12.1, $(findstring R3.14.12.1, $(EPICS_BASE)))
 USR_CXXFLAGS += -U_GNU_SOURCE
 endif
 
-
 # Include the srcs from nullhttpd
 SRC_DIRS += $(NULLHTTPD)/src
 

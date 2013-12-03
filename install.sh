@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # DLS specific http proxy
-#export http_proxy=wwwcache.rl.ac.uk:8080
+export http_proxy=wwwcache.rl.ac.uk:8080
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
-VERSION="ffmpeg-1.1.3"
+VERSION="ffmpeg-2.1.1"
 SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.xz"
 WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
 WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
