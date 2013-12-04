@@ -7,7 +7,6 @@
 * comment out http_proxy in install.sh
 * svn add vendor/ffmpeg vendor/ffmpeg-win* vendor/yasm
 * make -C vendor
-* correct vendor/Makefile version numbers
 * make
 * update version number in documentation
 * find vendor -name .svn -prune -o -type d -exec ~tmc43/bin/set-svn-ignore {} \;

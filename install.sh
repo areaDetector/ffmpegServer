@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # DLS specific http proxy
-export http_proxy=wwwcache.rl.ac.uk:8080
+#export http_proxy=wwwcache.rl.ac.uk:8080
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
@@ -13,10 +13,10 @@ WIN64SHARED="http://ffmpeg.zeranoe.com/builds/win64/shared/${VERSION}-win64-shar
 WIN64SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win64/dev/${VERSION}-win64-dev.7z"
 YASM="http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz"
 
-# First check whether the user has 7zr, needed for the windows build
-which 7zr > /dev/null
+# First check whether the user has 7za, needed for the windows build
+which 7za > /dev/null
 if [ $? -ne 0 ]; then
-	echo "*** Error: You need to download p7zip from http://sourceforge.net/projects/p7zip/files/p7zip and make sure '7zr' is on your PATH"
+	echo "*** Error: You need to download p7zip from http://sourceforge.net/projects/p7zip/files/p7zip and make sure '7za' is on your PATH"
 	exit 1
 fi
 
@@ -37,10 +37,10 @@ echo "Untarring source..."
 tar Jxvf "${HERE}/vendor/$(basename $SOURCE)" -C "${HERE}/vendor"
 
 # unzip the 7z archives
-7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHARED)"
-7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHAREDDEV)"
-7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHARED)"
-7zr x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHAREDDEV)"
+7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHARED)"
+7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHAREDDEV)"
+7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHARED)"
+7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHAREDDEV)"
 
 # untar yasm
 echo "Untarring yasm..."

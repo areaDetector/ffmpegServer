@@ -11,8 +11,8 @@ class FFmpegServer(Device):
     libraries = ['swscale', 'avutil', 'avcodec', 'avformat', 'avdevice']
     if Architecture() == "win32-x86" or Architecture() == "windows-x64":
         LibFileList = libraries
-    else:
-        SysLibFileList = libraries
+#    else:
+#        SysLibFileList = libraries
     LibFileList += ['ffmpegServer']
     DbdFileList = ['ffmpegServer']  
     AutoInstantiate = True    
