@@ -4,9 +4,10 @@
 
 #TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
-SUPPORT=W:/prod/R3.14.12.3/support
-WORK=W:/work/R3.14.12.3/support
+SUPPORT=W:\\prod/R3.14.12.3/support
+WORK=W:\\work/R3.14.12.3/support
+LOCAL = Z:\\R3.14.12.3/support
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=W:/epics/R3.14.12.3/base
+EPICS_BASE=W:\\epics/R3.14.12.3/base
 
