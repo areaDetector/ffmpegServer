@@ -16,8 +16,13 @@ ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
 else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))	
 	MACHINE = X64
 	VENDORARCH = win64
+else ifeq (linux-x86_64, $(findstring linux-x86_64, $(T_A)))
+	FFMPEGMAK = $(TOP)/vendor/ffmpeg-$(T_A)/config.mak		
 else ifeq (linux-x86, $(findstring linux-x86, $(T_A)))
 	FFMPEGMAK = $(TOP)/vendor/ffmpeg-$(T_A)/config.mak	
+	CONFIGOPTIONS += --extra-cflags=-m32 
+	CONFIGOPTIONS += --extra-cxxflags=-m32 
+	CONFIGOPTIONS += --extra-ldflags=-m32 
 endif
 
 # For windows, install the dlls and libs

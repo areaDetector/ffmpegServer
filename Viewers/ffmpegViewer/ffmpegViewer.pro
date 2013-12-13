@@ -20,8 +20,8 @@ LIBS += -lca
 
 # ffmpeg stuff
 INCLUDEPATH += ../../vendor/ffmpeg-linux-x86/include
-LIBPATH += ../../lib/linux-x86
-QMAKE_RPATHDIR += ../../lib/linux-x86
+LIBPATH += ../../vendor/ffmpeg-linux-x86/lib
+QMAKE_RPATHDIR += ../../vendor/ffmpeg-linux-x86/lib
 LIBS += -lavdevice -lavformat -lavcodec -lavutil -lbz2 -lswscale
 DEFINES += __STDC_CONSTANT_MACROS
 
