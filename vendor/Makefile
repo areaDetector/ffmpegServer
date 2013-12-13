@@ -7,6 +7,9 @@ CONFIGOPTIONS += --enable-shared --enable-static --enable-debug --disable-stripp
 CONFIGOPTIONS += --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver
 CONFIGOPTIONS += --disable-indevs --disable-outdevs --disable-symver
 
+# Good idea to use these if you have to do any debugging...
+# CONFIGOPTIONS += --disable-mmxext --disable-mmx --disable-optimizations
+
 ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
 	MACHINE = i386
 	VENDORARCH = win32
@@ -26,10 +29,13 @@ install: $(FFMPEGMAK)
 include $(TOP)/configure/RULES
 
 $(TOP)/vendor/ffmpeg-%/config.mak: $(TOP)/vendor/yasm-%/yasm
-	(mkdir -p $(TOP)/vendor/ffmpeg-$(*F); cd $(TOP)/vendor/ffmpeg-$(*F); export PATH=${PATH}:../yasm-$(*F); sh ../ffmpeg/configure $(CONFIGOPTIONS) && make && make install)
+	mkdir -p $(TOP)/vendor/ffmpeg-$(*F)
+	cd $(TOP)/vendor/ffmpeg-$(*F) && export PATH=${PATH}:../yasm-$(*F) && sh ../ffmpeg/configure $(CONFIGOPTIONS) && make && make install
 
 $(TOP)/vendor/yasm-%/yasm:
-	(mkdir -p $(TOP)/vendor/yasm-$(*F); cd $(TOP)/vendor/yasm-$(*F); sh ../yasm/configure && make && touch $@)
+	mkdir -p $(TOP)/vendor/yasm-$(*F)
+	cd $(TOP)/vendor/yasm-$(*F) && sh ../yasm/configure && make
+	touch $@
 	
 # unfortunately the libs are not compatible with the opt/ref flag and pre-2012
 # MSVC compilers, so we'll have to make our own...

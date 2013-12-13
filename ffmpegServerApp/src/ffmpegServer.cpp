@@ -433,7 +433,6 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     	width = (int) (sf * width);
     	height = (int) (sf * height);
     }
-    size = width *  height;
 
     /* If width and height have changed then reinitialise the codec */
     if (c == NULL || width != c->width || height != c->height) {
@@ -451,9 +450,9 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         if (width * height < FF_MIN_BUFFER_SIZE) {
         	double sf = sqrt(1.0 * FF_MIN_BUFFER_SIZE / width / height);
         	height = (int) (height * sf + 1);
-        	if (height % 4) height = height +16 - (height % 16);        	
+        	if (height % 32) height = height + 32 - (height % 32);
         	width = (int) (width * sf + 1);        	
-        	if (width % 4) width = width +16 - (width % 16);
+        	if (width % 32) width = width + 32 - (width % 32);
 		}        	
         c->width = width;
         c->height = height;
@@ -468,16 +467,22 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
             }
             if(*p == -1)
                 c->pix_fmt = codec->pix_fmts[0];
-        }           
+        }
         /* open it */
         if (avcodec_open2(c, codec, NULL) < 0) {
             c = NULL;
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
                 "%s:%s: could not open codec\n",
-                driverName, functionName);                
+                driverName, functionName);
             return;
         }
+        /* Override codec pix_fmt to get rid of error messages */
+        if (c->pix_fmt == PIX_FMT_YUVJ420P) {
+        	c->pix_fmt = PIX_FMT_YUV420P;
+        	c->color_range = AVCOL_RANGE_JPEG;
+    	}
     }
+    size = width *  height;
     
     /* make sure our processed array is big enough */
     this->allocScArray(2 * size);
