@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
-<components arch="windows-x64">
-	<areaDetector.simDetector ADDR="0" HEIGHT="768" P="TESTC1" PORT="C1.CAM" R=":CAM:" TIMEOUT="1" WIDTH="1024"/>
-	<ffmpegServer.ffmpegStream ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="C1.CAM" P="TESTC1" PORT="C1.MJPG" R=":MJPG:" TIMEOUT="1"/>
-	<!--<ffmpegServer.ffmpegFile ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="C1.CAM" P="TESTC1" PORT="C1.FILE" R=":FILE:" TIMEOUT="1"/>-->
+<components arch="win32-x86">
+	<areaDetector.simDetector ADDR="0" HEIGHT="1200" P="BLxxI-DI-PHDGN-01" PORT="C1.CAM" R=":CAM:" TIMEOUT="1" WIDTH="1600"/>
+	<ffmpegServer.ffmpegStream ADDR="0" HTTP_PORT="8081" NDARRAY_ADDR="0" NDARRAY_PORT="C1.CAM" P="BLxxI-DI-PHDGN-01" PORT="C1.MJPG" R=":MJPG:" TIMEOUT="1"/>
+	<ffmpegServer.ffmpegFile ADDR="0" NDARRAY_ADDR="0" NDARRAY_PORT="C1.CAM" P="BLxxI-DI-PHDGN-01" PORT="C1.FILE" R=":FILE:" TIMEOUT="1"/>
 </components>
