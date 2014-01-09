@@ -311,7 +311,7 @@ NDArray* ffmpegStream::wait_for_jpeg(int sid) {
     pthread_mutex_lock(&this->mutex);
     pthread_cond_wait(&(this->cond[sid]), &this->mutex);
     pArray = this->jpeg;
-    pArray->reserve();  
+    if(pArray) pArray->reserve();  
     pthread_mutex_unlock(&this->mutex);   
     return pArray;    
 }    
