@@ -12,7 +12,7 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 SUPPORT=/dls_sw/prod/R3.14.11/support
 WORK=/dls_sw/work/R3.14.11/support
-LOCAL = /home/tmc43/R3.14.12.3/support
+#LOCAL = /home/tmc43/R3.14.12.3/support
 
 # If you don't want to install into $(TOP) then
 # define INSTALL_LOCATION_APP here

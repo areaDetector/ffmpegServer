@@ -29,6 +29,10 @@ endif
 BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-$(VENDORARCH)-shared/bin/*.dll)
 LIB_INSTALLS_WIN32  += avdevice.lib avformat.lib avcodec.lib avutil.lib swscale.lib
 
+# For linux install the .so and .a files
+LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg-$(T_A)/lib/*.a)
+LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg-$(T_A)/lib/*.so*)
+
 install: $(FFMPEGMAK)
 
 include $(TOP)/configure/RULES

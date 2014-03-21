@@ -44,12 +44,6 @@ else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 else ifeq (linux-x86, $(findstring linux-x86, $(T_A)))
 	# linux-x86 and linux-x86_64
 	VENDORARCH=$(T_A)
-	VENDORLIB = $(TOP)/vendor/ffmpeg-$(VENDORARCH)/lib
-	avdevice_DIR = $(VENDORLIB)
-	avformat_DIR = $(VENDORLIB)
-	avcodec_DIR = $(VENDORLIB)
-	avutil_DIR = $(VENDORLIB)
-	swscale_DIR = $(VENDORLIB)	
 endif
 
 # Include the ffmpeg header files
