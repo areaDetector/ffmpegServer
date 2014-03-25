@@ -29,9 +29,8 @@ endif
 BIN_INSTALLS_WIN32  += $(wildcard ../ffmpeg-$(VENDORARCH)-shared/bin/*.dll)
 LIB_INSTALLS_WIN32  += avdevice.lib avformat.lib avcodec.lib avutil.lib swscale.lib
 
-# For linux install the .so and .a files
-LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg-$(T_A)/lib/*.a)
-LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg-$(T_A)/lib/*.so*)
+# For linux, install all the .a and .so files
+LIB_INSTALLS_Linux  += $(wildcard ../ffmpeg-$(T_A)/lib/*.so*) $(wildcard ../ffmpeg-$(T_A)/lib/*.a)
 
 install: $(FFMPEGMAK)
 
@@ -40,6 +39,7 @@ include $(TOP)/configure/RULES
 $(TOP)/vendor/ffmpeg-%/config.mak: $(TOP)/vendor/yasm-%/yasm
 	mkdir -p $(TOP)/vendor/ffmpeg-$(*F)
 	cd $(TOP)/vendor/ffmpeg-$(*F) && export PATH=${PATH}:../yasm-$(*F) && sh ../ffmpeg/configure $(CONFIGOPTIONS) && make && make install
+	$(MAKE) install
 
 $(TOP)/vendor/yasm-%/yasm:
 	mkdir -p $(TOP)/vendor/yasm-$(*F)
