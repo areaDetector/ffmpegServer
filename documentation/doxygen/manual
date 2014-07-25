@@ -1,0 +1,32 @@
+/**
+\mainpage ffmpegServer EPICS Support Module
+\section intro_sec Introduction 
+ffmpegServer is a windows and linux <a href="http://cars9.uchicago.edu/software/epics/areaDetector.html">areaDetector</a> plugin wrapping the <a href="http://www.ffmpeg.org">ffmpeg</a> libraries that provides 2 functions:
+
+- \ref ffmpegStream.template "ffmpegStream": Compression into an <a href="http://en.wikipedia.org/wiki/Motion_JPEG">mjpg</a> stream which is made available over http.
+- \ref ffmpegFile.template "ffmpegFile": Compression to disk into any file format that ffmpeg supports.
+
+Please click on one of the links above for documentation on the plugin.
+
+\section dep_sec Dependencies
+ffmpegServer requires the following:
+
+- <a href="http://cars9.uchicago.edu/software/epics/areaDetector.html">areaDetector</a> - tested with version 1-9
+- <a href="http://controls.diamond.ac.uk/downloads/support/nullhttpd">nullhttpd</a> - tested with version 0-5-1dls5
+- <a href="http://ffmpeg.zeranoe.com/">ffmpeg</a> - tested with version 2.1.1
+
+\section install_sec Install instructions
+First of all, please read the information on <a href="http://www.ffmpeg.org/legal.html">ffmpeg legal information</a> to check that your usage of ffmpeg is legal in your country. As this module is just a wrapper to ffmpeg, it is not distributed with ffmpeg, so you need to download and compile ffmpeg in order to use the module. The following steps need to be accomplished, either using the bash script <tt>install.sh</tt> in the root of the module, or by doing them manually:
+
+- (Linux only) Download and unzip the <a href="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/ffmpeg-2.1.1.tar.xz">source</a> to vendor/ffmpeg
+- (Linux only) Download and unzip <a href="http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz">yasm</a> to vendor/yasm
+- (Win32 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win32/shared/ffmpeg-2.1.1-win32-shared.7z">win32 libraries</a> to vendor/ffmpeg-win32-shared
+- (Win32 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win32/dev/ffmpeg-2.1.1-win32-dev.7z">win32 devel libraries</a> to vendor/ffmpeg-win32-shared
+- (Win64 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-2.1.1-win64-shared.7z">win64 libraries</a> to vendor/ffmpeg-win64-shared
+- (Win64 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-2.1.1-win64-dev.7z">win64 devel libraries</a> to vendor/ffmpeg-win64-shared
+
+You can now edit <tt>configure/RELEASE</tt> and type <tt>make</tt> to build
+
+\section build_sec Build Instructions
+This section contains instructions for the programmer using this module: \subpage build_instructions
+**/
