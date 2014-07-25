@@ -13,6 +13,13 @@ External Modules
 
 Please note that some releases may depend on dls tagged versions of external modules (areaDetector, asyn, busy, autosave). These modifications are only relevant for internal diamond uses, and standard versions of these modules can be used.
 
+Stream view applications
+------------------------
+
+A regular browser can be used to view the mjpeg streams.
+
+A stand-alone viewer application based on Qt4 has also been developed. See [ffmpegViewer](https://github.com/areaDetector/ffmpegViewer)
+
 History
 -------
 

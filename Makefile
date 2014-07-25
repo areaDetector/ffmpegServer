@@ -17,18 +17,8 @@ DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
 #	UNINSTALL_DIRS += documentation/doxygen $(IOC_DIRS)
 #endif
 
-# make sure Viewer is only built on linux-x86
-ifeq ($(EPICS_HOST_ARCH), linux-x86)
-    # This builds the QT viewer
-    DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard Viewers))
-    install: $(TOP)/Viewers/Makefile
-    clean: $(TOP)/Viewers/Makefile        
-endif
-
 # Comment out the following line to disable building of example iocs
 #DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
 
 include $(TOP)/configure/RULES_TOP
 
-$(TOP)/Viewers/Makefile: $(TOP)/Viewers/Viewers.pro
-	/dls_sw/prod/tools/RHEL5/bin/qmake -o Makefile $<	
