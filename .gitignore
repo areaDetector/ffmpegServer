@@ -1,0 +1,25 @@
+
+# Eclipse project files
+.project
+.cproject
+.settings/
+
+# Backup files
+*~
+*.swp
+
+# Local configure files
+*.local*
+
+# EPICS generated files and dirs
+bin/
+O.*
+lib/
+data/
+db/
+dbd/
+
+# ffmpegServer vendor libraries
+vendor/ffmpeg*
+vendor/yasm*
+
