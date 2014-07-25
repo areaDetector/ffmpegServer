@@ -5,10 +5,13 @@
 # 
 # Common prefixes
 SUPPORT = /dls_sw/prod/R3.14.12.3/support
+AREA_DETECTOR=/home/up45/github
+
 # Module definitions
-AREADETECTOR = $(SUPPORT)/areaDetector/1-9dls13
-ASYN = $(SUPPORT)/asyn/4-21
-BUSY = $(SUPPORT)/busy/1-4dls1
-FFMPEGSERVER = /home/up45/github/ffmpegServer
+ADCORE = $(AREA_DETECTOR)/ADCore
+ASYN = $(SUPPORT)/asyn/4-22
+BUSY=$(SUPPORT)/busy/1-6
+FFMPEGSERVER = $(AREA_DETECTOR)/ffmpegServer
+
 # EPICS Base appears last
 EPICS_BASE = /dls_sw/epics/R3.14.12.3/base

@@ -10,7 +10,7 @@
 #  PORT     Asyn Port name
 #  TIMEOUT  Timeout
 #  ADDR     Asyn Port address
-file $(AREADETECTOR)/db/ADBase.template
+file $(ADCORE)/db/ADBase.template
 {
 pattern { P, R, PORT, TIMEOUT, ADDR }
     { "BLxxI-DI-PHDGN-01", ":CAM:", "C1.CAM", "1", "0" }
@@ -22,7 +22,7 @@ pattern { P, R, PORT, TIMEOUT, ADDR }
 #  PORT     Asyn Port name
 #  TIMEOUT  Timeout
 #  ADDR     Asyn Port address
-file $(AREADETECTOR)/db/simDetector.template
+file $(ADCORE)/db/simDetector.template
 {
 pattern { P, R, PORT, TIMEOUT, ADDR }
     { "BLxxI-DI-PHDGN-01", ":CAM:", "C1.CAM", "1", "0" }
@@ -37,7 +37,7 @@ pattern { P, R, PORT, TIMEOUT, ADDR }
 #  NDARRAY_PORT  Input Array Port
 #  NDARRAY_ADDR  Input Array Address
 #  Enabled       Plugin Enabled at startup?
-file $(AREADETECTOR)/db/NDPluginBase.template
+file $(ADCORE)/db/NDPluginBase.template
 {
 pattern { P, R, PORT, TIMEOUT, ADDR, NDARRAY_PORT, NDARRAY_ADDR, Enabled }
     { "BLxxI-DI-PHDGN-01", ":MJPG:", "C1.MJPG", "1", "0", "C1.CAM", "0", "1" }
@@ -63,7 +63,7 @@ pattern { P, R, PORT, QUALITY, MAXW, MAXH }
 #  PORT     Asyn Port name
 #  TIMEOUT  Timeout
 #  ADDR     Asyn Port address
-file $(AREADETECTOR)/db/NDFile.template
+file $(ADCORE)/db/NDFile.template
 {
 pattern { P, R, PORT, TIMEOUT, ADDR }
     { "BLxxI-DI-PHDGN-01", ":FILE:", "C1.FILE", "1", "0" }
