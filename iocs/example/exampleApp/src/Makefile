@@ -39,6 +39,7 @@ example_SYS_LIBS += png12
 example_SYS_LIBS += bz2
 example_SYS_LIBS += Xext
 example_SYS_LIBS += freetype
+example_SYS_LIBS += hdf5
 example_LIBS += $(EPICS_BASE_IOC_LIBS)
 example_SRCS += exampleMain.cpp
 
