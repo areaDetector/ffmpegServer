@@ -6,15 +6,12 @@
 TOP = ../..
 include $(TOP)/configure/CONFIG
 
-PROD_IOC = example
+PROD_IOC_Linux    = example
+PROD_IOC_WIN32    = example
+
 DBD += example.dbd
-example_DBD += base.dbd
-example_DBD += asyn.dbd
-example_DBD += busySupport.dbd
-example_DBD += ADSupport.dbd
-example_DBD += NDPluginSupport.dbd
-example_DBD += simDetectorSupport.dbd
 example_DBD += ffmpegServer.dbd
+example_SRCS += exampleMain.cpp
 example_SRCS += example_registerRecordDeviceDriver.cpp
 example_LIBS += ffmpegServer
 example_LIBS += avdevice
@@ -23,25 +20,10 @@ example_LIBS += avcodec
 example_LIBS += avutil
 example_LIBS += swscale
 example_LIBS += simDetector
-example_LIBS += NDPlugin
-example_LIBS += ADBase
-example_LIBS += netCDF
-example_LIBS += NeXus
-example_LIBS += busy
-example_LIBS += asyn
-example_SYS_LIBS += tiff
-example_SYS_LIBS += jpeg
-example_SYS_LIBS += z
-example_SYS_LIBS += gomp
-example_SYS_LIBS += X11
-example_SYS_LIBS += xml2
-example_SYS_LIBS += png12
+
 example_SYS_LIBS += bz2
-example_SYS_LIBS += Xext
-example_SYS_LIBS += freetype
-example_SYS_LIBS += hdf5
-example_LIBS += $(EPICS_BASE_IOC_LIBS)
-example_SRCS += exampleMain.cpp
+
+include $(ADCORE)/ADApp/commonDriverMakefile
 
 include $(TOP)/configure/RULES
 
