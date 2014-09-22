@@ -2,7 +2,9 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 DIRS := $(DIRS) configure
+DIRS := $(DIRS) vendor
 DIRS := $(DIRS) ffmpegServerApp
+ffmpegServerApp_DEPEND_DIRS += vendor
 ifeq ($(BUILD_IOCS), YES)
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
 iocs_DEPEND_DIRS += ffmpegServerApp
