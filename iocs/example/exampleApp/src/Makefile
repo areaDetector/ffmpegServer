@@ -21,7 +21,7 @@ example_LIBS += avutil
 example_LIBS += swscale
 example_LIBS += simDetector
 
-example_SYS_LIBS += bz2
+example_SYS_LIBS_Linux += bz2
 
 include $(ADCORE)/ADApp/commonDriverMakefile
 
