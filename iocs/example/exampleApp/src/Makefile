@@ -9,10 +9,15 @@ include $(TOP)/configure/CONFIG
 PROD_IOC_Linux    = example
 PROD_IOC_WIN32    = example
 
+PROD_NAME = example
+
 DBD += example.dbd
 example_DBD += ffmpegServer.dbd
+example_DBD += simDetectorSupport.dbd
+
 example_SRCS += exampleMain.cpp
 example_SRCS += example_registerRecordDeviceDriver.cpp
+
 example_LIBS += ffmpegServer
 example_LIBS += avdevice
 example_LIBS += avformat
