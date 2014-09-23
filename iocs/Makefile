@@ -1,7 +1,8 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 
-DIRS := example
+#DIRS += example
+DIRS += ffmpegServerIOC
 
 include $(TOP)/configure/RULES_TOP
 
