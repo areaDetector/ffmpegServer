@@ -32,6 +32,7 @@ example_LIBS += asyn
 example_SYS_LIBS += tiff
 example_SYS_LIBS += jpeg
 example_SYS_LIBS += z
+example_SYS_LIBS += hdf5
 example_SYS_LIBS += gomp
 example_SYS_LIBS += X11
 example_SYS_LIBS += xml2
