@@ -1,23 +1,22 @@
+bin
+lib
+include
+db
+dbd
+*_BAK.adl
+envPaths*
+cdCommands
+dllPath.bat
+auto_settings.sav*
+configure/*.local
+O.*/
+*~
+*.swp
 
 # Eclipse project files
 .project
 .cproject
 .settings/
-
-# Backup files
-*~
-*.swp
-
-# Local configure files
-*.local*
-
-# EPICS generated files and dirs
-bin/
-O.*
-lib/
-data/
-db/
-dbd/
 
 # ffmpegServer vendor libraries
 vendor/ffmpeg*
