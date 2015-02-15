@@ -9,7 +9,7 @@ static const char *driverName2 = "ffmpegFile";
 #define MAX_ATTRIBUTE_STRING_SIZE 256
 
 /** Opens an FFMPEG file.
-  * \param[in] fileName The name of the file to open.
+  * \param[in] filename The name of the file to open.
   * \param[in] openMode Mask defining how the file should be opened; bits are 
   *            NDFileModeRead, NDFileModeWrite, NDFileModeAppend, NDFileModeMultiple
   * \param[in] pArray A pointer to an NDArray; this is used to determine the array and attribute properties.
