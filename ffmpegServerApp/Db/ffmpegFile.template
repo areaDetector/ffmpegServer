@@ -21,6 +21,9 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, ffmpegFile, $(PORT)_ffmpegFile, $(PORT) ffmpegFile class instance
 
+include "NDFile.template"
+include "NDPluginBase.template"
+
 # # File data format 
 # % gdatag, mbbinary, rw, $(PORT)_ffmpegFile, FileFormat, Set FileFormat
 record(mbbo, "$(P)$(R)FileFormat")
