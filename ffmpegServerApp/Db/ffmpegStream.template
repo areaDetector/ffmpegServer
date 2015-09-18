@@ -28,6 +28,8 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, ffmpegStream, $(PORT)_ffmpegStream, $(PORT) ffmpegStream class instance
 
+include "NDPluginBase.template"
+
 # # JPEG Quality
 # % gdatag, pv, rw, $(PORT)_ffmpegStream, QUALITY, Set QUALITY
 record(ao, "$(P)$(R)QUALITY") {
