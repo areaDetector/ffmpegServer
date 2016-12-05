@@ -6,7 +6,6 @@
 #include <iocsh.h>
 
 static const char *driverName2 = "ffmpegFile";
-#define MAX_ATTRIBUTE_STRING_SIZE 256
 
 /** Opens an FFMPEG file.
   * \param[in] filename The name of the file to open.
