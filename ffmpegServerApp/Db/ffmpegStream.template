@@ -39,6 +39,7 @@ record(ao, "$(P)$(R)QUALITY") {
   field(DRVH, "100")
   field(DRVL, "0")          
   field(PINI, "1")  
+  info(autosaveFields, "VAL")
 }
 
 # # JPEG Quality Readback from driver
@@ -56,6 +57,7 @@ record(ao, "$(P)$(R)MAXW") {
   field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXW")
   field(VAL, "$(MAXW=1600)")
   field(PINI, "1")  
+  info(autosaveFields, "VAL")
 }
 
 # # Maximum jpg width Readback from driver
@@ -73,6 +75,7 @@ record(ao, "$(P)$(R)MAXH") {
   field(OUT, "@asyn($(PORT) 0)FFMPEG_MAXH")
   field(VAL, "$(MAXH=1200)")
   field(PINI, "1")  
+  info(autosaveFields, "VAL")
 }
 
 # # Maximum jpg width Readback from driver
@@ -93,6 +96,7 @@ record(bo, "$(P)$(R)FALSE_COL") {
   field(ONAM, "On")
   field(VAL, "0")
   field(PINI, "1")  
+  info(autosaveFields, "VAL")
 }
 
 # # False colour mode readback from driver
@@ -114,6 +118,7 @@ record(bo, "$(P)$(R)ALWAYS_ON") {
   field(ONAM, "On") 
   field(VAL, "0")  
   field(PINI, "1")  
+  info(autosaveFields, "VAL")
 }
 
 # # Always on readback from driver
@@ -183,6 +188,7 @@ record(waveform, "$(P)$(R)MJPG_URL_RBV")
 record(longout, "$(P)$(R)GX") {
     field(VAL, "100")
     field(PINI, "1")
+    info(autosaveFields, "VAL")
 }
 
 #% autosave 2
@@ -190,6 +196,7 @@ record(longout, "$(P)$(R)GX") {
 record(longout, "$(P)$(R)GY") {
     field(VAL, "100")
     field(PINI, "1")
+    info(autosaveFields, "VAL")
 }
 
 #% autosave 2
@@ -199,6 +206,7 @@ record(bo, "$(P)$(R)GRID") {
     field(ZNAM, "Off")
     field(ONAM, "On")
     field(PINI, "1")
+    info(autosaveFields, "VAL")
 }
 
 #% autosave 2
@@ -207,6 +215,7 @@ record(bo, "$(P)$(R)GRID") {
 record(longout, "$(P)$(R)GCOL") {
     field(VAL, "0xFFFFFF")
     field(PINI, "1")
+    info(autosaveFields, "VAL")
 }
 
 #% autosave 2
@@ -216,4 +225,5 @@ record(longout, "$(P)$(R)GS") {
     field(DRVL, "10")    
     field(DRVH, "2000")
     field(PINI, "1")
+    info(autosaveFields, "VAL")
 }
