@@ -658,7 +658,9 @@ extern "C" int ffmpegStreamConfigure(const char *portName, int queueSize, int bl
             driverName, MAX_FFMPEG_STREAMS);
         return(asynError);        
     }
-    streams[nstreams++] = new ffmpegStream(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxBuffers, maxMemory, priority, stackSize);
+    ffmpegStream *pPlugin = new ffmpegStream(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxBuffers, maxMemory, priority, stackSize);
+    pPlugin->start();
+    streams[nstreams++] = pPlugin;
     return(asynSuccess);
 }
 
