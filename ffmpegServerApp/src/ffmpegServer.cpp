@@ -387,7 +387,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     NDAttribute *pAttribute = NULL;    
 
     /* Call the base class method */
-    NDPluginDriver::processCallbacks(pArray);
+    NDPluginDriver::beginProcessCallbacks(pArray);
     
     /* see if anyone's listening */
     pthread_mutex_lock(&this->mutex);    
@@ -575,10 +575,10 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
      * Set autoconnect to 1.  priority can be 0, which will use defaults. 
      * We require a minimum stacksize of 128k for windows-x64 */    
     : NDPluginDriver(portName, queueSize, blockingCallbacks,
-                   NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_SERVER_PARAMS, maxBuffers, maxMemory,
+                   NDArrayPort, NDArrayAddr, 1, maxBuffers, maxMemory,
                    asynGenericPointerMask,
                    asynGenericPointerMask,
-                   0, 1, priority, stackSize < 128000 ? 128000 : stackSize)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
+                   0, 1, priority, stackSize < 128000 ? 128000 : stackSize, 1)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
 {
     char host[64] = "";
     char url[256] = "";
