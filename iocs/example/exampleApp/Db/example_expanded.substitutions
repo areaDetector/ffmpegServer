@@ -22,7 +22,7 @@ pattern { P, R, PORT, TIMEOUT, ADDR }
 #  PORT     Asyn Port name
 #  TIMEOUT  Timeout
 #  ADDR     Asyn Port address
-file $(ADCORE)/db/simDetector.template
+file $(ADSIMDETECTOR)/db/simDetector.template
 {
 pattern { P, R, PORT, TIMEOUT, ADDR }
     { "BLxxI-DI-PHDGN-01", ":CAM:", "C1.CAM", "1", "0" }
