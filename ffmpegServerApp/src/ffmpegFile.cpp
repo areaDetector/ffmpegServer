@@ -21,6 +21,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     int ret;
 	static const char *functionName = "openFile";
 	char errbuf[AV_ERROR_MAX_STRING_SIZE];
+    epicsFloat64 f64Val;
     this->sheight = 0;
 	this->swidth = 0;
 
@@ -52,8 +53,8 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     } else {
     	this->supportsMultipleArrays = 1;
         /* We want to use msmpeg4v2 instead of mpeg4 for avi files*/
-        if (av_match_ext(filename, "avi") && fmt->video_codec == CODEC_ID_MPEG4) {
-        	fmt->video_codec = CODEC_ID_MSMPEG4V2;
+        if (av_match_ext(filename, "avi") && fmt->video_codec == AV_CODEC_ID_MPEG4) {
+        	fmt->video_codec = AV_CODEC_ID_MSMPEG4V2;
         }
     }
 
@@ -97,7 +98,8 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 	c->codec_id = codec_id;
 
     /* put sample parameters */
-    getIntegerParam(0, ffmpegFileBitrate, &(c->bit_rate));
+    getDoubleParam(0, ffmpegFileBitrate, &f64Val);
+    c->bit_rate = (int64_t)f64Val;
 
     /* frames per second */
     AVRational avr;
@@ -115,9 +117,9 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 
 	c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
 
-    c->pix_fmt = PIX_FMT_YUV420P;
+    c->pix_fmt = AV_PIX_FMT_YUV420P;
     if(codec && codec->pix_fmts){
-        const enum PixelFormat *p= codec->pix_fmts;
+        const enum AVPixelFormat *p= codec->pix_fmts;
         for(; *p!=-1; p++){
             if(*p == c->pix_fmt)
                 break;
@@ -139,7 +141,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 
 	/* Some formats want stream headers to be separate. */
 	if (oc->oformat->flags & AVFMT_GLOBALHEADER) {
-		c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+		c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	}
 
     /* Now that all the parameters are set, we can open the audio and
@@ -207,8 +209,8 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     }
 
     /* alloc in and scaled pictures */
-    inPicture = avcodec_alloc_frame();
-    scPicture = avcodec_alloc_frame();
+    inPicture = av_frame_alloc();
+    scPicture = av_frame_alloc();
 	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);       
     scPicture->pts = 0;
 	needStop = 1;
@@ -337,6 +339,37 @@ asynStatus ffmpegFile::closeFile()
     return asynSuccess;
 }
 
+/** Called when asyn clients call pasynFloat64->write().
+  * This function ensures the ffmpegFileBitrate parameter value is within the
+  * allowed range of -2^53 to 2^53.  If it is not, the value is not set in
+  * the parameter library, an error is logged, and the asynError status is
+  * returned.  Otherwise this function calls asynPortDriver::writeFloat64 with
+  * the same arguments this function was called with and returns its status.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and
+  *            address.
+  * \param[in] value Value to write. */
+asynStatus ffmpegFile::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
+{
+    int function = pasynUser->reason;
+        const char *paramName;
+        getParamName(function, &paramName);
+    asynStatus status = asynSuccess;
+    int addr=0;
+    static const char *functionName = "writeFloat64";
+
+    if (function == ffmpegFileBitrate &&
+            (value < EXACT_INT_DBL_MIN || value > EXACT_INT_DBL_MAX)) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s:%s: value out of range, function=%d, name=%s, value=%.0f, "
+                "min=%.0f, max=%.0f\n",
+            driverName2, functionName, function, paramName, value,
+            EXACT_INT_DBL_MIN, EXACT_INT_DBL_MAX);
+        return asynError;
+    }
+
+    return asynPortDriver::writeFloat64(pasynUser, value);
+}
+
 /** Constructor for ffmpegFile; all parameters are simply passed to NDPluginFile::NDPluginFile.
 ffmpegFileConfigure() should be used to create an instance in the iocsh.
 See ffmpegStream.template for more details of usage.
@@ -368,10 +401,10 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
 {
     //const char *functionName = "ffmpegFile";
 
-    createParam(ffmpegFileBitrateString,  asynParamInt32, &ffmpegFileBitrate);
-    createParam(ffmpegFileFPSString,      asynParamInt32, &ffmpegFileFPS);
-    createParam(ffmpegFileHeightString,   asynParamInt32, &ffmpegFileHeight);
-    createParam(ffmpegFileWidthString,    asynParamInt32, &ffmpegFileWidth);
+    createParam(ffmpegFileBitrateString, asynParamFloat64, &ffmpegFileBitrate);
+    createParam(ffmpegFileFPSString,     asynParamInt32,   &ffmpegFileFPS);
+    createParam(ffmpegFileHeightString,  asynParamInt32,   &ffmpegFileHeight);
+    createParam(ffmpegFileWidthString,   asynParamInt32,   &ffmpegFileWidth);
 
     /* Set the plugin type string */    
     setStringParam(NDPluginDriverPluginType, "ffmpegFile");

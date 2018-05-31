@@ -58,7 +58,7 @@ record(longout, "$(P)$(R)NumCapture")
 # # FFMPEG Bitrate
 # % gdatag, pv, rw, $(PORT)_ffmpegFile, BITRATE, Set BITRATE
 record(ao, "$(P)$(R)BITRATE") {
-  field(DTYP, "asynInt32")
+  field(DTYP, "asynFloat64")
   field(OUT, "@asyn($(PORT) 0)FFMPEG_BITRATE")
   field(VAL, "10000000")
   field(PINI, "YES")  
@@ -68,7 +68,7 @@ record(ao, "$(P)$(R)BITRATE") {
 # % gdatag, pv, ro, $(PORT)_ffmpegFile, BITRATE_RBV, Readback for BITRATE
 record(ai, "$(P)$(R)BITRATE_RBV") {
   field(SCAN, "I/O Intr")
-  field(DTYP, "asynInt32")
+  field(DTYP, "asynFloat64")
   field(INP, "@asyn($(PORT) 0)FFMPEG_BITRATE")
 }
 
