@@ -404,8 +404,9 @@ extern "C" int ffmpegFileConfigure(const char *portName, int queueSize, int bloc
                                    const char *NDArrayPort, int NDArrayAddr,
                                    int priority, int stackSize)
 {
-    new ffmpegFile(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr,
-                   priority, stackSize);                   
+    ffmpegFile *pPlugin = new ffmpegFile(portName, queueSize, blockingCallbacks, NDArrayPort,
+                                         NDArrayAddr, priority, stackSize);
+    pPlugin->start();
     return(asynSuccess);
 }
 
