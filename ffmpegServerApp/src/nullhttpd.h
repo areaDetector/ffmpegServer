@@ -275,7 +275,7 @@ void fixslashes(char *pOriginal);
 int hex2int(char *pChars);
 void striprn(char *string);
 void swapchar(char *string, char oldchar, char newchar);
-char *strcasestr(const char *src, const char *query);
+char *nullhttpd_strcasestr(const char *src, const char *query);
 char *strcatf(char *dest, const char *format, ...);
 int printhex(const char *format, ...);
 int printht(const char *format, ...);

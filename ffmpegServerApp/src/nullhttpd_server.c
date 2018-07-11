@@ -113,10 +113,10 @@ logdata("\n[[[ FLUSHING HEADER ]]]\n");
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
 	// Nutscrape and Mozilla don't know what a fucking keepalive is
-	if ((strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
+	if ((nullhttpd_strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
-	if (strcasestr(conn[sid].dat->in_Protocol, "HTTP/1.1")!=NULL) {
+	if (nullhttpd_strcasestr(conn[sid].dat->in_Protocol, "HTTP/1.1")!=NULL) {
 		snprintf(conn[sid].dat->out_Protocol, sizeof(conn[sid].dat->out_Protocol)-1, "HTTP/1.1");
 	} else {
 		snprintf(conn[sid].dat->out_Protocol, sizeof(conn[sid].dat->out_Protocol)-1, "HTTP/1.0");
@@ -556,7 +556,7 @@ unsigned htloop(void *x)
 //		}
 		conn[sid].dat->out_bodydone=1;
 		flushbuffer(sid);
-		if (strcasestr(conn[sid].dat->out_Connection, "close")!=NULL) break;
+		if (nullhttpd_strcasestr(conn[sid].dat->out_Connection, "close")!=NULL) break;
 	}
 	closeconnect(sid, 0);
 	logaccess(4, "Closing [%u][%u]", conn[sid].id, conn[sid].socket);

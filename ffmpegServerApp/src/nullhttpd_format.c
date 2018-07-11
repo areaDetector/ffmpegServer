@@ -92,7 +92,7 @@ void swapchar(char *string, char oldchar, char newchar)
 	}
 }
 
-char *strcasestr(const char *src, const char *query)
+char *nullhttpd_strcasestr(const char *src, const char *query)
 {
 	char *pToken;
 	char Buffer[8192];

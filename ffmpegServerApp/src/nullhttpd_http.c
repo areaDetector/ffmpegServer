@@ -238,7 +238,7 @@ void send_fileheader(int sid, int cacheable, int status, char *title, char *extr
 	} else {
 		conn[sid].dat->out_status=200;
 	}
-	if (strcasestr(conn[sid].dat->in_Protocol, "HTTP/1.1")!=NULL) {
+	if (nullhttpd_strcasestr(conn[sid].dat->in_Protocol, "HTTP/1.1")!=NULL) {
 		snprintf(conn[sid].dat->out_Protocol, sizeof(conn[sid].dat->out_Protocol)-1, "HTTP/1.1");
 	} else {
 		snprintf(conn[sid].dat->out_Protocol, sizeof(conn[sid].dat->out_Protocol)-1, "HTTP/1.0");
@@ -249,7 +249,7 @@ void send_fileheader(int sid, int cacheable, int status, char *title, char *extr
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
 	// Nutscrape and Mozilla don't know what a fucking keepalive is
-	if ((strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
+	if ((nullhttpd_strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
 	prints("%s %d OK\r\n", conn[sid].dat->out_Protocol, conn[sid].dat->out_status);
