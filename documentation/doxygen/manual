@@ -12,7 +12,6 @@ Please click on one of the links above for documentation on the plugin.
 ffmpegServer requires the following:
 
 - <a href="http://cars9.uchicago.edu/software/epics/areaDetector.html">areaDetector</a> - tested with version 1-9
-- <a href="http://controls.diamond.ac.uk/downloads/support/nullhttpd">nullhttpd</a> - tested with version 0-5-1dls5
 - <a href="http://ffmpeg.zeranoe.com/">ffmpeg</a> - tested with version 2.1.1
 
 \section install_sec Install instructions
