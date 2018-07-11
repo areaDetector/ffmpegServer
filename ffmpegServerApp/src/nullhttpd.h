@@ -262,13 +262,8 @@ void pthread_exit(unsigned A);
 #endif
 /* main.c functions */
 void dorequest(int sid);
-/* cgi.c */
-int cgi_main(void);
 /* config.c functions */
 int config_read(void);
-/* files.c functions */
-int dirlist(int sid);
-int sendfile(int sid, char *file);
 /* format.c */
 void decodeurl(char *pEncoded);
 void fixslashes(char *pOriginal);
