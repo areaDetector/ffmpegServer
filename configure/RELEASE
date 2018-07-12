@@ -7,4 +7,3 @@
 -include $(TOP)/configure/RELEASE.local
 
 ADSIMDETECTOR=$(AREA_DETECTOR)/ADSimDetector
-NULLHTTPD=$(SUPPORT)/nullhttpd
