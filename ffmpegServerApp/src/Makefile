@@ -45,7 +45,7 @@ endif
 USR_INCLUDES += -I$(TOP)/vendor/ffmpeg-$(VENDORARCH)/include
 		
 # build the ffmpeg libs (or stubs on windows) into the binaries
-ffmpegServer_LIBS += avdevice avformat avcodec avutil swscale
+ffmpegServer_LIBS += avdevice avformat avcodec swresample swscale avutil
 ffmpegServer_LIBS += ADBase NDPlugin asyn
 ffmpegServer_LIBS += $(EPICS_BASE_IOC_LIBS)
 ffmpegServer_SYS_LIBS_WIN32 += user32
