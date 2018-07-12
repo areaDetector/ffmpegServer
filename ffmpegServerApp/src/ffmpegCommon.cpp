@@ -32,7 +32,7 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
     static const char *functionName = "formatArray";
     int colorMode = NDColorModeMono;
 	int width, height;
-	PixelFormat pix_fmt;
+	enum AVPixelFormat pix_fmt;
 	NDAttribute *pAttribute = NULL;
 	int Int16;
 	
@@ -61,30 +61,30 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
         width  = (int) pArray->dims[0].size;
         height = (int) pArray->dims[1].size;
         if (Int16) {
-            pix_fmt = PIX_FMT_GRAY16;
+            pix_fmt = AV_PIX_FMT_GRAY16;
         } else if (width != c->width || height != c->height) {
-        	pix_fmt = PIX_FMT_GRAY8;
+        	pix_fmt = AV_PIX_FMT_GRAY8;
         } else {
         	int stride;
-            pix_fmt = PIX_FMT_GRAY8;
+            pix_fmt = AV_PIX_FMT_GRAY8;
             /* special case for gray8, and planar outputs, don't need to scale, 
                can use a neutral array */
             switch (c->pix_fmt) {
-    			case PIX_FMT_YUV420P:   //< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
-    			case PIX_FMT_YUV411P:   //< planar YUV 4:1:1, 12bpp, (1 Cr & Cb sample per 4x1 Y samples)
-    			case PIX_FMT_YUVJ420P:  //< planar YUV 4:2:0, 12bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV420P and setting color_range
-    			case PIX_FMT_NV12:      //< planar YUV 4:2:0, 12bpp, 1 plane for Y and 1 plane for the UV components, which are interleaved (first byte U and the following byte V)
-    			case PIX_FMT_NV21:      //< as above, but U and V bytes are swapped
+    			case AV_PIX_FMT_YUV420P:   //< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
+    			case AV_PIX_FMT_YUV411P:   //< planar YUV 4:1:1, 12bpp, (1 Cr & Cb sample per 4x1 Y samples)
+    			case AV_PIX_FMT_YUVJ420P:  //< planar YUV 4:2:0, 12bpp, full scale (JPEG), deprecated in favor of AV_PIX_FMT_YUV420P and setting color_range
+    			case AV_PIX_FMT_NV12:      //< planar YUV 4:2:0, 12bpp, 1 plane for Y and 1 plane for the UV components, which are interleaved (first byte U and the following byte V)
+    			case AV_PIX_FMT_NV21:      //< as above, but U and V bytes are swapped
     				stride = 4;
     				break;
-    			case PIX_FMT_YUV422P:   //< planar YUV 4:2:2, 16bpp, (1 Cr & Cb sample per 2x1 Y samples)
-    			case PIX_FMT_YUVJ422P:  //< planar YUV 4:2:2, 16bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV422P and setting color_range
-    			case PIX_FMT_YUV440P:   //< planar YUV 4:4:0 (1 Cr & Cb sample per 1x2 Y samples)
-    			case PIX_FMT_YUVJ440P:  //< planar YUV 4:4:0 full scale (JPEG), deprecated in favor of PIX_FMT_YUV440P and setting color_range    			
+    			case AV_PIX_FMT_YUV422P:   //< planar YUV 4:2:2, 16bpp, (1 Cr & Cb sample per 2x1 Y samples)
+    			case AV_PIX_FMT_YUVJ422P:  //< planar YUV 4:2:2, 16bpp, full scale (JPEG), deprecated in favor of AV_PIX_FMT_YUV422P and setting color_range
+    			case AV_PIX_FMT_YUV440P:   //< planar YUV 4:4:0 (1 Cr & Cb sample per 1x2 Y samples)
+    			case AV_PIX_FMT_YUVJ440P:  //< planar YUV 4:4:0 full scale (JPEG), deprecated in favor of AV_PIX_FMT_YUV440P and setting color_range    			
     				stride = 2;
     				break;    				
-    			case PIX_FMT_YUV444P:   //< planar YUV 4:4:4, 24bpp, (1 Cr & Cb sample per 1x1 Y samples)    			
-    			case PIX_FMT_YUVJ444P:  //< planar YUV 4:4:4, 24bpp, full scale (JPEG), deprecated in favor of PIX_FMT_YUV444P and setting color_range
+    			case AV_PIX_FMT_YUV444P:   //< planar YUV 4:4:4, 24bpp, (1 Cr & Cb sample per 1x1 Y samples)    			
+    			case AV_PIX_FMT_YUVJ444P:  //< planar YUV 4:4:4, 24bpp, full scale (JPEG), deprecated in favor of AV_PIX_FMT_YUV444P and setting color_range
 					stride = 1;
     				break;	
     			default:
@@ -92,6 +92,9 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
     				break;				
 			}			
 			if (stride) {	
+				scPicture->format = c->pix_fmt;
+				scPicture->width = c->width;
+				scPicture->height = c->height;
 	    	    scPicture->data[0] = (uint8_t*) pArray->pData;
     		    scPicture->data[1] = (uint8_t*) neutral;
     		    scPicture->data[2] = (uint8_t*) neutral;    	        	    
@@ -108,9 +111,9 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
         width  = (int) pArray->dims[1].size;
         height = (int) pArray->dims[2].size;
         if (Int16) {
-            pix_fmt = PIX_FMT_RGB48;
+            pix_fmt = AV_PIX_FMT_RGB48;
         } else {
-            pix_fmt = PIX_FMT_RGB24;
+            pix_fmt = AV_PIX_FMT_RGB24;
         }    
         /* setup the input picture */
         inPicture->data[0] = (uint8_t*) pArray->pData;
@@ -134,6 +137,11 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
     /* scale the picture so we can pass it to the encoder */
     sws_scale(*pCtx, inPicture->data, inPicture->linesize, 0,
 		      height, scPicture->data, scPicture->linesize);
+
+    scPicture->format = c->pix_fmt;
+    scPicture->width = c->width;
+    scPicture->height = c->height;
+
 	return(asynSuccess);
 }
 	

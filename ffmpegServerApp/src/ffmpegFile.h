@@ -7,10 +7,15 @@
 #define snprintf _snprintf
 #endif
 
-#define ffmpegFileBitrateString "FFMPEG_BITRATE"  /* (asynInt32, r/w) File bitrate */
+#define ffmpegFileBitrateString "FFMPEG_BITRATE"  /* (asynFloat64, r/w) File bitrate */
 #define ffmpegFileFPSString     "FFMPEG_FPS"      /* (asynInt32, r/w) Frames per second */
 #define ffmpegFileHeightString  "FFMPEG_HEIGHT"   /* (asynInt32, r/w) Video Height */
 #define ffmpegFileWidthString   "FFMPEG_WIDTH"    /* (asynInt32, r/w) Video Width */
+
+/* Minimum integer exactly representable in IEEE 754 double (-2^53) */
+#define EXACT_INT_DBL_MIN -9007199254740992
+/* Maximum integer exactly representable in IEEE 754 double (2^53) */
+#define EXACT_INT_DBL_MAX 9007199254740992
 
 /** Writes NDArrays to a ffmpeg file. This can be one of many video formats
   */
@@ -24,6 +29,7 @@ public:
     virtual asynStatus readFile(NDArray **pArray);
     virtual asynStatus writeFile(NDArray *pArray);
     virtual asynStatus closeFile();
+    virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
 
 protected:
     int ffmpegFileBitrate;
@@ -46,7 +52,7 @@ private:
     size_t outSize;
     int needStop;      
     int sheight, swidth;
-    PixelFormat spix_fmt;
+    enum AVPixelFormat spix_fmt;
     AVOutputFormat *fmt;
     AVFormatContext *oc;
     AVStream *video_st;

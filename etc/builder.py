@@ -7,7 +7,7 @@ class FFmpegServer(Device):
     '''Library dependencies for ffmpeg'''
     Dependencies = (AreaDetector,)
     # Device attributes
-    LibFileList = ['swscale', 'avutil', 'avcodec', 'avformat', 'avdevice', 'ffmpegServer']
+    LibFileList = ['swresample', 'swscale', 'avutil', 'avcodec', 'avformat', 'avdevice', 'ffmpegServer']
     DbdFileList = ['ffmpegServer']  
     AutoInstantiate = True    
 

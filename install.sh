@@ -5,7 +5,7 @@
 
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
-VERSION="ffmpeg-2.1.1"
+VERSION="ffmpeg-4.0"
 SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.xz"
 WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
 WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
