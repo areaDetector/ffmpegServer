@@ -362,9 +362,9 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
      * Set autoconnect to 1.  priority can be 0, which will use defaults. 
      * We require a minimum stacksize of 128k for windows-x64 */
     : NDPluginFile(portName, queueSize, blockingCallbacks,
-                   NDArrayPort, NDArrayAddr, 1, NUM_FFMPEG_FILE_PARAMS,
-                   2, -1, asynGenericPointerMask, asynGenericPointerMask, 
-                   ASYN_CANBLOCK, 1, priority, stackSize < 128000 ? 128000 : stackSize)
+                   NDArrayPort, NDArrayAddr, 1,
+                   2, 0, asynGenericPointerMask, asynGenericPointerMask,
+                   ASYN_CANBLOCK, 1, priority, stackSize < 128000 ? 128000 : stackSize, 1)
 {
     //const char *functionName = "ffmpegFile";
 
@@ -404,8 +404,9 @@ extern "C" int ffmpegFileConfigure(const char *portName, int queueSize, int bloc
                                    const char *NDArrayPort, int NDArrayAddr,
                                    int priority, int stackSize)
 {
-    new ffmpegFile(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr,
-                   priority, stackSize);                   
+    ffmpegFile *pPlugin = new ffmpegFile(portName, queueSize, blockingCallbacks, NDArrayPort,
+                                         NDArrayAddr, priority, stackSize);
+    pPlugin->start();
     return(asynSuccess);
 }
 
