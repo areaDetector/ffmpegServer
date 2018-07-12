@@ -126,7 +126,11 @@ int read_header(int sid)
 	x=time((time_t*)0);
 	do {
 		memset(line, 0, sizeof(line));
-		sgets(line, sizeof(line)-1, conn[sid].socket);
+		if(sgets(line, sizeof(line)-1, conn[sid].socket) < 0)
+                {
+                    /* We really should handle errors etc. */
+                    return -1;
+                }
 		striprn(line);
 	} while ((strlen(line)==0)&&((time((time_t)0)-x)<30));
 	if ((strlen(line)==0)&&((time((time_t)0)-x)>=30)) {
@@ -248,7 +252,7 @@ void send_fileheader(int sid, int cacheable, int status, char *title, char *extr
 	} else {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
-	// Nutscrape and Mozilla don't know what a fucking keepalive is
+	// Keepalive workaround for Mozilla/Netscape
 	if ((nullhttpd_strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}

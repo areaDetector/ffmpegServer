@@ -19,6 +19,8 @@
 #include "nullhttpd.h"
 
 #ifdef WIN32
+#include "Mstcpip.h"
+#include "ws2tcpip.h"
 static WSADATA wsaData;
 #define socklen_t int
 static SOCKET ListenSocket;
@@ -112,7 +114,7 @@ logdata("\n[[[ FLUSHING HEADER ]]]\n");
 	} else {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
-	// Nutscrape and Mozilla don't know what a fucking keepalive is
+	// Keepalive workaround for Mozilla/Netscape
 	if ((nullhttpd_strcasestr(conn[sid].dat->in_UserAgent, "MSIE")==NULL)) {
 		snprintf(conn[sid].dat->out_Connection, sizeof(conn[sid].dat->out_Connection)-1, "Close");
 	}
@@ -221,6 +223,13 @@ int sgets(char *buffer, int max, int fd)
 			conn[sid].dat->out_flushed=1;
 			conn[sid].dat->out_ReplyData[0]='\0';
 			closeconnect(sid, 1);
+                        /* JAT: I think we should exit on a fault. */
+                        n=-1;
+                        break;
+                } else if (rc==0) {
+                        /* JAT: The connection has closed. */
+                        n = -1;
+                        break;
 		} else if (rc!=1) {
 			n= -n;
 			break;
@@ -297,11 +306,15 @@ void server_shutdown()
 {
 	logaccess(0, "Stopping %s", SERVER_NAME);
 	stopping = 1;
+        if(ListenSocket != 0)
+        {
 #ifdef WIN32
-	closesocket(ListenSocket);
+	    closesocket(ListenSocket);
 #else
-	close(ListenSocket);
+	    close(ListenSocket);
 #endif
+            ListenSocket = 0;
+        }
 	fflush(stdout);
 /*	exit(0);*/
 }
@@ -620,6 +633,16 @@ void accept_loop(void *x)
 			continue;
 #endif
 		} else {
+	        // JAT: Enable keep alive
+#ifdef WIN32
+	        struct tcp_keepalive alive;
+            DWORD bytesRet = 0;
+	        alive.onoff = 1;
+	        alive.keepalivetime = 5000;
+	        alive.keepaliveinterval = 1000;
+	        WSAIoctl(conn[i].socket, SIO_KEEPALIVE_VALS, &alive, sizeof(alive),
+	                NULL, 0, &bytesRet, NULL, NULL);
+#endif
 			conn[i].id=1;
 			if (pthread_create(&conn[i].handle, &thr_attr, htloop, (void *)i)==-1) {
 				logerror("htloop() failed...");
