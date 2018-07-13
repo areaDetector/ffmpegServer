@@ -353,8 +353,6 @@ asynStatus ffmpegFile::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
     int function = pasynUser->reason;
         const char *paramName;
         getParamName(function, &paramName);
-    asynStatus status = asynSuccess;
-    int addr=0;
     static const char *functionName = "writeFloat64";
 
     if (function == ffmpegFileBitrate &&

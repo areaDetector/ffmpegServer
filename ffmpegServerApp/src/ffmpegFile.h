@@ -13,9 +13,9 @@
 #define ffmpegFileWidthString   "FFMPEG_WIDTH"    /* (asynInt32, r/w) Video Width */
 
 /* Minimum integer exactly representable in IEEE 754 double (-2^53) */
-#define EXACT_INT_DBL_MIN -9007199254740992
+#define EXACT_INT_DBL_MIN -9007199254740992.0
 /* Maximum integer exactly representable in IEEE 754 double (2^53) */
-#define EXACT_INT_DBL_MAX 9007199254740992
+#define EXACT_INT_DBL_MAX 9007199254740992.0
 
 /** Writes NDArrays to a ffmpeg file. This can be one of many video formats
   */
