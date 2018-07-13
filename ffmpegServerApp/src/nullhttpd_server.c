@@ -19,8 +19,6 @@
 #include "nullhttpd.h"
 
 #ifdef WIN32
-#include "Mstcpip.h"
-#include "ws2tcpip.h"
 static WSADATA wsaData;
 #define socklen_t int
 static SOCKET ListenSocket;

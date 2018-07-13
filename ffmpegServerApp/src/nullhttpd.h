@@ -29,8 +29,11 @@
 //	#pragma comment(lib, "libcmt.lib")
 	#pragma comment(lib, "ws2_32.lib")
 //	#define _MT 1
-	#include <winsock.h>
+	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
+	#include <winsock2.h>
+	#include <mstcpip.h>
+	#include <ws2tcpip.h>
 	#include <process.h>
 	#include <shellapi.h>
 	#include <signal.h>
