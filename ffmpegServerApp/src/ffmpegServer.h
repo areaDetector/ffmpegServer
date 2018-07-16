@@ -1,15 +1,16 @@
 #ifndef ffmpegServer_H
 #define ffmpegServer_H
 
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
+#endif
+
 #include <epicsTypes.h>
 #include <asynStandardInterfaces.h>
 
 #include "NDPluginDriver.h"
 
 /* null-httpd includes */
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS
-#endif
 extern "C" {
 #include "nullhttpd.h"
 }
