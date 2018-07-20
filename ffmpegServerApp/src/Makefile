@@ -23,9 +23,6 @@ else ifeq (R3.14.12.1, $(findstring R3.14.12.1, $(EPICS_BASE)))
 USR_CXXFLAGS += -U_GNU_SOURCE
 endif
 
-# Include the srcs from nullhttpd
-SRC_DIRS += $(NULLHTTPD)/src
-
 # For some reason the windows build needs stdint.h and inttypes.h
 USR_INCLUDES_WIN32 += -I$(TOP)/vendor/msinttypes
 
@@ -52,7 +49,7 @@ ffmpegServer_SYS_LIBS_WIN32 += user32
 		
 # The following are compiled and added to the support library
 ffmpegServer_SRCS += ffmpegCommon.cpp
-ffmpegServer_SRCS += ffmpegServer.cpp server.c http.c format.c win32.c 
+ffmpegServer_SRCS += ffmpegServer.cpp nullhttpd_server.c nullhttpd_http.c nullhttpd_format.c nullhttpd_win32.c
 ffmpegServer_SRCS += ffmpegFile.cpp
 
 include $(TOP)/configure/RULES
