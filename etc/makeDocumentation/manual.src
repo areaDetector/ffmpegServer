@@ -21,9 +21,9 @@ First of all, please read the information on <a href="http://www.ffmpeg.org/lega
 - (Linux only) Download and unzip the <a href="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/ffmpeg-4.0.tar.xz">source</a> to vendor/ffmpeg
 - (Linux only) Download and unzip <a href="http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz">yasm</a> to vendor/yasm
 - (Win32 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win32/shared/ffmpeg-4.0-win32-shared.7z">win32 libraries</a> to vendor/ffmpeg-win32-shared
-- (Win32 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win32/dev/ffmpeg-4.0-win32-dev.7z">win32 devel libraries</a> to vendor/ffmpeg-win32-shared
+- (Win32 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win32/dev/ffmpeg-4.0-win32-dev.7z">win32 devel libraries</a> to vendor/ffmpeg-win32-dev
 - (Win64 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-4.0-win64-shared.7z">win64 libraries</a> to vendor/ffmpeg-win64-shared
-- (Win64 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-4.0-win64-dev.7z">win64 devel libraries</a> to vendor/ffmpeg-win64-shared
+- (Win64 only) Download and unzip <a href="http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-4.0-win64-dev.7z">win64 devel libraries</a> to vendor/ffmpeg-win64-dev
 
 You can now edit <tt>configure/RELEASE</tt> and type <tt>make</tt> to build
 
