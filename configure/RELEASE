@@ -5,5 +5,3 @@
 -include $(TOP)/../configure/RELEASE_LIBS_INCLUDE
 -include $(TOP)/RELEASE.local
 -include $(TOP)/configure/RELEASE.local
-
-ADSIMDETECTOR=$(AREA_DETECTOR)/ADSimDetector

@@ -11,7 +11,7 @@ CONFORM_CXXFLAGS_STRICT =
 LIBRARY_IOC += ffmpegServer
 
 DBD += ffmpegServer.dbd
-#INC += ffmpegServer.h
+INC += ffmpegServer.h
 
 # ffmpeg must be built to c99 standard
 USR_CFLAGS_Linux += -std=c99
@@ -42,15 +42,16 @@ endif
 USR_INCLUDES += -I$(TOP)/vendor/ffmpeg-$(VENDORARCH)/include
 		
 # build the ffmpeg libs (or stubs on windows) into the binaries
-ffmpegServer_LIBS += avdevice avformat avcodec swresample swscale avutil
-ffmpegServer_LIBS += ADBase NDPlugin asyn
-ffmpegServer_LIBS += $(EPICS_BASE_IOC_LIBS)
-ffmpegServer_SYS_LIBS_WIN32 += user32
+LIB_LIBS += avdevice avformat avcodec swresample swscale avutil
+LIB_LIBS += NDPlugin
+LIB_SYS_LIBS_WIN32 += user32
 		
 # The following are compiled and added to the support library
 ffmpegServer_SRCS += ffmpegCommon.cpp
 ffmpegServer_SRCS += ffmpegServer.cpp nullhttpd_server.c nullhttpd_http.c nullhttpd_format.c nullhttpd_win32.c
 ffmpegServer_SRCS += ffmpegFile.cpp
+
+include $(ADCORE)/ADApp/commonLibraryMakefile
 
 include $(TOP)/configure/RULES
 
