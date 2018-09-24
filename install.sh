@@ -1,24 +1,14 @@
 #!/bin/bash
 
-# DLS specific http proxy
-#export http_proxy=wwwcache.rl.ac.uk:8080
-
 # Variables telling us where to get things
 HERE="$(dirname "$0")"
-VERSION="ffmpeg-4.0"
-SOURCE="http://ffmpeg.zeranoe.com/builds/source/ffmpeg/${VERSION}.tar.xz"
-WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.7z"
-WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.7z"
-WIN64SHARED="http://ffmpeg.zeranoe.com/builds/win64/shared/${VERSION}-win64-shared.7z"
-WIN64SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win64/dev/${VERSION}-win64-dev.7z"
+VERSION="ffmpeg-4.0.2"
+SOURCE="https://ffmpeg.org/releases/${VERSION}.tar.xz"
+WIN32SHARED="http://ffmpeg.zeranoe.com/builds/win32/shared/${VERSION}-win32-shared.zip"
+WIN32SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win32/dev/${VERSION}-win32-dev.zip"
+WIN64SHARED="http://ffmpeg.zeranoe.com/builds/win64/shared/${VERSION}-win64-shared.zip"
+WIN64SHAREDDEV="http://ffmpeg.zeranoe.com/builds/win64/dev/${VERSION}-win64-dev.zip"
 YASM="http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz"
-
-# First check whether the user has 7za, needed for the windows build
-which 7za > /dev/null
-if [ $? -ne 0 ]; then
-	echo "*** Error: You need to download p7zip from http://sourceforge.net/projects/p7zip/files/p7zip and make sure '7za' is on your PATH"
-	exit 1
-fi
 
 # fail if we can't do anything
 set -e
@@ -36,11 +26,11 @@ done
 echo "Untarring source..."
 tar Jxvf "${HERE}/vendor/$(basename $SOURCE)" -C "${HERE}/vendor"
 
-# unzip the 7z archives
-7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHARED)"
-7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN32SHAREDDEV)"
-7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHARED)"
-7za x "-o${HERE}/vendor" "${HERE}/vendor/$(basename $WIN64SHAREDDEV)"
+# unzip the zip archives
+unzip   "${HERE}/vendor/$(basename $WIN32SHARED)"    "-d${HERE}/vendor"
+unzip   "${HERE}/vendor/$(basename $WIN32SHAREDDEV)" "-d${HERE}/vendor"
+unzip   "${HERE}/vendor/$(basename $WIN64SHARED)"    "-d${HERE}/vendor" 
+unzip   "${HERE}/vendor/$(basename $WIN64SHAREDDEV)" "-d${HERE}/vendor"
 
 # untar yasm
 echo "Untarring yasm..."
