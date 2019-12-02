@@ -147,7 +147,7 @@ int formatArray(NDArray *pArray, asynUser *pasynUser, AVFrame *inPicture,
 	
 /**
  * \file
- * \section License
+ * section License
  * Author: Diamond Light Source, Copyright 2010
  *
  * 'ffmpegServer' is free software: you can redistribute it and/or modify
