@@ -4,7 +4,7 @@ ffmpegServer
 ffmpegServer is a windows and linux [areaDetector](http://cars9.uchicago.edu/software/epics/areaDetector.html) plugin wrapping the [ffmpeg](http://www.ffmpeg.org) libraries that provides 2 functions:
 
 * ffmpegStream: Compression into an [mjpg](http://en.wikipedia.org/wiki/Motion_JPEG) stream which is made available over http.
-* ffmpegFile: Compression to disk into any file format that ffmpeg supports.
+* ffmpegFile: Compression to disk in any ffmpeg supported file format.
 
 External Modules
 ----------------
