@@ -183,11 +183,11 @@ void c_shutdown(void *) {
     printf("OK\n");
 }    
 
-/** Configure and start the http server.
-Call this before creating any instances of ffmpegStream
-\param port port number to run the server on. Defaults to 8080
-*/
-void ffmpegServerConfigure(int port) {
+
+/** Configure and start the http server, specifying a specific network interface, or 'any' for default
+ * Default port is 8080
+ */
+void ffmpegServerConfigWithInterface(int port, const char* networkInterface) {
     int status;
     if (port==0) {
         port = 8080;
@@ -196,7 +196,7 @@ void ffmpegServerConfigure(int port) {
     nstreams = 0;    
     config.server_port = port;
     config.server_loglevel=1;
-    strncpy(config.server_hostname, "any", sizeof(config.server_hostname)-1);
+    strncpy(config.server_hostname, networkInterface, sizeof(config.server_hostname)-1);
     config.server_maxconn=50;
     config.server_maxidle=120;    
     printf("Starting server on port %d...\n", port);
@@ -221,6 +221,15 @@ void ffmpegServerConfigure(int port) {
     } else printf("OK\n");
     /* Register the shutdown function for epicsAtExit */
     epicsAtExit(c_shutdown, NULL);    
+}
+
+/** Configure and start the http server.
+Call this before creating any instances of ffmpegStream
+\param port port number to run the server on. Defaults to 8080
+*/
+void ffmpegServerConfigure(int port) {
+
+    ffmpegServerConfigWithInterface(port, "any");
 }
 
 /** Internal function to send a single snapshot */
@@ -724,9 +733,19 @@ static const iocshArg serverArg0 = { "Http Port",iocshArgInt};
 static const iocshArg * const serverArgs[] = {&serverArg0};
 static const iocshFuncDef serverFuncDef = {"ffmpegServerConfigure",1,serverArgs};
 
+static const iocshArg serverWithInterfaceArg0 = { "Http Port", iocshArgInt};
+static const iocshArg serverWithInterfaceArg1 = { "Network Interface", iocshArgString};
+static const iocshArg * const serverWithInterfaceArgs[] = {&serverWithInterfaceArg0, &serverWithInterfaceArg1};
+static const iocshFuncDef serverWithInterfaceFuncDef = {"ffmpegServerConfigWithInterface",2,serverWithInterfaceArgs};
+
 static void serverCallFunc(const iocshArgBuf *args)
 {
     ffmpegServerConfigure(args[0].ival);
+}
+
+static void serverWithInterfaceCallFunc(const iocshArgBuf *args)
+{
+    ffmpegServerConfigWithInterface(args[0].ival, args[1].sval);
 }
 
 /** Register ffmpegStreamConfigure and ffmpegServerConfigure for use on iocsh */
@@ -734,6 +753,7 @@ extern "C" void ffmpegServerRegister(void)
 {
     iocshRegister(&streamFuncDef,streamCallFunc);
     iocshRegister(&serverFuncDef,serverCallFunc);
+    iocshRegister(&serverWithInterfaceFuncDef,serverWithInterfaceCallFunc);
 }
 
 extern "C" {
