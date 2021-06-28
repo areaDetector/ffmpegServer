@@ -183,20 +183,23 @@ void c_shutdown(void *) {
     printf("OK\n");
 }    
 
-/** Configure and start the http server.
-Call this before creating any instances of ffmpegStream
-\param port port number to run the server on. Defaults to 8080
-*/
-void ffmpegServerConfigure(int port) {
+
+/** Configure and start the http server, specifying a specific network interface, or 'any' for default.
+ * To specify an interface, use either the DNS name or the IP of the NIC. ex: 10.68.212.33 or my-ioc-server-hostname
+ * Default port is 8080. 
+ */
+void ffmpegServerConfigure(int port, const char* networkInterface) {
     int status;
     if (port==0) {
         port = 8080;
-    }    
+    }
+
     streams = (ffmpegStream **) calloc(MAX_FFMPEG_STREAMS, sizeof(ffmpegStream *));
     nstreams = 0;    
     config.server_port = port;
     config.server_loglevel=1;
-    strncpy(config.server_hostname, "any", sizeof(config.server_hostname)-1);
+    
+    strncpy(config.server_hostname, networkInterface, sizeof(config.server_hostname)-1);
     config.server_maxconn=50;
     config.server_maxidle=120;    
     printf("Starting server on port %d...\n", port);
@@ -721,13 +724,19 @@ static void streamCallFunc(const iocshArgBuf *args)
 }
 
 static const iocshArg serverArg0 = { "Http Port",iocshArgInt};
-static const iocshArg * const serverArgs[] = {&serverArg0};
-static const iocshFuncDef serverFuncDef = {"ffmpegServerConfigure",1,serverArgs};
+static const iocshArg serverArg1 = { "Network Interface", iocshArgString};
+static const iocshArg * const serverArgs[] = {&serverArg0, &serverArg1};
+static const iocshFuncDef serverFuncDef = {"ffmpegServerConfigure",2,serverArgs};
+
 
 static void serverCallFunc(const iocshArgBuf *args)
 {
-    ffmpegServerConfigure(args[0].ival);
+    if(args[1].sval == NULL)
+        ffmpegServerConfigure(args[0].ival, "any");
+    else
+        ffmpegServerConfigure(args[0].ival, args[1].sval);
 }
+
 
 /** Register ffmpegStreamConfigure and ffmpegServerConfigure for use on iocsh */
 extern "C" void ffmpegServerRegister(void)
