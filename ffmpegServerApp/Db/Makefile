@@ -9,6 +9,7 @@ include $(TOP)/configure/CONFIG
 #
 DB += ffmpegStream.template
 DB += ffmpegFile.template
+DB += ffmpegServer_settings.req
 
 
 include $(TOP)/configure/RULES
