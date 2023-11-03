@@ -40,7 +40,8 @@ endif
 
 # Include the ffmpeg header files
 USR_INCLUDES += -I$(TOP)/vendor/ffmpeg-$(VENDORARCH)/include
-		
+
++ffmpegServer_SYS_LIBS += microhttpd
 # build the ffmpeg libs (or stubs on windows) into the binaries
 LIB_LIBS += avdevice avformat avcodec swresample swscale avutil
 LIB_LIBS += NDPlugin
@@ -48,7 +49,7 @@ LIB_SYS_LIBS_WIN32 += user32
 		
 # The following are compiled and added to the support library
 ffmpegServer_SRCS += ffmpegCommon.cpp
-ffmpegServer_SRCS += ffmpegServer.cpp nullhttpd_server.c nullhttpd_http.c nullhttpd_format.c nullhttpd_win32.c
+ffmpegServer_SRCS += ffmpegServer.cpp
 ffmpegServer_SRCS += ffmpegFile.cpp
 
 include $(ADCORE)/ADApp/commonLibraryMakefile

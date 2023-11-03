@@ -6,170 +6,266 @@
 #include "iocsh.h"
 #include <epicsExit.h>
 #include <epicsThread.h>
+#include <epicsEvent.h>
 #include <time.h>
 #include <math.h>
 
-/* windows includes */
-#ifdef _MSC_VER /* Microsoft Compilers */
-/** win32 implementation of pthread_cond_init */
-int pthread_cond_init (pthread_cond_t *cv, const pthread_condattr_t *) {
-  cv->semaphore = CreateEvent (NULL, FALSE, FALSE, NULL);
-  return 0;
-}
-/** win32 implementation of pthread_cond_wait */
-int pthread_cond_wait (pthread_cond_t *cv, pthread_mutex_t *external_mutex) {
-  pthread_mutex_unlock(external_mutex);
-  /** This is wrong, we could miss a wakeup call here... */
-  /** Note: this a wait with timeout, on windows we will get a jpeg every second
-    * even if there isn't a new one. This avoids GDA timeouts... */
-  WaitForSingleObject (cv->semaphore, 1000);
-  pthread_mutex_lock(external_mutex);
-  return 0;
-}
-/** win32 implementation of pthread_cond_signal */
-int pthread_cond_signal (pthread_cond_t *cv) {
-  SetEvent (cv->semaphore);
-  return 0;
-}
-#endif
-
 static const char *driverName = "ffmpegServer";
 
-/** This is called whenever a client requests a stream */
-void dorequest(int sid) {
-    char *portName;
-    int len;
-    char *ext;
-    
-    if (read_header(sid)<0) {
-        closeconnect(sid, 1);
-        return;
+static MHD_Daemon *mhd_daemon = NULL;
+static int mhd_port = 8080;
+static int mhd_maxconn = 50;
+
+static ffmpegStream **streams;
+static int nstreams = 0;
+
+class Streamer {
+
+private:
+    ffmpegStream *mStream;
+    char *mBuffer;
+    size_t mSent;
+    size_t mRemaining;
+
+public:
+    Streamer(ffmpegStream *stream)
+    : mStream(stream), mBuffer(NULL), mSent(0), mRemaining(0)
+    {
     }
-    logaccess(2, "%s - HTTP Request: %s %s", conn[sid].dat->in_RemoteAddr, 
-            conn[sid].dat->in_RequestMethod, conn[sid].dat->in_RequestURI);
-    snprintf(conn[sid].dat->out_ContentType, 
-            sizeof(conn[sid].dat->out_ContentType)-1, "text/html");
 
-    /* check if we are asking for a jpg or an mjpg file */
-    ext = strrchr(conn[sid].dat->in_RequestURI+1, '.');
+    ~Streamer(void) {
+        clear_frame();
+        mStream->send_stream_done();
+    }
 
-    if (ext != NULL) {
-        len = (int) (ext - conn[sid].dat->in_RequestURI - 1);
-        portName = (char *)calloc(sizeof(char), 256);
-        strncpy(portName, conn[sid].dat->in_RequestURI+1, len);
-        ext++;
-        for (int i=0; i<nstreams; i++) {
-            if (strcmp(portName, streams[i]->portName) == 0) {
-                if (strcmp(ext, "index") == 0) {
-                    streams[i]->send_snapshot(sid, 1);
-                    free(portName);
-                    return;
-                }                
-                if (strcmp(ext, "jpg") == 0 || strcmp(ext, "jpeg") == 0) {
-                    streams[i]->send_snapshot(sid, 0);
-                    free(portName);
-                    return;
-                }
-                if (strcmp(ext, "mjpg") == 0 || strcmp(ext, "mjpeg") == 0) {                    
-                    streams[i]->send_stream(sid);
-                    free(portName);
-                    return;
-                }
+    void clear_frame(void) {
+        free(mBuffer);
+        mBuffer = NULL;
+        mSent = mRemaining = 0;
+    }
 
-            }
+    ssize_t get_frame(void)
+    {
+        NDArray *pArray = mStream->get_jpeg(true);
+
+        if (!pArray)
+            return 0;
+
+        size_t data_len = pArray->dims[0].size;
+        mBuffer = (char*) malloc(data_len + 2048);
+
+        size_t length = 0;
+
+        #define APPEND(content)\
+        do {\
+            const char *c = content;\
+            size_t c_len = strlen(c);\
+            memcpy(mBuffer + length, c, c_len);\
+            length += c_len;\
+        } while(0)
+
+        // Header
+        APPEND("BOUNDARY\r\n");
+        APPEND(MHD_HTTP_HEADER_CONTENT_TYPE ": image/jpeg\r\n\r\n");
+        #undef APPEND
+
+        // Data
+        memcpy(mBuffer + length, pArray->pData, data_len);
+        pArray->release();
+        length += data_len;
+
+        mRemaining = length;
+        mSent = 0;
+
+        return length;
+    }
+
+    ssize_t send_frame(uint64_t pos, char *buf, size_t max)
+    {
+        if (!mRemaining) {
+            clear_frame();
+            get_frame();
+        }
+
+        size_t length = std::min(mRemaining, max);
+        memcpy(buf, mBuffer + mSent, length);
+
+        mSent += length;
+        mRemaining -= length;
+
+        return length;
+    }
+};
+
+
+char *get_index(void)
+{
+    const char *body_top =
+        "<HTML> \n"
+        " <style type=\"text/css\"> \n"
+        "BODY { \n"
+        "  background-color: #f2f2f6; \n"
+        "  font-family: arial, sans-serif; \n"
+        "} \n"
+        "H1 { \n"
+        "  font-size: 24px; \n"
+        "  color: #000000; \n"
+        "  font-weight: bold; \n"
+        "  text-align: center; \n"
+        "} \n"
+        "H2 { \n"
+        "  font-size: 18px; \n"
+        "  color: #1b2a60; \n"
+        "  font-weight: bold; \n"
+        "  text-align: center; \n"
+        "} \n"
+        "A:link { \n"
+        "  text-decoration: none; color:#3b4aa0; \n"
+        "} \n"
+        "A:visited { \n"
+        "  text-decoration: none; color:#3b4aa0; \n"
+        "} \n"
+        "A:active { \n"
+        "  text-decoration: none; color:#3b4aa0; \n"
+        "} \n"
+        "A:hover { \n"
+        "  text-decoration: underline; color:#3b4aff; \n"
+        "} \n"
+        "td { \n"
+        "  background-color: #e0e0ee; \n"
+        "  border-style: outset; \n"
+        "  border-color: #e0e0ee; \n"
+        "  border-width: 1px; \n"
+        "  padding: 10px; \n"
+        "  text-align: center; \n"
+        "} \n"
+        "p { \n"
+        "  text-align: center; \n"
+        "} \n"
+        " </style> \n"
+        " <HEAD> \n"
+        "  <TITLE>ffmpegServer Content Listing</TITLE> \n"
+        " </HEAD> \n"
+        " <BODY> \n"
+        "  <CENTER> \n"
+        "   <H1>ffmpegServer Content Listing</H1> \n"
+        "   <TABLE cellspacing=\"15\"> \n"
+        "    <TR> \n";
+
+    const char *body_bottom =
+        "</TR>\n"
+        "</TABLE>\n"
+        "</CENTER>\n"
+        "</BODY>\n"
+        "</HTML>\n";
+
+    const char *stream_cell =
+        "<TD>\n"
+        "<H2>%s</H2>\n"
+        "<img src=\"%s.index\" height=\"192\" title=\"Static JPEG\" alt=\"&lt;No image yet&gt;\"/>\n"
+        "<p><a href=\"%s.jpg\">Link to Static JPEG</a></p>\n"
+        "<p><a href=\"%s.mjpg\">Link to MJPEG Stream</a></p>\n"
+        "</TD>\n";
+
+    const char *new_line = "</TR><TR>\n";
+    size_t new_line_len = strlen(new_line);
+
+    size_t available = 131072;
+
+    char *buffer = (char*)malloc(available);
+    buffer[0] = '\0';
+
+    size_t body_top_len = strlen(body_top);
+    if (available - 1 < body_top_len)
+        return buffer;
+
+    strncat(buffer, body_top, available-1);
+    available -= body_top_len;
+
+    /* make a table of streams */
+    for (int i=0; i<nstreams; i++) {
+        char stream_buf[4096];
+        snprintf(stream_buf, 4096, stream_cell, streams[i]->portName, streams[i]->portName,
+                                                streams[i]->portName, streams[i]->portName);
+
+        size_t stream_buf_len = strlen(stream_buf);
+        if (available - 1 < stream_buf_len)
+            return buffer;
+
+        strncat(buffer, stream_buf, available-1);
+        available -= stream_buf_len;
+
+        if (i % 3 == 2) { //3 per row
+            if (available - 1 < new_line_len)
+                return buffer;
+
+            strncat(buffer, new_line, available-1);
+            available -= new_line_len;
         }
     }
 
-    /* If we weren't asked for a stream then just send the index page */
-    send_header(sid, 0, 200, "OK", "1", "text/html", -1, -1);
-    prints("\n\
-<HTML> \n\
- <style type=\"text/css\"> \n\
-BODY {       \n\
-  background-color: #f2f2f6; \n\
-  font-family: arial, sans-serif; \n\
-} \n\
-H1 { \n\
-  font-size: 24px; \n\
-  color: #000000; \n\
-  font-weight: bold; \n\
-  text-align: center; \n\
-} \n\
-H2 { \n\
-  font-size: 18px; \n\
-  color: #1b2a60; \n\
-  font-weight: bold; \n\
-  text-align: center; \n\
-} \n\
-A:link { \n\
-  text-decoration: none; color:#3b4aa0; \n\
-} \n\
-A:visited { \n\
-  text-decoration: none; color:#3b4aa0; \n\
-} \n\
-A:active { \n\
-  text-decoration: none; color:#3b4aa0; \n\
-} \n\
-A:hover { \n\
-  text-decoration: underline; color:#3b4aff; \n\
-} \n\
-td { \n\
-  background-color: #e0e0ee; \n\
-  border-style: outset; \n\
-  border-color: #e0e0ee; \n\
-  border-width: 1px; \n\
-  padding: 10px; \n\
-  text-align: center; \n\
-} \n\
-p { \n\
-  text-align: center; \n\
-} \n\
- </style> \n\
- <HEAD> \n\
-  <TITLE>ffmpegServer Content Listing</TITLE> \n\
- </HEAD> \n\
- <BODY> \n\
-  <CENTER> \n\
-   <H1>ffmpegServer Content Listing</H1> \n\
-   <TABLE cellspacing=\"15\"> \n\
-    <TR> \n\
-");    
-    /* make a table of streams */
-    for (int i=0; i<nstreams; i++) {
-        prints("<TD>\n");
-        prints("<H2>%s</H2>\n", streams[i]->portName);
-        prints("<img src=\"%s.index\" height=\"192\" title=\"Static JPEG\" alt=\"&lt;No image yet&gt;\"/>\n", streams[i]->portName);        
-        prints("<p><a href=\"%s.jpg\">Link to Static JPEG</a></p>\n", streams[i]->portName);
-        prints("<p><a href=\"%s.mjpg\">Link to MJPEG Stream</a></p>\n", streams[i]->portName);        
-        prints("</TD>\n");        
-        if (i % 3 == 2) { //3 per row
-            prints("    </TR>\n    <TR>\n");                    
-        }        
-    }
-    prints("\n\
-    </TR> \n\
-   </TABLE> \n\
-  </CENTER> \n\
- </BODY> \n\
-</HTML> \n\
-");
-    flushbuffer(sid);   
+    size_t body_bottom_len = strlen(body_bottom);
+    if (available - 1 < body_bottom_len)
+        return buffer;
+
+    strncat(buffer, body_bottom, available-1);
+
+    return buffer;
 }
 
-/** this dummy function is here to satisfy nullhttpd */
-int config_read()
+/** This is called whenever a client requests a stream */
+MHD_Result dorequest(void *cls, struct MHD_Connection *connection, const char *url,
+              const char *method, const char *version, const char *upload_data,
+              size_t *upload_data_size, void **con_cls)
 {
-    snprintf(config.server_base_dir, sizeof(config.server_base_dir)-1, "%s", DEFAULT_BASE_DIR);
-    snprintf(config.server_bin_dir, sizeof(config.server_bin_dir)-1, "%s/bin", config.server_base_dir);
-    snprintf(config.server_cgi_dir, sizeof(config.server_cgi_dir)-1, "%s/cgi-bin", config.server_base_dir);
-    snprintf(config.server_etc_dir, sizeof(config.server_etc_dir)-1, "%s/etc", config.server_base_dir);
-    snprintf(config.server_htdocs_dir, sizeof(config.server_htdocs_dir)-1, "%s/htdocs", config.server_base_dir);
-    fixslashes(config.server_base_dir);
-    fixslashes(config.server_bin_dir);
-    fixslashes(config.server_cgi_dir);
-    fixslashes(config.server_etc_dir);
-    fixslashes(config.server_htdocs_dir);
-    return 0;
+    if (strcmp(method, MHD_HTTP_METHOD_GET))
+        return MHD_NO;
+
+    /* check if we are asking for a jpg or an mjpg file */
+    const char *ext = strrchr(url, '.');
+
+    if (!ext) {
+        char *index_buf = get_index();
+
+        struct MHD_Response *response = MHD_create_response_from_buffer(
+                       strlen(index_buf),
+                       (void*) index_buf,
+                       MHD_RESPMEM_MUST_FREE);
+        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "text/html");
+
+        MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
+        return ret;
+    }
+
+    int len = (int) (ext - url - 1);
+    char portName[256] = {0};
+    strncpy(portName, url+1, len);
+    ext++;
+    for (int i=0; i<nstreams; i++) {
+        if (strcmp(portName, streams[i]->portName) == 0) {
+            if (strcmp(ext, "index") == 0)
+                return (MHD_Result)streams[i]->send_snapshot(connection, 1);
+
+            if (strcmp(ext, "jpg") == 0 || strcmp(ext, "jpeg") == 0)
+                return (MHD_Result)streams[i]->send_snapshot(connection, 0);
+
+            if (strcmp(ext, "mjpg") == 0 || strcmp(ext, "mjpeg") == 0)
+                return (MHD_Result)streams[i]->send_stream(connection);
+        }
+    }
+    return MHD_NO;
+}
+
+ssize_t send_frame(void *cls, uint64_t pos, char *buf, size_t max)
+{
+    return ((Streamer *)cls)->send_frame(pos, buf, max);
+}
+
+void send_stream_done(void *cls)
+{
+    Streamer *s = (Streamer*)cls;
+    delete s;
 }
 
 static int stopping = 0;
@@ -178,7 +274,7 @@ static int stopping = 0;
 void c_shutdown(void *) {
     printf("Shutting down http server...");
     stopping = 1;
-    server_shutdown();
+    MHD_stop_daemon(mhd_daemon);
     sleep(1);
     printf("OK\n");
 }    
@@ -189,167 +285,133 @@ void c_shutdown(void *) {
  * Default port is 8080. 
  */
 void ffmpegServerConfigure(int port, const char* networkInterface) {
-    int status;
-    if (port==0) {
-        port = 8080;
-    }
+    if(port)
+        mhd_port = port;
 
     streams = (ffmpegStream **) calloc(MAX_FFMPEG_STREAMS, sizeof(ffmpegStream *));
-    nstreams = 0;    
-    config.server_port = port;
-    config.server_loglevel=1;
-    
-    strncpy(config.server_hostname, networkInterface, sizeof(config.server_hostname)-1);
-    config.server_maxconn=50;
-    config.server_maxidle=120;    
-    printf("Starting server on port %d...\n", port);
-    snprintf((char *)program_name, sizeof(program_name)-1, "ffmpegServer");
-    init();
+    nstreams = 0;
+    printf("Starting server on port %d...\n", mhd_port);
+    mhd_daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY |
+                                   MHD_USE_THREAD_PER_CONNECTION,
+                                   mhd_port, NULL,
+                                   NULL, dorequest, NULL,
+                                   MHD_OPTION_CONNECTION_LIMIT, mhd_maxconn,
+                                   MHD_OPTION_CONNECTION_TIMEOUT, 120,
+                                   MHD_OPTION_END);
+
 #ifdef WIN32
     if (_beginthread(WSAReaper, 0, NULL)==-1) {
         logerror("Winsock reaper thread failed to start");
         exit(0);
     }
 #endif
-    /* Start up acquisition thread */
-    status = (epicsThreadCreate("httpServer",
-            epicsThreadPriorityMedium,
-            epicsThreadGetStackSize(epicsThreadStackMedium),
-            (EPICSTHREADFUNC)accept_loop,
-            NULL) == NULL);
-    if (status) {
-        printf("%s:ffmpegServerConfigure epicsThreadCreate failure for image task\n",
-                driverName);
-        return;
-    } else printf("OK\n");
+    printf("OK\n");
+
     /* Register the shutdown function for epicsAtExit */
     epicsAtExit(c_shutdown, NULL);    
 }
 
 /** Internal function to send a single snapshot */
-void ffmpegStream::send_snapshot(int sid, int index) {
-    time_t now=time((time_t*)0);
-    int size, always_on;    
+void ffmpegStream::send_snapshot(MHD_Connection *connection, int index) {
+    int always_on;
     NDArray* pArray;
 //  printf("JPEG requested\n");
     /* Say we're listening */
     getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
-    pthread_mutex_lock( &this->mutex );    
+    this->mutex.lock();
     this->nclients++;   
     if (this->nclients > 1) always_on = 1;
-    pthread_mutex_unlock(&this->mutex);
+    this->mutex.unlock();
     /* if always on or clients already listening then there is already a frame */        
     if (always_on || index) {
-        pArray = get_jpeg();
+        pArray = get_jpeg(false);
     } else {
-        pArray = wait_for_jpeg(sid);
+        pArray = get_jpeg(true);
     }    
     /* we're no longer listening */
-    pthread_mutex_lock( &this->mutex );    
-    this->nclients--;    
-    pthread_mutex_unlock(&this->mutex);    
+    this->mutex.lock();
+    this->nclients--;
+    this->mutex.unlock();
     /* If there's no data yet, say so */
     if (pArray == NULL) {
-        printerror(sid, 200, "No Data", "No jpeg available yet");
-        return;
+        char *nodata = (char*)malloc(1024);
+        strcpy(nodata, "<html><title>No Data</title><body>No jpeg available yet</body></html>");
+        struct MHD_Response *response = MHD_create_response_from_buffer(
+            strlen(nodata), nodata, MHD_RESPMEM_MUST_FREE);
+        int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
+        return ret;
     }
+
     /* Send the right header for a jpeg */
-    size = (int) pArray->dims[0].size;    
-    conn[sid].dat->out_ContentLength=size;
-    send_fileheader(sid, 0, 200, "OK", "1", "image/jpeg", size, now);
-    /* Send the jpeg itself */
-    send(conn[sid].socket, (const char *) pArray->pData, size, 0);
+    int size = (int) pArray->dims[0].size;
+
+    struct MHD_Response *response = MHD_create_response_from_buffer(
+        size, (char *) pArray->pData, MHD_RESPMEM_PERSISTENT);
+
+    MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, "image/jpeg");
+
+    int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    MHD_destroy_response(response);
     pArray->release();
-    /* Clear up */
-    conn[sid].dat->out_headdone=1;
-    conn[sid].dat->out_bodydone=1;
-    conn[sid].dat->out_flushed=1;
-    conn[sid].dat->out_ReplyData[0]='\0';
-    flushbuffer(sid);
+    return ret;
 }
 
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
-
-/** Internal function to send a jpeg frame as part of an mjpeg stream */
-int ffmpegStream::send_frame(int sid, NDArray *pArray) {
-    int ret = 0;
-//    double difftime;
-//    struct timeval start, end;
-    if (pArray) {
-        /* Send metadata */
-//        printf("Send frame %d to sid %d\n", pArray->dims[0].size, sid);                        
-        prints("Content-Type: image/jpeg\r\n");
-        prints("Content-Length: %d\r\n\r\n", pArray->dims[0].size);
-        flushbuffer(sid);
-        /* Send the jpeg */
-//        gettimeofday(&start, NULL);         
-        ret = send(conn[sid].socket, (const char *) pArray->pData, (int) pArray->dims[0].size, 0);                  
-//        gettimeofday(&end, NULL);         
-        /* Send a boundary */
-        prints("\r\n--BOUNDARY\r\n");
-        flushbuffer(sid);
-//        difftime = (end.tv_usec - start.tv_usec) * 0.000001 + end.tv_sec - start.tv_sec;
-//        if (difftime > 0.1) printf ("It took %.2lf seconds to send a frame to %d. That's a bit slow\n", difftime, sid);
-//        printf("Done\n");        
-        pArray->release();             
-    }
-    return ret;
-}    
-
 /** Internal function to get the current jpeg and return it */
-NDArray* ffmpegStream::get_jpeg() {
-    NDArray* pArray;
-    pthread_mutex_lock(&this->mutex);
-    pArray = this->jpeg;
-    if (pArray) pArray->reserve();  
-    pthread_mutex_unlock(&this->mutex);
-    return pArray;
-}    
-    
-
-/** Internal function to wait for a jpeg to be produced */
-NDArray* ffmpegStream::wait_for_jpeg(int sid) {
-    NDArray* pArray;
-    pthread_mutex_lock(&this->mutex);
-    pthread_cond_wait(&(this->cond[sid]), &this->mutex);
-    pArray = this->jpeg;
-    if(pArray) pArray->reserve();  
-    pthread_mutex_unlock(&this->mutex);   
-    return pArray;    
-}    
+NDArray* ffmpegStream::get_jpeg(bool wait) {
+    if (wait) {
+        epicsEvent evt;
+        epicsEvent *ptr = &evt;
+        this->waiting.send(&ptr, sizeof(ptr));
+        evt.wait();
+     }
+     NDArray* pArray;
+     this->mutex.lock();
+     pArray = this->jpeg;
+     if(pArray) pArray->reserve();
+     this->mutex.unlock();
+     return pArray;
+}
 
 /** Internal function to send an mjpg stream */
-void ffmpegStream::send_stream(int sid) {
-    int ret = 0;
-    int always_on;
-    NDArray* pArray;
-    time_t now=time((time_t*)0);    
+void ffmpegStream::send_stream(MHD_Connection *connection) {
+    int ret, always_on;
     /* Say we're listening */
     getIntegerParam(0, ffmpegServerAlwaysOn, &always_on);
-    pthread_mutex_lock( &this->mutex );    
-    this->nclients++;    
+    this->mutex.lock();
+    this->nclients++;
     if (this->nclients > 1) always_on = 1;
-    pthread_mutex_unlock(&this->mutex);    
+    this->mutex.unlock();
+
+    /* Create a new streamer object */
+    Streamer *s = new Streamer(this);
+
     /* Send the appropriate header */
-    send_fileheader(sid, 0, 200, "OK", "1", "multipart/x-mixed-replace;boundary=BOUNDARY", -1, now);
-    prints("--BOUNDARY\r\n");
-    flushbuffer(sid);
-    /* if always on or clients already listening then there is already a frame */    
-    if (always_on) {
-        pArray = get_jpeg();
-        ret = send_frame(sid, pArray);    
-    }
-    /* while the client is listening and we aren't stopping */
-    while (ret >= 0 && !stopping) {
-        /* wait for a new frame and send it*/
-        pArray = wait_for_jpeg(sid);
-        ret = send_frame(sid, pArray);
-    }
-    /* We're no longer listening */
-    pthread_mutex_lock( &this->mutex );    
+    struct MHD_Response *response = MHD_create_response_from_callback(
+        MHD_SIZE_UNKNOWN, 16*1024*1024, &::send_frame, s,
+        &::send_stream_done);
+
+    MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE,
+        "multipart/x-mixed-replace; boundary=BOUNDARY");
+    MHD_add_response_header(response, MHD_HTTP_HEADER_EXPIRES, "0");
+    MHD_add_response_header(response, MHD_HTTP_HEADER_CACHE_CONTROL,
+        "no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0");
+    MHD_add_response_header(response, MHD_HTTP_HEADER_PRAGMA, "no-cache");
+
+    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    MHD_destroy_response(response);
+
+    return ret;
+}
+
+void ffmpegStream::send_stream_done(void)
+{
+     /* We're no longer listening */
+    this->mutex.lock();
     this->nclients--;    
-    pthread_mutex_unlock(&this->mutex);            
+    this->mutex.unlock();
 } 
 
 /** Internal function to alloc a correctly sized processed array */
@@ -396,9 +458,9 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     NDPluginDriver::beginProcessCallbacks(pArray);
     
     /* see if anyone's listening */
-    pthread_mutex_lock(&this->mutex);    
+    this->mutex.lock();
     clients = this->nclients;
-    pthread_mutex_unlock(&this->mutex);  
+    this->mutex.unlock();
     setIntegerParam(0, ffmpegServerClients, clients);
     
     /* get the configuration values */
@@ -525,7 +587,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     }      
 
     /* lock the output plugin mutex */
-    pthread_mutex_lock(&this->mutex);
+    this->mutex.lock();
 
     /* Release the last jpeg created */
     if (this->jpeg) {
@@ -561,10 +623,11 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     //printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
     
     /* signal fresh_frame to output plugin and unlock mutex */
-    for (int i=0; i<config.server_maxconn; i++) {
-        pthread_cond_signal(&(this->cond[i]));
-    }
-    pthread_mutex_unlock(&this->mutex);
+    epicsEvent *evt;
+    while(this->waiting.tryReceive(&evt, sizeof(evt)) != -1)
+        evt->signal();
+
+    this->mutex.unlock();
 
     /* We must enter the loop and exit with the mutex locked */
     this->lock();
@@ -608,7 +671,8 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
                    NDArrayPort, NDArrayAddr, 1, maxBuffers, maxMemory,
                    asynGenericPointerMask,
                    asynGenericPointerMask,
-                   0, 1, priority, stackSize < 128000 ? 128000 : stackSize, 1)  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
+                   0, 1, priority, stackSize < 128000 ? 128000 : stackSize, 1),  /* Not ASYN_CANBLOCK or ASYN_MULTIDEVICE, do autoConnect */
+    waiting(mhd_maxconn, sizeof(epicsEvent *))
 {
     char host[64] = "";
     char url[256] = "";
@@ -621,7 +685,6 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     this->inPicture = NULL;
     this->scPicture = NULL;            
     this->ctx = NULL;      
-    this->cond = NULL;
 
     /* Create some parameters */
     createParam(ffmpegServerQualityString,  asynParamInt32, &ffmpegServerQuality);
@@ -641,7 +704,7 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     status = connectToArrayPort();
 
     /* Set the initial values of some parameters */
-    setIntegerParam(0, ffmpegServerHttpPort, config.server_port);
+    setIntegerParam(0, ffmpegServerHttpPort, mhd_port);
     setIntegerParam(0, ffmpegServerClients, 0);    
     
     /* Set the plugin type string */    
@@ -650,9 +713,9 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     /* Set the hostname */
     gethostname(host, 64);
     setStringParam(ffmpegServerHost, host);   
-    sprintf(url, "http://%s:%d/%s.jpg", host, config.server_port, portName);
+    sprintf(url, "http://%s:%d/%s.jpg", host, mhd_port, portName);
     setStringParam(ffmpegServerJpgUrl, url);
-    sprintf(url, "http://%s:%d/%s.mjpg", host, config.server_port, portName);
+    sprintf(url, "http://%s:%d/%s.mjpg", host, mhd_port, portName);
     setStringParam(ffmpegServerMjpgUrl, url);
 
     /* Initialise the ffmpeg library */
@@ -667,13 +730,6 @@ ffmpegStream::ffmpegStream(const char *portName, int queueSize, int blockingCall
     if (!codec) {
         fprintf(stderr, "MJPG codec not found\n");
         exit(1);
-    }
-    
-    /* this mutex and the conditional variable are used to synchronize access to the global picture buffer */
-    pthread_mutex_init(&(this->mutex), NULL);
-    this->cond = (pthread_cond_t *) calloc(config.server_maxconn, sizeof(pthread_cond_t));
-    for (int i=0; i<config.server_maxconn; i++) {
-        pthread_cond_init(&(this->cond[i]), NULL);
     }
 }
 
