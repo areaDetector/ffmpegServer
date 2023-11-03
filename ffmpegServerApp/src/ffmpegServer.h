@@ -6,14 +6,14 @@
 #endif
 
 #include <epicsTypes.h>
+#include <epicsMessageQueue.h>
+#include <epicsMutex.h>
 #include <asynStandardInterfaces.h>
+
+#include <microhttpd.h>
 
 #include "NDPluginDriver.h"
 
-/* null-httpd includes */
-extern "C" {
-#include "nullhttpd.h"
-}
 #include "ffmpegCommon.h"
 
 
@@ -42,9 +42,10 @@ public:
     /* These methods override those in the base class */
     void processCallbacks(NDArray *pArray);
     /* These are used by the http server to access the data in this class */
-    int send_frame(int sid, NDArray *pArray);
-    void send_stream(int sid);
-    void send_snapshot(int sid, int index);   
+    int send_stream(MHD_Connection *connection);
+    int send_snapshot(MHD_Connection *connection, int index);
+    void send_stream_done(void);
+    NDArray* get_jpeg(bool wait);
 
 protected:
     int ffmpegServerQuality;
@@ -73,18 +74,12 @@ private:
     struct SwsContext *ctx;      
     
     /* signal fresh frames */
-    pthread_cond_t *cond;
-    pthread_mutex_t mutex;    
+    epicsMutex mutex;
+    epicsMessageQueue waiting;
 
-    NDArray* get_jpeg();
-    NDArray* wait_for_jpeg(int sid);    
     void allocScArray(size_t size);
 };
-                             
-/* These are global to the http server */
-static ffmpegStream **streams;
-static int nstreams;
-    
+
 #endif
 /**
  * \file
