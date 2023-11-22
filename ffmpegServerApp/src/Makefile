@@ -48,7 +48,7 @@ LIB_SYS_LIBS_WIN32 += user32
 		
 # The following are compiled and added to the support library
 ffmpegServer_SRCS += ffmpegCommon.cpp
-ffmpegServer_SRCS += ffmpegServer.cpp nullhttpd_server.c nullhttpd_http.c nullhttpd_format.c nullhttpd_win32.c
+ffmpegServer_SRCS += ffmpegServer.cpp nullhttpd_extern.c nullhttpd_server.c nullhttpd_http.c nullhttpd_format.c nullhttpd_win32.c
 ffmpegServer_SRCS += ffmpegFile.cpp
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
