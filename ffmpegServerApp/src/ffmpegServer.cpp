@@ -468,8 +468,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         avr.den = 25;
         if (c != NULL) {
             /* width and height changed, close old codec */
-            avcodec_close(c);
-            av_free(c);
+            avcodec_free_context(&c);
         }
         c = avcodec_alloc_context3(codec);
         /* Make sure that we don't try and create an image smaller than AV_INPUT_BUFFER_MIN_SIZE */
