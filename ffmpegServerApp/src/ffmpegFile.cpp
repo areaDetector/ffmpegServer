@@ -47,23 +47,22 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     }
 
     /* If we are using image2 then we only support one frame per image */
-    fmt = oc->oformat;
-    if (strcmp("image2", fmt->name)==0) {
+    if (strcmp("image2", oc->oformat->name)==0) {
     	this->supportsMultipleArrays = 0;
     } else {
     	this->supportsMultipleArrays = 1;
-        /* We want to use msmpeg4v2 instead of mpeg4 for avi files*/
-        if (av_match_ext(filename, "avi") && fmt->video_codec == AV_CODEC_ID_MPEG4) {
-        	fmt->video_codec = AV_CODEC_ID_MSMPEG4V2;
-        }
     }
 
-    codec_id = av_guess_codec(fmt, NULL, filename, NULL, AVMEDIA_TYPE_VIDEO);
+    codec_id = av_guess_codec(oc->oformat, NULL, filename, NULL, AVMEDIA_TYPE_VIDEO);
     if (codec_id == AV_CODEC_ID_NONE) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s Codec has no video stream component\n",
             driverName2, functionName);
         return(asynError);
+    }
+    /* We want to use msmpeg4v2 instead of mpeg4 for avi files*/
+    if (av_match_ext(filename, "avi") && codec_id == AV_CODEC_ID_MPEG4) {
+        codec_id = AV_CODEC_ID_MSMPEG4V2;
     }
 
     /* find the encoder */
@@ -85,7 +84,6 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
         return(asynError);
 	}
 	video_st->id = oc->nb_streams-1;
-	c = video_st->codec;
 
 	if (codec->type != AVMEDIA_TYPE_VIDEO) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
@@ -94,7 +92,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
         return(asynError);
 	}
 
-	avcodec_get_context_defaults3(c, codec);
+    c = avcodec_alloc_context3(codec);
 	c->codec_id = codec_id;
 
     /* put sample parameters */
@@ -113,6 +111,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
        of which frame timestamps are represented. for fixed-fps content,
        timebase should be 1/framerate and timestamp increments should be
        identically 1. */
+    video_st->time_base = avr;
     c->time_base = avr;
 
 	c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
@@ -147,8 +146,6 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     /* Now that all the parameters are set, we can open the audio and
      * video codecs and allocate the necessary encode buffers. */
 
-	c = video_st->codec;
-
 	/* open the codec */
 	ret = avcodec_open2(c, codec, NULL);
 	if (ret < 0) {
@@ -157,6 +154,15 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
 		            driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 		return(asynError);
 	}
+
+    /* copy the stream parameters to the muxer */
+    ret = avcodec_parameters_from_context(video_st->codecpar, c);
+    if (ret < 0) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s Could not copy the stream parameters: %s\n",
+                    driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
+        return(asynError);
+    }
 
 	/* dump the format so we can see it on the console... */
     av_dump_format(oc, 0, filename, 1);
@@ -211,7 +217,7 @@ asynStatus ffmpegFile::openFile(const char *filename, NDFileOpenMode_t openMode,
     /* alloc in and scaled pictures */
     inPicture = av_frame_alloc();
     scPicture = av_frame_alloc();
-	avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);       
+	av_image_fill_arrays(scPicture->data,scPicture->linesize,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height,1);
     scPicture->pts = 0;
 	needStop = 1;
     return(asynSuccess);
@@ -245,39 +251,43 @@ asynStatus ffmpegFile::writeFile(NDArray *pArray)
     }	
 	
 
-    /* encode the image */
-    AVPacket pkt;
-    int got_output;
-    av_init_packet(&pkt);
-    pkt.data = NULL;    // packet data will be allocated by the encoder
-    pkt.size = 0;
-
-    ret = avcodec_encode_video2(c, &pkt, this->scPicture, &got_output);
+    /* send the frame to the encoder */
+    ret = avcodec_send_frame(c, this->scPicture);
     if (ret < 0) {
-        fprintf(stderr, "Error encoding video frame: %s\n", av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
-        exit(1);
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s Error sending a frame to the encoder: %s\n",
+            driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
 
-    /* If size is zero, it means the image was buffered. */
-    if (got_output) {
-        if (c->coded_frame->key_frame)
-            pkt.flags |= AV_PKT_FLAG_KEY;
-
-        pkt.stream_index = video_st->index;
+    pkt = av_packet_alloc();
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(c, pkt);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            break;
+        else if (ret < 0) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s Error encoding a frame: %s\n",
+                driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
+            return(asynError);
+        }
+        /* rescale output packet timestamp values from codec to stream timebase */
+        av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
+        pkt->stream_index = video_st->index;
 
         /* Write the compressed frame to the media file. */
-        ret = av_interleaved_write_frame(oc, &pkt);
-    } else {
-    	printf("got_output = 0, shouldn't see this\n");
-        ret = 0;
+        ret = av_interleaved_write_frame(oc, pkt);
+        /* pkt is now blank (av_interleaved_write_frame() takes ownership of
+         * its contents and resets pkt), so that no unreferencing is necessary.
+         * This would be different if one used av_write_frame(). */
+        if (ret < 0) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s Error while writing output packet: %s\n",
+                driverName2, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
+            return(asynError);
+        }
     }
-    scPicture->pts += av_rescale_q(1, video_st->codec->time_base, video_st->time_base);
 
-    if (ret != 0) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s Error while writing video frame\n",
-            driverName2, functionName);
-    }
+    scPicture->pts += av_rescale_q(1, c->time_base, video_st->time_base);
 
     return(asynSuccess);
 }
@@ -309,22 +319,18 @@ asynStatus ffmpegFile::closeFile()
 
     /* close each codec */
     if (video_st) {
-	    avcodec_close(video_st->codec);
+	    avcodec_free_context(&c);
+        av_packet_free(&pkt);
 	}
-	
-    /* free the streams */
-    for(unsigned int i = 0; i < oc->nb_streams; i++) {
-        av_freep(&oc->streams[i]->codec);
-        av_freep(&oc->streams[i]);
-    }
 
-    if (!(fmt->flags & AVFMT_NOFILE)) {
+    if (!(oc->oformat->flags & AVFMT_NOFILE)) {
         /* close the output file */
-        avio_close(oc->pb);
+        avio_closep(&oc->pb);
     }
 
-    /* free the stream */
-    av_free(oc);
+    /* free the streams */
+    avformat_free_context(oc);
+
     if (scArray) {
     	scArray->release();
     	scArray = NULL;
@@ -334,8 +340,8 @@ asynStatus ffmpegFile::closeFile()
     	outArray = NULL;
     }
 
-    av_free(inPicture);
-    av_free(scPicture);  
+    av_frame_free(&inPicture);
+    av_frame_free(&scPicture);
     return asynSuccess;
 }
 
@@ -419,8 +425,8 @@ ffmpegFile::ffmpegFile(const char *portName, int queueSize, int blockingCallback
     this->scPicture = NULL;    
     this->scArray = NULL;
     this->outArray = NULL;
+    this->pkt = NULL;
     this->ctx = NULL;      
-    this->fmt = NULL;
     this->oc = NULL;
     this->video_st = NULL;    
     

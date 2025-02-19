@@ -10,6 +10,7 @@ extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libswscale/swscale.h"
 #include "libavformat/avformat.h"
+#include "libavutil/imgutils.h"
 }
 
 /* areaDetector includes */

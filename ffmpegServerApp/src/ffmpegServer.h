@@ -66,7 +66,7 @@ private:
     NDArray *jpeg;
     int nclients;
          
-    AVCodec *codec;
+    const AVCodec *codec;
     AVCodecContext *c;
     AVFrame *inPicture;
     AVFrame *scPicture;            
