@@ -20,7 +20,7 @@
 
 #define RFC1123FMT "%a, %d %b %Y %H:%M:%S GMT"
 
-void printerror(int sid, int status, char* title, char* text)
+void printerror(int sid, int status, const char* title, const char* text)
 {
 	send_header(sid, 0, 200, "OK", "1", "text/html", -1, -1);
 	prints("<HTML><HEAD><TITLE>%d %s</TITLE></HEAD>\n", status, title);
@@ -197,7 +197,7 @@ logdata("\n[[[ STARTING REQUEST ]]]\n");
 	return 0;
 }
 
-void send_header(int sid, int cacheable, int status, char *title, char *extra_header, char *mime_type, int length, time_t mod)
+void send_header(int sid, int cacheable, int status, const char *title, const char *extra_header, const char *mime_type, int length, time_t mod)
 {
 	char timebuf[100];
 	time_t now;
@@ -232,7 +232,7 @@ void send_header(int sid, int cacheable, int status, char *title, char *extra_he
 	}
 }
 
-void send_fileheader(int sid, int cacheable, int status, char *title, char *extra_header, char *mime_type, int length, time_t mod)
+void send_fileheader(int sid, int cacheable, int status, const char *title, const char *extra_header, const char *mime_type, int length, time_t mod)
 {
 	char timebuf[100];
 	time_t now;

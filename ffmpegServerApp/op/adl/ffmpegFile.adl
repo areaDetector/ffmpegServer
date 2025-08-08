@@ -87,6 +87,18 @@ display {
 		1a7309,
 	}
 }
+rectangle {
+	object {
+		x=390
+		y=40
+		width=675
+		height=530
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
 "text entry" {
 	object {
 		x=556
@@ -434,18 +446,6 @@ composite {
 				}
 			}
 		}
-	}
-}
-rectangle {
-	object {
-		x=390
-		y=40
-		width=675
-		height=530
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
 	}
 }
 composite {
@@ -984,6 +984,18 @@ composite {
 		}
 	}
 }
+rectangle {
+	object {
+		x=390
+		y=575
+		width=675
+		height=70
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
 composite {
 	object {
 		x=477
@@ -1038,9 +1050,9 @@ composite {
 		}
 		text {
 			object {
-				x=779
+				x=749
 				y=586
-				width=30
+				width=60
 				height=20
 			}
 			"basic attribute" {
@@ -1175,18 +1187,6 @@ composite {
 		}
 	}
 }
-rectangle {
-	object {
-		x=390
-		y=575
-		width=675
-		height=100
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-}
 text {
 	object {
 		x=477
@@ -1232,9 +1232,9 @@ text {
 }
 text {
 	object {
-		x=779
+		x=739
 		y=616
-		width=30
+		width=70
 		height=20
 	}
 	"basic attribute" {

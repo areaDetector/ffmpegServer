@@ -543,7 +543,7 @@ void WSAReaper(void *x)
 #ifdef WIN32
 unsigned _stdcall htloop(void *x)
 #else
-unsigned htloop(void *x)
+void* htloop(void *x)
 #endif
 {
 	int sid=(int)x;

@@ -274,17 +274,17 @@ void fixslashes(char *pOriginal);
 int hex2int(char *pChars);
 void striprn(char *string);
 void swapchar(char *string, char oldchar, char newchar);
-char *nullhttpd_strcasestr(const char *src, const char *query);
+const char *nullhttpd_strcasestr(const char *src, const char *query);
 char *strcatf(char *dest, const char *format, ...);
 int printhex(const char *format, ...);
 int printht(const char *format, ...);
 /* http.c functions */
-void printerror(int sid, int status, char* title, char* text);
+void printerror(int sid, int status, const char* title, const char* text);
 char *get_mime_type(char *name);
 void ReadPOSTData(int sid);
 int read_header(int sid);
-void send_header(int sid, int cacheable, int status, char *title, char *extra_header, char *mime_type, int length, time_t mod);
-void send_fileheader(int sid, int cacheable, int status, char *title, char *extra_header, char *mime_type, int length, time_t mod);
+void send_header(int sid, int cacheable, int status, const char *title, const char *extra_header, const char *mime_type, int length, time_t mod);
+void send_fileheader(int sid, int cacheable, int status, const char *title, const char *extra_header, const char *mime_type, int length, time_t mod);
 /* server.c functions */
 void logaccess(int loglevel, const char *format, ...);
 void logerror(const char *format, ...);

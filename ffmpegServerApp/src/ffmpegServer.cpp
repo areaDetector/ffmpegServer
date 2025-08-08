@@ -357,7 +357,7 @@ void ffmpegStream::allocScArray(size_t size) {
     if (this->scArray) {
         if (this->scArray->dims[0].size >= size) {
             /* the processed array is already big enough */
-            avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);               
+            av_image_fill_arrays(scPicture->data,scPicture->linesize,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height,1);
             return;
         } else {
             /* need a new one, so discard the old one */
@@ -366,7 +366,7 @@ void ffmpegStream::allocScArray(size_t size) {
     }
     this->scArray = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
     /* alloc in and scaled pictures */
-    avpicture_fill((AVPicture *)scPicture,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height);   
+    av_image_fill_arrays(scPicture->data,scPicture->linesize,(uint8_t *)scArray->pData,c->pix_fmt,c->width,c->height,1);
 }       
     
 
@@ -384,6 +384,11 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     int width, height;
     /* in case we force a final size */
     int setw, seth;
+    int num_bytes = 0;
+    AVPacket *pkt = NULL;
+    NDArray *pScratch = NULL;
+    int ret;
+	char errbuf[AV_ERROR_MAX_STRING_SIZE];
 
     size_t size;
     /* for printing errors */
@@ -463,8 +468,7 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
         avr.den = 25;
         if (c != NULL) {
             /* width and height changed, close old codec */
-            avcodec_close(c);
-            av_free(c);
+            avcodec_free_context(&c);
         }
         c = avcodec_alloc_context3(codec);
         /* Make sure that we don't try and create an image smaller than AV_INPUT_BUFFER_MIN_SIZE */
@@ -527,36 +531,42 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     /* lock the output plugin mutex */
     pthread_mutex_lock(&this->mutex);
 
+    /* send the frame to the encoder */
+    ret = avcodec_send_frame(c, scPicture);
+    if (ret < 0) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s Error sending a frame to the encoder: %s\n",
+            driverName, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
+        goto done;
+    }
+
+    /* allocate a new NDArray for encoded packet */
+    pScratch = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
+
+    pkt = av_packet_alloc();
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(c, pkt);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            break;
+        else if (ret < 0) {
+            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s Error encoding a frame: %s\n",
+                driverName, functionName, av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
+            pScratch->release();
+            goto done;
+        }
+        memcpy((char*)pScratch->pData + num_bytes, pkt->data, pkt->size);
+        num_bytes += pkt->size;
+
+        av_packet_unref(pkt);
+    }
+    pScratch->dims[0].size = num_bytes;
+
     /* Release the last jpeg created */
     if (this->jpeg) {
         this->jpeg->release();
     }
-    
-    /* Convert it to a jpeg */        
-    this->jpeg = this->pNDArrayPool->alloc(1, &size, NDInt8, 0, NULL);
-
-    AVPacket pkt;
-    int got_output;
-    av_init_packet(&pkt);
-    pkt.data = (uint8_t*)this->jpeg->pData;    // packet data will be allocated by the encoder
-    pkt.size = c->width * c->height;
-
-    // needed to stop a stream of "AVFrame.format is not set" etc. messages
-    scPicture->format = c->pix_fmt;
-    scPicture->width = c->width;
-    scPicture->height = c->height;
-
-    if (avcodec_encode_video2(c, &pkt, scPicture, &got_output)) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: Encoding jpeg failed\n",
-            driverName, functionName);
-        got_output = 0; // got_output is undefined on error, so explicitly set it for use later
-    }
-
-    if (got_output) {
-        this->jpeg->dims[0].size = pkt.size;
-        av_packet_unref(&pkt);
-    }
+    this->jpeg = pScratch;
 
     //printf("Frame! Size: %d\n", this->jpeg->dims[0].size);
     
@@ -564,6 +574,9 @@ void ffmpegStream::processCallbacks(NDArray *pArray)
     for (int i=0; i<config.server_maxconn; i++) {
         pthread_cond_signal(&(this->cond[i]));
     }
+
+done:
+    av_packet_free(&pkt);
     pthread_mutex_unlock(&this->mutex);
 
     /* We must enter the loop and exit with the mutex locked */

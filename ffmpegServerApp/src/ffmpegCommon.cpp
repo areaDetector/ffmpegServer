@@ -8,12 +8,6 @@ void ffmpegInitialise() {
 	/* check if we're already intialised */
 	if (ffmpegInitialised) return;
 	
-    /* register all the codecs */
-    avcodec_register_all();
-
-	/* start the library */
-    av_register_all();	
-    
     /* Make a big neutral array */
     neutral = (unsigned char *)malloc(NEUTRAL_FRAME_SIZE *  sizeof(unsigned char));
     memset(neutral, 128, NEUTRAL_FRAME_SIZE);           

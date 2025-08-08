@@ -41,19 +41,19 @@ protected:
 
 private:
     FILE *outFile;
-    AVCodec *codec;
+    const AVCodec *codec;
     enum AVCodecID codec_id;
     AVCodecContext *c;
     AVFrame *inPicture;
     AVFrame *scPicture;    
     NDArray *scArray;
     NDArray *outArray;
+    AVPacket *pkt;
     struct SwsContext *ctx;      
     size_t outSize;
     int needStop;      
     int sheight, swidth;
     enum AVPixelFormat spix_fmt;
-    AVOutputFormat *fmt;
     AVFormatContext *oc;
     AVStream *video_st;
     double video_pts;   
