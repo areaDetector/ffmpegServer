@@ -38,11 +38,15 @@ else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 	VENDORARCH=win64-dev
 endif
 
-# Include the ffmpeg header files
-USR_INCLUDES += -I$(TOP)/vendor/ffmpeg-$(VENDORARCH)/include
-		
-# build the ffmpeg libs (or stubs on windows) into the binaries
-LIB_LIBS += avdevice avformat avcodec swresample swscale avutil
+# If we're building ffmpeg ourselves, we need to add the include and library paths
+ifeq ($(FFMPEG_EXTERNAL), NO)
+	USR_INCLUDES += -I$(TOP)/vendor/ffmpeg-$(VENDORARCH)/include
+	LIB_LIBS += avdevice avformat avcodec swresample swscale avutil
+else
+# Otherwise, use the system libraries
+	USR_INCLUDES += -I$(FFMPEG_INCLUDE)
+	LIB_SYS_LIBS += avdevice avformat avcodec swresample swscale avutil
+endif
 LIB_LIBS += NDPlugin
 LIB_SYS_LIBS_WIN32 += user32
 		
